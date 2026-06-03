@@ -1,0 +1,10 @@
+[package]
+name = "pointers-threads"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+paste = "1.0.15"
+# tokio = "1.52.3"  #works but didnt get all the features
+tokio = { version = "1.52.3", features = ["full"] }
+tokio-macros = { version = "0.2.6" }
