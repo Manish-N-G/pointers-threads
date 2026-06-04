@@ -24,7 +24,7 @@ pub mod th1g;
 /// assert_eq!("th1", th1.join().unwrap());
 /// assert_eq!("th2", th2.join().unwrap());
 /// ```
-/// This will join and print the value received
+/// This will join and assert the values
 pub fn thread1st() {
     let th1 = thread::spawn(th1_func1);
     let th2 = thread::spawn(th1_func1);
