@@ -7,6 +7,24 @@ pub mod th1e;
 pub mod th1f;
 pub mod th1g;
 
+/// Simple function that creates threads
+/// 
+/// Here the threads are run concurrently but we make sure that we
+/// are joining then at the end to ensure that they fill
+/// finish before this function gets done.
+/// ``` 
+/// let th1 = thread::spawn(|| {
+///     println!("th1 inside");
+///     "th1"
+/// });
+/// let th2 = thread::spawn(|| {
+///     println!("th2 inside");
+///     "th2"
+/// });
+/// assert_eq!("th1", th1.join().unwrap());
+/// assert_eq!("th2", th2.join().unwrap());
+/// ```
+/// This will join and print the value received
 pub fn thread1st() {
     let th1 = thread::spawn(th1_func1);
     let th2 = thread::spawn(th1_func1);
