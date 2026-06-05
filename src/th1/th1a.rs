@@ -1,21 +1,33 @@
 use std::thread;
 
-pub fn thread1a() {
-    println!("Testing if this works in th1a");
-    // let mut v = [1,2,3,4,5]; // works for array
-    let mut v = vec![1,2,3,4,5]; // works for array
-    // Here rust uses "move closure inference". That this means is
+/// Creates a spawned thread and Joins and returns the result
+///
+/// This is a simple test thread that takes a vector, and adds 
+/// 6 to it at the end of the vec
+/// ```
+/// use std::thread;
+/// let v = vec![1,2,3,4,5];
+/// let a1 = thread1a(v);
+///
+/// // we cant do print statement event with --show-output/ --nocapture
+/// assert_eq!(&a1, &[1,2,3,4,5,6])
+/// ```
+pub fn thread1a_add6(mut v: Vec<i32>) -> Vec<i32> {
+    // println!("Testing th1a thread1a");
+    // v is something like v = vec![1,2,3,4,5]; // this works
+    // Here rust uses "move closure inference". This means 
     // that rust automatically decided to move without explicitly 
     // writing it.
     // If we need to pass references, it needs to have static
     // livetime in general
     thread::spawn(|| { // move is made automatically
         v.push(6);
-        for x in v {
+        for x in v.iter() {
             println!("x is {x:?}");
         }
-        
-    }).join().unwrap();
+        v
+    }).join().unwrap()
+    // if we were to use v again, we will have borrow issues
     // println!("v outside is {v:?}"); // this will cause problems
 }
 

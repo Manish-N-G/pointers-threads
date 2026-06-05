@@ -3,8 +3,14 @@ name = "pointers-threads"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "pointers_threads"
+# Note, lib names cannot contain - and need to be _ instead
+path = "src/lib.rs"
+
 [dependencies]
 paste = "1.0.15"
 # tokio = "1.52.3"  #works but didnt get all the features
 tokio = { version = "1.52.3", features = ["full"] }
 tokio-macros = { version = "0.2.6" }
+

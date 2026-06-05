@@ -12,7 +12,9 @@ pub mod th1g;
 /// Here the threads are run concurrently but we make sure that we
 /// are joining then at the end to ensure that they fill
 /// finish before this function gets done.
-/// ``` 
+/// ```rust
+/// use std::thread;
+///
 /// let th1 = thread::spawn(|| {
 ///     println!("th1 inside");
 ///     "th1"

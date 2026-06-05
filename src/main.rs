@@ -46,7 +46,7 @@ fn main() {
     //
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
-    mod3_a();
+    mod1_a();
     //
     //
 
@@ -79,9 +79,13 @@ async fn two() -> u8 {
 }
 
 fn mod1_a() {
+    use pointers_threads::lib_th1a::*;
+
     th1::thread1st();
-    th1::th1a::thread1a();
-    th1::th1a::thread1a_error();
+    let a1 = thread1a_add6(vec![1,2,3,4,5]);
+    println!("a1 is :{:?}",a1);
+
+    thread1a_error();
     th1::th1a::thread1a_builder();
     th1::th1a::thread1a_stat();
     th1::th1a::thread1a_scope();
