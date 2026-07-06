@@ -151,7 +151,7 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 /// assert_eq!(thread1a_stat(), "this is stat thread");
 /// ```
 pub fn thread1a_stat() -> &'static str{
-    let stat = "this is stat thread"; // static lifetime
+    let stat = "this is stat thread!"; // static lifetime
     thread::spawn(|| {
         // Instead of taking a variable, where I would have to move 
         // Into the closure, I will just check lenght and use that to 
@@ -169,7 +169,7 @@ pub fn thread1a_stat() -> &'static str{
 
     // this will allow me to use stat after calling it here
     if stat.len().is_multiple_of(2) {
-        println!("stat is {stat}");
+        println!("stat val inside the function is: {stat}");
     }
     stat
 }
