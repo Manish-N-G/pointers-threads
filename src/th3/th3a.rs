@@ -3,7 +3,7 @@
 // the code.
 
 pub async fn thread3a_normal_async() {
-    make_coffee().await;    
+    make_coffee().await;
 }
 
 pub async fn thread3a_multi_async() {
@@ -23,13 +23,13 @@ async fn make_coffee_multi() {
     brew_coffee().await;
 }
 
-async fn boil_water() -> u8{
+async fn boil_water() -> u8 {
     tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
     println!("boiling the water for coffee");
     3
 }
 
-async fn grind_beans() -> u8{
+async fn grind_beans() -> u8 {
     println!("grinding the beans for coffee");
     8
 }
@@ -38,4 +38,3 @@ async fn brew_coffee() -> u8 {
     println!("brewing the coffee with after water and coffee are done");
     44
 }
-

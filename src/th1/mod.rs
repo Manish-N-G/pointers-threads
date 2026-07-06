@@ -8,7 +8,7 @@ pub mod th1f;
 pub mod th1g;
 
 /// Simple function that creates threads
-/// 
+///
 /// Here the threads are run concurrently but we make sure that we
 /// are joining then at the end to ensure that they fill
 /// finish before this function gets done.
@@ -36,7 +36,7 @@ pub fn thread1st() {
 
     th1.join().unwrap();
     th2.join().unwrap();
-    println!("Main thread id is {:?}", thread::current().id() );
+    println!("Main thread id is {:?}", thread::current().id());
 }
 
 fn th1_func1() {

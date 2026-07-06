@@ -1,16 +1,20 @@
-use std::sync::{RwLock, Arc};
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
 pub fn thread1e_arc_rwlock() {
-    #[derive(Debug)]    
+    #[derive(Debug)]
     struct RwTest<'a> {
         a: RwLock<u8>,
         b: RwLock<u16>,
         c: RwLock<&'a str>,
     }
     // RwTest directly takes ownership and didnt need to move it in struct
-    let st = RwTest { a: RwLock::new(11), b: RwLock::new(22), c: RwLock::new("Rw testing")};
+    let st = RwTest {
+        a: RwLock::new(11),
+        b: RwLock::new(22),
+        c: RwLock::new("Rw testing"),
+    };
     println!("Testing Struct for RwLock {:#?}", st);
 
     let rwl = RwLock::new(33);
@@ -47,12 +51,14 @@ pub fn thread1e_arc_rwlock() {
     println!("---------------------- RW lock struct to scope ---------------------------");
 
     // the \ char can make the string literal in a single line. It just says ignore the new line
-    println!("The order can change randomly for multiple threads. \
+    println!(
+        "The order can change randomly for multiple threads. \
               Even thread sleep will not fix it. \
-              Unless we join it manually with scopethreadhandle as I have done it for x");
+              Unless we join it manually with scopethreadhandle as I have done it for x"
+    );
     let t = RwLock::new(44);
     thread::scope(|s| {
-        // as we can have many reads, this works not just in a single thread but also 
+        // as we can have many reads, this works not just in a single thread but also
         // across threads. So this should be file.
         // So the purpose to having sleep in this case would be that the threads will start,
         // will be able to call read immediately.
@@ -77,7 +83,7 @@ pub fn thread1e_arc_rwlock() {
             println!("t received the write lock");
             // This will we will have to wait 12 seconds will finally we can update the value
             thread::sleep(Duration::from_millis(5000));
-            *g+=100;
+            *g += 100;
             println!("t rwlock write 1 with +100 is: {g}");
         });
         s.spawn(|| {
@@ -102,19 +108,25 @@ pub fn thread1e_arc_rwlock() {
         let r = c_lock.read();
         // This allows us to see if we have the lock
         assert!(r.is_ok());
-        println!("th spawned current id {:?} and read val {:?}", thread::current(), r);
-    }).join().unwrap();
-
+        println!(
+            "th spawned current id {:?} and read val {:?}",
+            thread::current(),
+            r
+        );
+    })
+    .join()
+    .unwrap();
 
     let rw = Arc::new(RwLock::new(66));
     let crw = Arc::clone(&rw);
     // since we dont call unwrap on this, the compiler/clippy warns us that we
     // need to assign is something. If we call unwrap on this, this is not bug
     // us. I left this as a titbit for information
-    let _ = thread::spawn(move|| {
-         let _lock = crw.write().unwrap(); 
-         panic!("manually panicing this spawned");
-    }).join();
+    let _ = thread::spawn(move || {
+        let _lock = crw.write().unwrap();
+        panic!("manually panicing this spawned");
+    })
+    .join();
     // even if thread panicked, we can still continus as its not the main thread
     // NOTE: calling panic on the main thread will stop the program unlike a thread
     // This below will cause this
@@ -129,18 +141,17 @@ pub fn thread1e_arc_rwlock() {
     let guard = rw.write().unwrap_or_else(|mut e| {
         // Err of Poisoned value of RWLock.
         **e.get_mut() = 1;
-        // here is important to clear poison. The value will still be poisoned if we dont 
+        // here is important to clear poison. The value will still be poisoned if we dont
         // revove this. Cause the struct will say poisoned = true,
         rw.clear_poison(); // poisoned = false
         e.into_inner() // This will give us new RWLock
-    });    
+    });
     assert!(!rw.is_poisoned());
     assert_eq!(*guard, 1);
     println!("rw after poison clear {}", guard);
-
 }
 
-pub fn thread1e_rwlock_is_finished() { 
+pub fn thread1e_rwlock_is_finished() {
     println!("------------------------- is finished for RWlock--------------------");
     let x = std::sync::RwLock::new(1u64);
     let y = std::sync::Arc::new(x);
@@ -148,12 +159,12 @@ pub fn thread1e_rwlock_is_finished() {
 
     for a in 0..10 {
         let z = y.clone();
-        h.push(std::thread::spawn( move || {
+        h.push(std::thread::spawn(move || {
             // This also produces the same result. Except that its slower. How this works is that
             // when the thread read/write guard is not available, the thread is put to sleep
             // internally for the read/write. This is how read write runs. This sleep is woken by
             // roughly by how locks are taken for read/write. If the lock is not available, the
-            // thread is put into a wait queue(Os parks the thread). And when another thread makes 
+            // thread is put into a wait queue(Os parks the thread). And when another thread makes
             // the lock guard free and available, the next thread is selected from the list of
             // waiting threads. Eventually we wait till the list in the queue is all accounted for.
             // if a%3!=0 {
@@ -167,7 +178,7 @@ pub fn thread1e_rwlock_is_finished() {
             //         }
             //     }
             // }
-            if a%3!=0 {
+            if a % 3 != 0 {
                 loop {
                     if let Ok(val) = z.try_read() {
                         println!("Val is now {} for loop {a}", val);
@@ -190,16 +201,20 @@ pub fn thread1e_rwlock_is_finished() {
         }));
     }
 
-    h.iter().for_each(|handle| loop {
-        match handle.is_finished() {
-            true => break,
-            _ => std::thread::sleep(std::time::Duration::from_millis(100)),
+    h.iter().for_each(|handle| {
+        loop {
+            match handle.is_finished() {
+                true => break,
+                _ => std::thread::sleep(std::time::Duration::from_millis(100)),
+            }
         }
     });
     // for x in h {
     //     println!("thread no {:?}", std::env::current_dir().unwrap());
     //     x.join().unwrap();
     // }
-    println!("Done for is_finished. We have final value {}", y.read().unwrap());
+    println!(
+        "Done for is_finished. We have final value {}",
+        y.read().unwrap()
+    );
 }
-

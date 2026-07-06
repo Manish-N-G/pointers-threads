@@ -1,19 +1,19 @@
 // #![allow(unused)]
-use std::cell::UnsafeCell;
 pub use self::modcell::MyCell;
-pub use self::modrefcell::MyRefCell;
 pub use self::modrc::MyRc;
+pub use self::modrefcell::MyRefCell;
+use std::cell::UnsafeCell;
 // same as above
 // use crate::th2::th2a::modcell::MyCell;
 // use crate::th2::th2a::modrefcell::MyRefCell;
 // use crate::th2::th2a::modrc::MyRc;
-use std::ops::{ Deref, DerefMut };
+use std::ops::{Deref, DerefMut};
 // Just tells us that we point to something that is not a null value
 use std::ptr::NonNull;
 // PhantomData adds certain characteristics to struct that make it behave as a certain way
 // think of when we need to consider auto traits to a struct type depending on is fields
 // to where adhere to a traits requirements.
-// This plays a bit role in raw pointers for example, variance of a type or for autotrait 
+// This plays a bit role in raw pointers for example, variance of a type or for autotrait
 // requirements. More is said about PhantomData later
 use std::marker::PhantomData;
 
@@ -21,11 +21,11 @@ use std::marker::PhantomData;
 pub fn testing_mycell() {
     // this variable doenst need to be mutable as it mutates through interior mutability
     let ce = MyCell::new(3u8);
-    println!("MyCell u8 val get is {}", ce.get() );
+    println!("MyCell u8 val get is {}", ce.get());
     ce.set(8u8);
-    println!("MyCell u8 after val set is {}", ce.get() );
-    println!("MyCell replace {}", ce.replace(9u8) );
-    println!("MyCell get new val is {}", ce.get() );
+    println!("MyCell u8 after val set is {}", ce.get());
+    println!("MyCell replace {}", ce.replace(9u8));
+    println!("MyCell get new val is {}", ce.get());
 
     let mut c2 = MyCell::new(String::from("hello there"));
     // since we used trait implementing copy only for get,
@@ -34,7 +34,7 @@ pub fn testing_mycell() {
     // This is why I feel we need to put this in the struct directly
     // However we can use mut value
     *c2.get_mut() = String::from("new"); // works but doesnt server the purpose of interior
-                                         // mutability
+    // mutability
     let mut c3 = std::cell::Cell::new(String::from("hello from cell"));
     // in std library, we cant use get() for non copy trait types too
     // c3.get();
@@ -44,9 +44,9 @@ pub fn testing_mycell() {
 pub fn testing_myrefcell() {
     let rce = MyRefCell::new(11u8);
     // can have many borrows but only a single borrow_mut
-    println!("MyCell u8 borrow is {:?}", rce.borrow() );
+    println!("MyCell u8 borrow is {:?}", rce.borrow());
     // can have many borrows is its in the same thread
-    println!("MyCell u8 borrow again is {:?}", rce.borrow() );
+    println!("MyCell u8 borrow again is {:?}", rce.borrow());
     // rce.borrow_mut(); // this doesnt work. It will compile but will panic during run time
     #[allow(unused)]
     let rce = MyRefCell::new(10u8);
@@ -55,27 +55,45 @@ pub fn testing_myrefcell() {
     let x = rce.borrow();
     drop(x);
     // drop(x); // Another drop x will cause this to throw an error
-    println!("MyCell u8 try borrow is possible? {:?}", rce.try_borrow() );
-    println!("MyCell u8 try borrow again is possible? {:?}", rce.try_borrow() );
-    println!("MyCell u8 try borrow mut is possible? {:?}", rce.try_borrow_mut() );
+    println!("MyCell u8 try borrow is possible? {:?}", rce.try_borrow());
+    println!(
+        "MyCell u8 try borrow again is possible? {:?}",
+        rce.try_borrow()
+    );
+    println!(
+        "MyCell u8 try borrow mut is possible? {:?}",
+        rce.try_borrow_mut()
+    );
     let mut x = rce.borrow_mut();
-    *x+=4;
-    *x+=9;
-    println!("MyCell u8 try borrow after is possible? {:?}", rce.try_borrow() );
-    println!("MyCell u8 try borrow mut after is possible? {:?}", rce.try_borrow_mut() );
-    println!("MyCell u8 try borrow mut after is {:?}", *x );
+    *x += 4;
+    *x += 9;
+    println!(
+        "MyCell u8 try borrow after is possible? {:?}",
+        rce.try_borrow()
+    );
+    println!(
+        "MyCell u8 try borrow mut after is possible? {:?}",
+        rce.try_borrow_mut()
+    );
+    println!("MyCell u8 try borrow mut after is {:?}", *x);
 }
 
 pub fn testing_myrc_cell() {
     let myrcval = MyRc::new(33u8);
     let otherrc = MyRc::clone(&myrcval);
     let newotherrc = MyRc::clone(&myrcval);
-    println!("MyRC strong count for val: {}", myrcval.get_strong() );
-    println!("MyRC strong count for val cloned: {}", otherrc.get_strong() );
+    println!("MyRC strong count for val: {}", myrcval.get_strong());
+    println!("MyRC strong count for val cloned: {}", otherrc.get_strong());
     drop(newotherrc);
-    println!("MyRC strong count for val cloned after 1 cloned dropped: {}", otherrc.get_strong() );
+    println!(
+        "MyRC strong count for val cloned after 1 cloned dropped: {}",
+        otherrc.get_strong()
+    );
     drop(otherrc);
-    println!("MyRC strong count for val cloned after 2 cloned dropped: {}", myrcval.get_strong() );
+    println!(
+        "MyRC strong count for val cloned after 2 cloned dropped: {}",
+        myrcval.get_strong()
+    );
     drop(myrcval);
     // println!("MyRC after all dropped for strong count: {}", myrcval.get_strong() ); // this cont
     // compile as value is already dropped
@@ -86,8 +104,8 @@ pub fn testing_myrc_cell() {
 pub mod modrc {
     use super::*;
     // We know that if we have to drop the MyRc type, if we have all the fields inside
-    // it, it would mean that we have to drop the whole struct. The point of having an 
-    // RC type is to be able to have many shared reference to a value. This reference could 
+    // it, it would mean that we have to drop the whole struct. The point of having an
+    // RC type is to be able to have many shared reference to a value. This reference could
     // increases when we clone the value. For this sake, its better to create a inner type that
     // hold this values that doesnt get affected when we call the drop value on RC. This way
     // the drop will look at the num of references in inner and then decide whether we need to
@@ -96,7 +114,7 @@ pub mod modrc {
     // all the actual values. In this case NonNull from MyRC that points to MyRcInner
     struct MyRcInner<T> {
         value: T,
-        // initially was Unsafecell, but change to MyCell cause 
+        // initially was Unsafecell, but change to MyCell cause
         // there were too many unsafe calls in the code.
         strong_count: MyCell<usize>,
     }
@@ -127,7 +145,7 @@ pub mod modrc {
         // For example, when we have MyRc that only has a pointer (NonNull)
         // to the value we want, the rust compiler doesnt know what to do when
         // MyRc is dropped. In general, we have to provide a way to handle that when
-        // rust drops MyRc, so in a sence, the dropchek throught phantomdata 
+        // rust drops MyRc, so in a sence, the dropchek throught phantomdata
         // also checks and tried to drop (treats it as if it could) MyRcInner
         // (even when not possible directly as phantomdata doesnt really hold any data)
         // This is important when we have generic type with references which
@@ -137,7 +155,7 @@ pub mod modrc {
         // in Dropck to ensure that this does not happen. Rust makes this possible
         // with the use of PhantomData. We can think of PhantomData as a type that
         // owns a value or reference to a value when in actuality is doesnt use
-        // any space for allocation. This is read by the compiler as; huh, okay 
+        // any space for allocation. This is read by the compiler as; huh, okay
         // you have a owned (which it doesnt but seems to for the compiler)
         // instance of T, so I will also check inside MyRcInner if that value
         // still holds good during dropck for example and or lifetimes and references.
@@ -145,26 +163,28 @@ pub mod modrc {
         // idea of what this does.
         _markr: PhantomData<MyRcInner<T>>,
     }
-    
+
     impl<T> MyRc<T> {
         pub fn new(val: T) -> Self {
             // we 1st create the MyRcInner type
-            let inner = Box::new(MyRcInner {value: val, strong_count: MyCell::new(1)});
+            let inner = Box::new(MyRcInner {
+                value: val,
+                strong_count: MyCell::new(1),
+            });
             // here, into_raw gives us a raw pointer to the value.
             // this value is consumed when we get the raw pointer.
             // in such a situation, this value does not get deallocated
-            // as is not affected when this scope ends, else the box 
+            // as is not affected when this scope ends, else the box
             // could have been dropped at the end of this scope.
             // Self { inner: Box::into_raw(inner) }
             // Self { inner: NonNull::new( Box::into_raw(inner) ).unwrap() } // Works OR
             // Safety arguement: Box does not give us a null pointer
-            unsafe { 
-                Self { 
-                    // inner: NonNull::new( Box::into_raw(inner) ), // gives option type 
-                    inner: NonNull::new_unchecked( Box::into_raw(inner) ), // doesnt give option
+            unsafe {
+                Self {
+                    // inner: NonNull::new( Box::into_raw(inner) ), // gives option type
+                    inner: NonNull::new_unchecked(Box::into_raw(inner)), // doesnt give option
                     _markr: PhantomData,
                 }
-                
             }
         }
         // this could be changed in the way its written
@@ -184,14 +204,17 @@ pub mod modrc {
         fn clone(&self) -> Self {
             //let inner = unsafe { &*self.inner };
             let inner = unsafe { self.inner.as_ref() };
-            let val:usize = inner.strong_count.get();
-            inner.strong_count.set ( val.wrapping_add(1) );
-            Self { inner: self.inner, _markr: PhantomData, }
+            let val: usize = inner.strong_count.get();
+            inner.strong_count.set(val.wrapping_add(1));
+            Self {
+                inner: self.inner,
+                _markr: PhantomData,
+            }
         }
     }
     impl<T> Deref for MyRc<T> {
         type Target = T;
-        fn deref(&self) ->&Self::Target {
+        fn deref(&self) -> &Self::Target {
             //unsafe { &(*self.inner).value }
             unsafe { &self.inner.as_ref().value }
         }
@@ -201,12 +224,13 @@ pub mod modrc {
             //let inner = unsafe { &(*self.inner) };
             let inner = unsafe { self.inner.as_ref() };
             match inner.strong_count.get() {
-                x if x>1 => inner.strong_count.set( x-1 ),
+                x if x > 1 => inner.strong_count.set(x - 1),
                 // drop value here
-                _ => { // x 
+                _ => {
+                    // x
                     // drop(inner);
                     unsafe { drop(Box::from_raw(self.inner.as_ptr())) }
-                }, 
+                }
             }
         }
     }
@@ -229,7 +253,7 @@ pub mod modrefcell {
         references: MyCell<RefState>,
     }
     impl<T> MyRefCell<T> {
-        pub fn new(val:T) -> Self {
+        pub fn new(val: T) -> Self {
             Self {
                 value: UnsafeCell::new(val),
                 references: MyCell::new(Unshared),
@@ -288,10 +312,10 @@ pub mod modrefcell {
         //         }
         //     }
         // }
-        
+
         // Here, we take only a shared reference of self.
         // However, using our MyCell, which uses unsafe code under the hood,
-        // we are able to use the set and get methods so that we are able 
+        // we are able to use the set and get methods so that we are able
         // be make it work. We use the MyCell along with UnsafeCell in order to
         // make this work. Perhaps we could have even used MyCell for the value field.
 
@@ -308,7 +332,7 @@ pub mod modrefcell {
         // drop a value for a borrow/borrow_mut variable. This is important as we
         // Need to know how to monitor, update the reference states, drop the values
         // when necessary and Deref/Deref_mut that value. Calling this on the
-        // Original MyRefCell will not be able to handle this as we cant call 
+        // Original MyRefCell will not be able to handle this as we cant call
         // drop directly for an instance of borrow/borrow_mut for example.
         // This intermediate Struct helps us handles the states and values
         // available in the MyRefCell struct type.
@@ -316,15 +340,15 @@ pub mod modrefcell {
         // NOTE: If something allocates, mutates memory or executes logic, its run time
         pub fn borrow(&self) -> Ref<'_, T> {
             match self.references.get() {
-                Unshared => self.references.set( Shared(1) ),
-                Shared(x) => self.references.set( Shared(x.saturating_add(2)) ),
+                Unshared => self.references.set(Shared(1)),
+                Shared(x) => self.references.set(Shared(x.saturating_add(2))),
                 _ => panic!("cant borrow as already borrowed as mutable"),
             }
             Ref { refcell: self }
         }
         pub fn borrow_mut(&self) -> RefMut<'_, T> {
             match self.references.get() {
-                Unshared => self.references.set( Exclusive ),
+                Unshared => self.references.set(Exclusive),
                 Shared(_) => panic!("cant borrow as mut as borrowed as immutable"),
                 _ => panic!("cant borrow as mut as already borrowed as mutable"),
             }
@@ -334,13 +358,13 @@ pub mod modrefcell {
             // }
         }
         pub fn try_borrow(&self) -> bool {
-            // match self.references.get() 
+            // match self.references.get()
             //     Exclusive => false,
             //     _ => true,
             // }
             // Same as above
             // matches!( self.references.get(), x if x != Exclusive ) // I had to use PartialEq for this
-                                                                      // to be accepted
+            // to be accepted
             // is better and more direct
             self.references.get() != Exclusive
         }
@@ -355,12 +379,12 @@ pub mod modrefcell {
             self.references.get() == Unshared
         }
     }
-    // NOTE: we have to implement a way to drop values and then 
+    // NOTE: we have to implement a way to drop values and then
     // make our value decrement for shared references.
     #[derive(Debug)]
     pub struct Ref<'refc, T> {
         refcell: &'refc MyRefCell<T>,
-    } 
+    }
     // by implementing the Drop and Deref, DerefMut traits on a type,
     // we are able to adjuct the count of the references for the origial MyRefCell. This
     // way, we know or lets say have an idea how this can be implemented
@@ -373,8 +397,8 @@ pub mod modrefcell {
                 // should not be possilbe as just creating a borrow will change it to shared value
                 // If we call drop again on this type, it will panic through unreachable
                 Unshared | Exclusive => unreachable!(),
-                Shared(1) => self.refcell.references.set( Unshared ),
-                Shared(x) => self.refcell.references.set( Shared(x-1) ), 
+                Shared(1) => self.refcell.references.set(Unshared),
+                Shared(x) => self.refcell.references.set(Shared(x - 1)),
             }
         }
     }
@@ -396,10 +420,10 @@ pub mod modrefcell {
     // so we can implement drop, deref and derefmut.
     pub struct RefMut<'refc, T> {
         refcell: &'refc MyRefCell<T>,
-    } 
+    }
 
     // this drop will have to handle states for just borrow_mut as borrow_mut
-    // is only the one capable to produce RefMut. So when dropping a borrow_mut reference 
+    // is only the one capable to produce RefMut. So when dropping a borrow_mut reference
     // We have to handle just the Exclusive types as the others are not possible
     impl<'refc, T> Drop for RefMut<'refc, T> {
         fn drop(&mut self) {
@@ -407,7 +431,7 @@ pub mod modrefcell {
                 // these states are not possible
                 // if we manuall drop the again, they they will panic through unreachable
                 Unshared | Shared(_) => unreachable!(),
-                Exclusive => self.refcell.references.set( Unshared ), 
+                Exclusive => self.refcell.references.set(Unshared),
             }
         }
     }
@@ -442,22 +466,28 @@ pub mod modcell {
     pub struct MyCell<T> {
         value: UnsafeCell<T>,
     }
-    
+
     impl<T> MyCell<T> {
         pub fn new(val: T) -> MyCell<T> {
-            Self { value: UnsafeCell::new(val) }
+            Self {
+                value: UnsafeCell::new(val),
+            }
         }
-        // Since we dont impl sync, this wont allow us to 
+        // Since we dont impl sync, this wont allow us to
         // implement threads. And that will prevent us using references to
         // the value as we are not giving it out for multi threading.
         pub fn set(&self, val: T) {
-            unsafe { *self.value.get() = val; } // get give us a mut pointer to address
+            unsafe {
+                *self.value.get() = val;
+            } // get give us a mut pointer to address
         }
         // We get only the copy of the value, as we validate this
         // by using the copy trait. This way we dont get the
         // reference of the value.
-        pub fn get(&self) -> T 
-        where T: Copy {
+        pub fn get(&self) -> T
+        where
+            T: Copy,
+        {
             unsafe { *self.value.get() }
         }
         // This will give us a mut reference for a value
@@ -466,8 +496,10 @@ pub mod modcell {
             self.value.get_mut()
         }
 
-        pub fn replace(&self, val: T) -> T 
-        where T: Copy {
+        pub fn replace(&self, val: T) -> T
+        where
+            T: Copy,
+        {
             let x = self.get();
             self.set(val);
             x

@@ -6,9 +6,9 @@
 //! exactly the same as well.
 //!
 //! Along with pointers, we also see that we have concurrently type functions
-//! that allow us to know how this works. This creates differet threads and 
+//! that allow us to know how this works. This creates differet threads and
 //! uses different libs to test and see what works and how it works.
-//! 
+//!
 //! We also cover async that shows how futures and async operate, sometimes with
 //! multithreading/tasks, under the hood.
 
@@ -17,11 +17,11 @@ mod threads1;
 
 // We dont use //! and should not use it here, its its not the 1st line
 /// This module covers how different type of threads and pointers are used
-/// 
-/// In order to understand threads, we will also have to worry about 
+//todomanish: Have to see if we if I add more modules in threads1, if the description
+//matches for all or how it works. Todo. and will happen soon
+///
+/// In order to understand threads, we will also have to worry about
 /// pointers and what pointer is best to use. Hence all this is accessable
 /// in thei module.
 ///
 pub use threads1::*;
-
-

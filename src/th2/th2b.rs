@@ -1,6 +1,6 @@
 #[allow(non_snake_case)]
 pub fn thread2b_RcWeak() {
-    enum RcWeak{
+    enum RcWeak {
         NRc(std::rc::Rc<Node>),
         NWeak(std::rc::Weak<Node>),
     }
@@ -21,8 +21,14 @@ pub fn thread2b_RcWeak() {
     // drop(y); // this should clear all the references
 
     // this doesnt work
-    let x = std::rc::Rc::new(Node{a:3, b: std::cell::RefCell::new(vec![])});
-    let y = std::rc::Rc::new(Node{a:4, b: std::cell::RefCell::new(vec![RcWeak::NRc(std::rc::Rc::clone(&x))])});
+    let x = std::rc::Rc::new(Node {
+        a: 3,
+        b: std::cell::RefCell::new(vec![]),
+    });
+    let y = std::rc::Rc::new(Node {
+        a: 4,
+        b: std::cell::RefCell::new(vec![RcWeak::NRc(std::rc::Rc::clone(&x))]),
+    });
     x.b.borrow_mut().push(RcWeak::NRc(std::rc::Rc::clone(&y)));
 
     // let yb = x.b.borrow();
@@ -51,8 +57,16 @@ pub fn thread2b_RcWeak() {
     };
     drop(xb);
 
-    println!("new strong x is {:?} and new strong y is {}", std::rc::Rc::strong_count(&x), std::rc::Rc::strong_count(&y));
-    println!("weak x is {:?} and weak y is {}", std::rc::Rc::weak_count(&x), std::rc::Rc::weak_count(&y));
+    println!(
+        "new strong x is {:?} and new strong y is {}",
+        std::rc::Rc::strong_count(&x),
+        std::rc::Rc::strong_count(&y)
+    );
+    println!(
+        "weak x is {:?} and weak y is {}",
+        std::rc::Rc::weak_count(&x),
+        std::rc::Rc::weak_count(&y)
+    );
 
     drop(x);
     drop(y);

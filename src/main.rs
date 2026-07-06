@@ -7,7 +7,7 @@ use paste::paste;
 #[allow(unused_macros)]
 macro_rules! my_func {
     // 'm' is for literal matching.
-    // ident can be used here more for alphabets. cant start with a number 
+    // ident can be used here more for alphabets. cant start with a number
     // but ident can have numbers present else where.
     ( 'm', $md:literal, $($va:ident),* ) => {{ $(
             paste! {
@@ -22,14 +22,13 @@ macro_rules! my_func {
     }};
     ( 't', $nb:literal, $nest: literal, $va:literal ) => {{
         paste! {
-            [<th $nb>]::[<th $nest>]::[<thread $va>]();
-        }
+            [<th $nb>]::[<th $nest>]::[<thread $va>](); }
     }};
 }
 
 mod th1; // this means that files that point to main.rs dont expose the 
-         // files that point to th1. Its only just for this file unless
-         // explicitly stated somewhere else.
+// files that point to th1. Its only just for this file unless
+// explicitly stated somewhere else.
 mod th2;
 
 mod th3;
@@ -38,7 +37,7 @@ mod th3;
 // #[tokio::main]
 fn main() {
     // my_func!('m', 1, c);
-    // These two below are not really useful. But just having fun a bit 
+    // These two below are not really useful. But just having fun a bit
     // with how the macros are running.
     // Cause we can just call the function directly when we are testing
     // my_func!('t', 1, "", "1st");
@@ -51,12 +50,8 @@ fn main() {
     //
 
     let rt = tokio::runtime::Runtime::new().expect("testing");
-    let t = rt.block_on(
-        two()
-    );
+    let t = rt.block_on(two());
     println!("t is {t}");
-    
-
 }
 
 async fn one(val: u8) {
@@ -82,12 +77,23 @@ fn mod1_a() {
     use pointers_threads::lib_th1a::*;
 
     th1::thread1st();
-    let a1 = thread1a_add6(vec![1,2,3,4,5]);
-    println!("a1 is :{:?}",a1);
+    let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
+    println!("a1 is :{:?}", a1);
 
-    thread1a_error();
-    th1::th1a::thread1a_builder();
-    th1::th1a::thread1a_stat();
+    let a2 = thread1a_add_val(a1, 9);
+    println!("a2 is :{:?}", a2);
+
+    println!("move issue is three {}", thread1a_move_issue());
+
+    println!("builder: {:?}", thread1a_builder(vec![1, 2, 3, 4, 5], true));
+
+    println!(
+        "thread stat owned for \"hello world\" is :{}",
+        thread1a_stat_owned("hello world")
+    );
+
+    println!("Stat funcion val: {}", thread1a_stat() );
+
     th1::th1a::thread1a_scope();
 }
 
@@ -147,15 +153,13 @@ fn mod2_b() {
 // }
 fn mod3_a() {
     let rt = tokio::runtime::Runtime::new().expect("rt for mod3_a");
-    rt.block_on( {
+    rt.block_on({
         println!("1st normal");
         th3::th3a::thread3a_normal_async()
     }); // talks blocked here
 
     println!("\nNext we have multi");
-    rt.block_on(
-        th3::th3a::thread3a_multi_async()
-    )
+    rt.block_on(th3::th3a::thread3a_multi_async())
 }
 
 fn mod3_b() {

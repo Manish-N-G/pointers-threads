@@ -4,7 +4,7 @@
 mod state1_oop_box_dyn {
     // This trait is meant to use OOP concepts to represnt how we can add functionality to the
     // differnt types as structs in Rust. There as many ways genreally for rust to go about a task
-    // but this on focuses on OOP and could has been implemented in a different way that the one 
+    // but this on focuses on OOP and could has been implemented in a different way that the one
     // that is used here.
     trait State {
         // Here, we try to use the State trait to control how this is implemented
@@ -27,14 +27,14 @@ mod state1_oop_box_dyn {
     #[derive(Debug)]
     struct Created;
     impl State for Created {
-        fn review_state(self: Box<Self>) -> Box<dyn State>{
+        fn review_state(self: Box<Self>) -> Box<dyn State> {
             self // state does not change
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn State>{
+        fn approve_state(self: Box<Self>) -> Box<dyn State> {
             self // state cant be apporved before its reviewed
         }
-        fn add_state(self: Box<Self>) -> Box<dyn State>{
-            Box::new(Added) 
+        fn add_state(self: Box<Self>) -> Box<dyn State> {
+            Box::new(Added)
         }
     }
 
@@ -43,13 +43,13 @@ mod state1_oop_box_dyn {
     impl State for Added {
         // this function takes ownership of the Box holding the type that implemements the trait
         // and returns a Box that we can create.
-        fn review_state(self: Box<Self>) -> Box<dyn State>{
+        fn review_state(self: Box<Self>) -> Box<dyn State> {
             Box::new(Reviewed)
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn State>{
+        fn approve_state(self: Box<Self>) -> Box<dyn State> {
             self
         }
-        fn add_state(self: Box<Self>) -> Box<dyn State>{
+        fn add_state(self: Box<Self>) -> Box<dyn State> {
             self
         }
     }
@@ -57,16 +57,16 @@ mod state1_oop_box_dyn {
     #[derive(Debug)]
     struct Reviewed;
     impl State for Reviewed {
-        fn review_state(self: Box<Self>) -> Box<dyn State>{
+        fn review_state(self: Box<Self>) -> Box<dyn State> {
             self
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn State>{
+        fn approve_state(self: Box<Self>) -> Box<dyn State> {
             Box::new(Approved)
         }
-        fn add_state(self: Box<Self>) -> Box<dyn State>{
+        fn add_state(self: Box<Self>) -> Box<dyn State> {
             Box::new(Added)
         }
-        fn content(&self, _content: & str) -> &str{
+        fn content(&self, _content: &str) -> &str {
             ""
         }
     }
@@ -74,16 +74,16 @@ mod state1_oop_box_dyn {
     #[derive(Debug)]
     struct Approved;
     impl State for Approved {
-        fn review_state(self: Box<Self>) -> Box<dyn State>{
+        fn review_state(self: Box<Self>) -> Box<dyn State> {
             Box::new(Reviewed)
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn State>{
+        fn approve_state(self: Box<Self>) -> Box<dyn State> {
             self
         }
-        fn add_state(self: Box<Self>) -> Box<dyn State>{
+        fn add_state(self: Box<Self>) -> Box<dyn State> {
             Box::new(Added)
         }
-        fn content<'a>(&self, content: &'a str) -> &'a str{
+        fn content<'a>(&self, content: &'a str) -> &'a str {
             content
         }
     }
@@ -95,26 +95,29 @@ mod state1_oop_box_dyn {
 
     impl Post {
         pub fn new() -> Self {
-            Self { state: Some(Box::new(Created)), content: "".into() }
+            Self {
+                state: Some(Box::new(Created)),
+                content: "".into(),
+            }
         }
 
-        pub fn insert(&mut self, content: impl Into<String>){
+        pub fn insert(&mut self, content: impl Into<String>) {
             self.content = content.into();
             self.state = Some(self.state.take().unwrap().add_state());
         }
 
-        pub fn append(&mut self, content: &str){
+        pub fn append(&mut self, content: &str) {
             self.content.push_str(content);
             self.state = Some(self.state.take().unwrap().add_state());
         }
 
-        pub fn review(&mut self){
+        pub fn review(&mut self) {
             if let Some(s) = self.state.take() {
                 self.state = Some(s.review_state())
             }
         }
 
-        pub fn approve(&mut self){
+        pub fn approve(&mut self) {
             if let Some(s) = self.state.take() {
                 self.state = Some(s.approve_state())
             }
@@ -130,9 +133,7 @@ mod state1_oop_box_dyn {
             self.state.as_ref().unwrap().content(&self.content)
         }
     }
-
 }
-
 
 mod state1_oop_dyn_any {
     use std::any::Any;
@@ -159,14 +160,14 @@ mod state1_oop_dyn_any {
     #[derive(Debug)]
     struct Created;
     impl State for Created {
-        fn review_state(self: Box<Self>) -> Box<dyn Any>{
+        fn review_state(self: Box<Self>) -> Box<dyn Any> {
             self // state does not change
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn Any>{
+        fn approve_state(self: Box<Self>) -> Box<dyn Any> {
             self // state cant be apporved before its reviewed
         }
-        fn add_state(self: Box<Self>) -> Box<dyn Any>{
-            Box::new(Added) 
+        fn add_state(self: Box<Self>) -> Box<dyn Any> {
+            Box::new(Added)
         }
     }
 
@@ -175,13 +176,13 @@ mod state1_oop_dyn_any {
     impl State for Added {
         // this function takes ownership of the Box holding the type that implemements the trait
         // and returns a Box that we can create.
-        fn review_state(self: Box<Self>) -> Box<dyn Any>{
+        fn review_state(self: Box<Self>) -> Box<dyn Any> {
             Box::new(Reviewed)
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn Any>{
+        fn approve_state(self: Box<Self>) -> Box<dyn Any> {
             self
         }
-        fn add_state(self: Box<Self>) -> Box<dyn Any>{
+        fn add_state(self: Box<Self>) -> Box<dyn Any> {
             self
         }
     }
@@ -189,13 +190,13 @@ mod state1_oop_dyn_any {
     #[derive(Debug)]
     struct Reviewed;
     impl State for Reviewed {
-        fn review_state(self: Box<Self>) -> Box<dyn Any>{
+        fn review_state(self: Box<Self>) -> Box<dyn Any> {
             self
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn Any>{
+        fn approve_state(self: Box<Self>) -> Box<dyn Any> {
             Box::new(Approved)
         }
-        fn add_state(self: Box<Self>) -> Box<dyn Any>{
+        fn add_state(self: Box<Self>) -> Box<dyn Any> {
             Box::new(Added)
         }
     }
@@ -203,13 +204,13 @@ mod state1_oop_dyn_any {
     #[derive(Debug)]
     struct Approved;
     impl State for Approved {
-        fn review_state(self: Box<Self>) -> Box<dyn Any>{
+        fn review_state(self: Box<Self>) -> Box<dyn Any> {
             Box::new(Reviewed)
         }
-        fn approve_state(self: Box<Self>) -> Box<dyn Any>{
+        fn approve_state(self: Box<Self>) -> Box<dyn Any> {
             self
         }
-        fn add_state(self: Box<Self>) -> Box<dyn Any>{
+        fn add_state(self: Box<Self>) -> Box<dyn Any> {
             Box::new(Added)
         }
     }
@@ -221,32 +222,56 @@ mod state1_oop_dyn_any {
 
     impl Post {
         pub fn new() -> Self {
-            Self { state: Some(Box::new(Created)), content: "".into() }
-        }
-
-        pub fn insert(&mut self, content: impl Into<String>){
-            self.content = content.into();
-            self.state = Some(self.state.take().unwrap().add_state().downcast::<Added>().unwrap());
-        }
-
-        pub fn append(&mut self, content: &str){
-            self.content.push_str(content);
-            self.state = Some(self.state.take().unwrap().add_state().downcast::<Added>().unwrap());
-        }
-
-        pub fn review(&mut self){
-            // approach one
-            let concrete = (**self.state.as_ref().unwrap()).type_id();
-            if concrete == std::any::TypeId::of::<Added>() {
-                self.state = Some(self.state.take().unwrap().review_state().downcast::<Reviewed>().unwrap());
+            Self {
+                state: Some(Box::new(Created)),
+                content: "".into(),
             }
         }
 
-        pub fn approve(&mut self){
+        pub fn insert(&mut self, content: impl Into<String>) {
+            self.content = content.into();
+            self.state = Some(
+                self.state
+                    .take()
+                    .unwrap()
+                    .add_state()
+                    .downcast::<Added>()
+                    .unwrap(),
+            );
+        }
+
+        pub fn append(&mut self, content: &str) {
+            self.content.push_str(content);
+            self.state = Some(
+                self.state
+                    .take()
+                    .unwrap()
+                    .add_state()
+                    .downcast::<Added>()
+                    .unwrap(),
+            );
+        }
+
+        pub fn review(&mut self) {
+            // approach one
+            let concrete = (**self.state.as_ref().unwrap()).type_id();
+            if concrete == std::any::TypeId::of::<Added>() {
+                self.state = Some(
+                    self.state
+                        .take()
+                        .unwrap()
+                        .review_state()
+                        .downcast::<Reviewed>()
+                        .unwrap(),
+                );
+            }
+        }
+
+        pub fn approve(&mut self) {
             // approach two
             if let Some(s) = self.state.take() {
                 let concrete = (*s).type_id();
-                if concrete == std::any::TypeId::of::<Reviewed>(){
+                if concrete == std::any::TypeId::of::<Reviewed>() {
                     self.state = Some(s.approve_state().downcast::<Approved>().unwrap())
                 } else {
                     self.state = Some(s)
@@ -264,21 +289,19 @@ mod state1_oop_dyn_any {
             ""
         }
     }
-
 }
-
 
 // The transformations between the states for this new approach are no longer encapsulated entirely
 // within the Post implementation. However, our gain is that invalid states are now impossible
 // because of the type system and the type checking that happens at compile time
 mod state1_non_oop {
     #[derive(Debug)]
-    pub struct Post{
+    pub struct Post {
         content: String,
     }
     impl Post {
         #[allow(clippy::new_ret_no_self)]
-        pub fn new() -> DraftPost{
+        pub fn new() -> DraftPost {
             DraftPost
         }
         pub fn get(&self) -> &str {
@@ -286,11 +309,15 @@ mod state1_non_oop {
         }
         pub fn add_content(mut self, val: impl Into<String>) -> AddedPost {
             self.content = val.into();
-            AddedPost { content: self.content }
+            AddedPost {
+                content: self.content,
+            }
         }
         pub fn append_content(mut self, val: &str) -> AddedPost {
             self.content.push_str(val);
-            AddedPost { content: self.content }
+            AddedPost {
+                content: self.content,
+            }
         }
     }
 
@@ -298,17 +325,21 @@ mod state1_non_oop {
     pub struct DraftPost;
     impl DraftPost {
         pub fn add_content(self, val: impl Into<String>) -> AddedPost {
-            AddedPost { content: val.into() }
+            AddedPost {
+                content: val.into(),
+            }
         }
     }
-    
+
     #[derive(Debug)]
     pub struct AddedPost {
         content: String,
     }
     impl AddedPost {
         pub fn review(self) -> ReviewedPost {
-            ReviewedPost { content: self.content }
+            ReviewedPost {
+                content: self.content,
+            }
         }
         pub fn append_content(&mut self, val: &str) {
             self.content.push_str(val);
@@ -324,22 +355,28 @@ mod state1_non_oop {
     }
     impl ReviewedPost {
         pub fn approve(self) -> Post {
-            Post { content: self.content }
+            Post {
+                content: self.content,
+            }
         }
         pub fn add_content(mut self, val: impl Into<String>) -> AddedPost {
             self.content = val.into();
-            AddedPost { content: self.content }
+            AddedPost {
+                content: self.content,
+            }
         }
         pub fn append_content(mut self, val: &str) -> AddedPost {
             self.content.push_str(val);
-            AddedPost { content: self.content }
+            AddedPost {
+                content: self.content,
+            }
         }
     }
 }
 
 pub mod state1_oop_non_oop {
-    pub use super::state1_oop_box_dyn::Post as Post_OOP;
     pub use super::state1_non_oop::Post as Post_Non;
+    pub use super::state1_oop_box_dyn::Post as Post_OOP;
     pub use super::state1_oop_dyn_any::Post as Post_Any;
 
     pub fn thread1g_state_pattern() {
@@ -370,25 +407,32 @@ pub mod state1_oop_non_oop {
         println!("post_non as Draft {:?}", p);
         let mut p = p.add_content("Now type pattern testing to see what we got");
         println!("post_non Added {:?}", p);
-        println!("post_non Added updated {:?}", p.append_content(". This is appended"));
+        println!(
+            "post_non Added updated {:?}",
+            p.append_content(". This is appended")
+        );
         let p = p.review();
         let p = p.append_content(". This is again added after review");
-        println!("post_non back to added {:?}", p );
+        println!("post_non back to added {:?}", p);
         let p = p.review();
-        println!("post_non Review {:?}", p );
+        println!("post_non Review {:?}", p);
         let p = p.approve();
-        println!("post_non approved {:?}", p );
-        println!("post_non approved {:?}", p.get() );
+        println!("post_non approved {:?}", p);
+        println!("post_non approved {:?}", p.get());
         let p = p.append_content(". After approved");
         let p = p.review();
         let p = p.approve();
-        println!("post_non Finised {:?}", p.get() );
-        println!("chain all post_non - {}", Post_Non::new()
-            .add_content("Chain Val")
-            .review()
-            .append_content(". appended")
-            .review()
-            .approve().get());
+        println!("post_non Finised {:?}", p.get());
+        println!(
+            "chain all post_non - {}",
+            Post_Non::new()
+                .add_content("Chain Val")
+                .review()
+                .append_content(". appended")
+                .review()
+                .approve()
+                .get()
+        );
     }
 
     pub fn thread1g_any_pattern() {
@@ -413,5 +457,3 @@ pub mod state1_oop_non_oop {
         println!("post_any approved to approve after review.. {:?}", p.get());
     }
 }
-
-
