@@ -1,3 +1,4 @@
+//
 // This is anohter addition of doc comments on top of what is 
 // already mentioned before. //! is for lib_th1a again. And its
 // the root of this crate. /// Will need to be appended only to
@@ -208,12 +209,17 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 
 
 //     th1::th1a::thread1a_scope();
-
-/*
-pub fn thread1a_scope() {
-    let v = (1..1000).collect::<Vec<u32>>();
+// todomanish. this somewhat works. but I need to add a recursion limit in this
+// somehow
+// #![recursion_limit = "256"]
+pub fn thread1a_scope_vec<T>(rng: std::ops::Range<T>, printable: bool) -> Vec<T>
+where T: Sized + std::fmt::Display + Send,
+      std::ops::Range<T>: std::iter::Iterator
+{
     #[allow(warnings)]
     let mut v2 = ('a'..'z').collect::<Vec<char>>();
+    // let v = rng.collect::<Vec<T>>();
+    let mut v = rng.collect::<Vec<T>>();
     // scope doesnt need to have reference of 'static lifetime.
     // But what is important to know is that we cant have more
     // than 1 mutable referece instance in the scope, but serveral shared references.
@@ -221,26 +227,42 @@ pub fn thread1a_scope() {
     // by join at the end
     thread::scope(|s| {
         s.spawn(|| {
-            for x in &v {
-                print!("{}.", x);
+            if printable {
+                for x in &v {
+                    print!("{}.", x);
+                }
+                println!();
             }
-            println!();
         }); // these threads are run concurrently
         s.spawn(|| {
-            for x in &v {
-                print!("{}-", x);
+            if printable {
+                for x in &v {
+                    print!("{}-", x);
+                }
+                println!();
             }
-            println!();
         });
+        // we will get the issue here, v cannot be borrowed as mutable, as it was already borrowed
+        // as immutable. This is when we have spawned threads in scope, that have already captured
+        // the value as shared reference, but then we are using this thread and the closure infers
+        // this as mutable reference when we push a value to it. For this reason, rust doesnt allow
+        // this. In this example, it simply mention 3, but its for types T depending on the function
+        // signature.
         // s.spawn(|| {
         //     v.push(3);
-        // }) // this is not possible
+        // }); // this is not possible
+
+        // This this situation, rust borrows a mutable refernce for v2, but its only used in the
+        // scope just 1se, which doesnt cause conflicts as no other new threads have been asking 
+        // for shared/mutable refernce of v2.
         s.spawn(|| {
             v2.push('z'); // automatic borrow ( as mut ) occures here.
         });
+
+        // creating this below, would then end up causing conflicts.
         // s.spawn(|| {
         //     v2.push('z'); // automatic borrow ( as mut ) occures here.
         // }); // cannot be possible as we already called 1st mut ref of v2
     }); // all the threads are joined here.
+    v
 }
-*/
