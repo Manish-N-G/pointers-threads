@@ -149,7 +149,7 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 /// use pointers_threads::lib_th1a::*;
 /// use std::thread;
 ///
-/// assert_eq!(thread1a_stat(), "this is stat thread");
+/// assert_eq!(thread1a_stat(), "this is stat thread!");
 /// ```
 pub fn thread1a_stat() -> &'static str{
     let stat = "this is stat thread!"; // static lifetime
@@ -208,40 +208,124 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 }
 
 
-//     th1::th1a::thread1a_scope();
-// todomanish. this somewhat works. but I need to add a recursion limit in this
-// somehow
+/// We take 2 Iterator of a Generic type, and creates a shared reference thread
+/// with one, and a mutable reference with another. It returns a vec of the
+/// mutated iterator via a Vec.
+///
+/// This uses generics and a understand how threads process these types
+/// of values when they are generic. This function doesnt do mut but
+/// gives us an undstanding how to combine Generics with Iterators
+/// and create threads
+/// ```
+/// use pointers_threads::lib_th1a::*;
+/// use std::thread;
+///
+/// assert_eq!(
+///     thread1a_scope_vec((1..10), ('a'..'z'), 'z', false),
+///     ('a'..='z').collect::<Vec<char>>()
+/// );
+/// ```
+/// There also consists of smaller sub threads in this function just to
+/// get a feel for how the thread works. In order to understand it
+/// better we need to implement the ptinr type.
+/// ```
+/// use pointers_threads::lib_th1a::*;
+/// use std::thread;
+///
+/// // We can print the output when we run it as true.
+/// // And these threads show how we can intermingle values.
+/// // An example is already mentioned in the function. However,
+/// // for duplicate unordered list, we can increase the value
+/// // of the range to get a better outcome.
+/// // note: this is handles by sleep internally to achived the
+/// // ordering patter.
+/// assert_eq!(
+///     thread1a_scope_vec((1..1000), ('a'..'z'), 'z', true),
+///     ('a'..='z').collect::<Vec<char>>()
+/// );
+/// ```
+// With range, I was asked to sort out Recursion limits if we didnt use 
+// Range: Iterator<item = type> but I didnt want to break my head, but instead,
+// when I tried it, it didnt give me recursion problems.
 // #![recursion_limit = "256"]
-pub fn thread1a_scope_vec<T>(rng: std::ops::Range<T>, printable: bool) -> Vec<T>
-where T: Sized + std::fmt::Display + Send,
-      std::ops::Range<T>: std::iter::Iterator
+// I still prefer to use Iterator directly to avoid any hassle.
+// pub fn thread1a_scope_vec<I1, I2, U1, U2>(iter1: std::ops::Range<U1>, iter2: std::ops::Range<U2>, val2: U2,  printable: bool)
+//     -> Vec<U2>
+// where std::ops::Range<U1>: Iterator<Item = U1> + Send + Sync,
+//       std::ops::Range<U2>: Iterator<Item = U2> + Send + Sync,
+//       Vec<U1>: std::fmt::Debug,
+//       Vec<U2>: std::fmt::Debug,
+//       U1: std::fmt::Debug + std::fmt::Display + Send + Sync,
+//       U2: std::fmt::Debug + std::fmt::Display + Send + Sync,
+pub fn thread1a_scope_vec<I1, I2>(iter1: I1, iter2: I2, val2: I2::Item,  printable: bool)
+    -> Vec<I2::Item>
+where I1::Item: std::fmt::Display + Send + Sync, // sized is default
+      I2::Item: std::fmt::Display + Send + Sync,
+      Vec<I2::Item>: std::fmt::Debug,
+      I1: std::iter::Iterator,
+      I2: std::iter::Iterator,
 {
+    let v = iter1.collect::<Vec<I1::Item>>();
+    // let v = iter1.collect::<Vec<U1>>();
     #[allow(warnings)]
-    let mut v2 = ('a'..'z').collect::<Vec<char>>();
+    let mut v2 = iter2.collect::<Vec<I2::Item>>();
+    // let mut v2 = iter2.collect::<Vec<U2>>();
     // let v = rng.collect::<Vec<T>>();
-    let mut v = rng.collect::<Vec<T>>();
     // scope doesnt need to have reference of 'static lifetime.
     // But what is important to know is that we cant have more
     // than 1 mutable referece instance in the scope, but serveral shared references.
     // lifetimes can be smaller than static as scope finished the tread
     // by join at the end
+    let x: Vec<_> = (1..1000).collect();
+    let y = std::sync::Arc::new( std::sync::Mutex::new(x.iter()));
+    let z = y.clone();
     thread::scope(|s| {
-        s.spawn(|| {
+        let s1 = s.spawn(|| {
             if printable {
                 for x in &v {
                     print!("{}.", x);
+                    thread::sleep(std::time::Duration::from_nanos(10));
                 }
                 println!();
             }
         }); // these threads are run concurrently
-        s.spawn(|| {
+        let s2 = s.spawn(|| {
             if printable {
                 for x in &v {
                     print!("{}-", x);
+                    thread::sleep(std::time::Duration::from_nanos(10));
                 }
                 println!();
             }
         });
+        // At this point, these both threads are running. Its just that when we call
+        // join, we make sure that we dont proceed to the next command till join completes.
+        // Here we make sure that s1 and s2 are complete before moving to the other thread.
+        // However, s1 and s2 will be running at this position regardless if we called s1 join
+        // over s2 join.
+        // Note; adding a small thread sleep duration time can show better intermingling
+        s1.join().unwrap();
+        s2.join().unwrap();
+        let s1 = s.spawn(|| {
+            if printable {
+                while let Some(val) = y.lock().unwrap().next() {
+                    print!("{}**", val);
+                    thread::sleep(std::time::Duration::from_nanos(10));
+                }
+                println!();
+            }
+        });
+        let s2 = s.spawn(|| {
+            if printable {
+                while let Some(val) = z.lock().unwrap().next() {
+                    print!("{}~~", val);
+                    thread::sleep(std::time::Duration::from_nanos(10));
+                }
+                println!();
+            }
+        });
+        s1.join().unwrap();
+        s2.join().unwrap();
         // we will get the issue here, v cannot be borrowed as mutable, as it was already borrowed
         // as immutable. This is when we have spawned threads in scope, that have already captured
         // the value as shared reference, but then we are using this thread and the closure infers
@@ -256,7 +340,10 @@ where T: Sized + std::fmt::Display + Send,
         // scope just 1se, which doesnt cause conflicts as no other new threads have been asking 
         // for shared/mutable refernce of v2.
         s.spawn(|| {
-            v2.push('z'); // automatic borrow ( as mut ) occures here.
+            v2.push(val2); // automatic borrow ( as mut ) occures here.
+            if printable {
+                println!("v2 is: {:?}", v2);
+            }
         });
 
         // creating this below, would then end up causing conflicts.
@@ -264,5 +351,5 @@ where T: Sized + std::fmt::Display + Send,
         //     v2.push('z'); // automatic borrow ( as mut ) occures here.
         // }); // cannot be possible as we already called 1st mut ref of v2
     }); // all the threads are joined here.
-    v
+    v2
 }

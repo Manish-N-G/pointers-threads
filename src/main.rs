@@ -94,7 +94,13 @@ fn mod1_a() {
 
     println!("Stat funcion val: {}", thread1a_stat() );
 
-    th1::th1a::thread1a_scope();
+    // This also works
+    // println!("val for th scope vec is {:?}", 
+    //     thread1a_scope_vec::<std::ops::Range<i32>, std::ops::Range<char>, i32, char>(
+    //         (1..1000), ('a'..'j'), 'j', true
+    //     )
+    // );
+    println!("val for th scope vec is {:?}", thread1a_scope_vec((1..1000), ('a'..'j'), 'j', true));
 }
 
 fn mod1_b() {
