@@ -1,4 +1,3 @@
-//
 // This is anohter addition of doc comments on top of what is 
 // already mentioned before. //! is for lib_th1a again. And its
 // the root of this crate. /// Will need to be appended only to
