@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused)]
 use std::ops::Deref;
-
 use paste::paste;
 
 #[allow(unused_macros)]
@@ -26,12 +25,13 @@ macro_rules! my_func {
     }};
 }
 
-mod th1; // this means that files that point to main.rs dont expose the 
+// this means that files that point to main.rs dont expose the 
 // files that point to th1. Its only just for this file unless
 // explicitly stated somewhere else.
+mod th1;
 mod th2;
-
 mod th3;
+mod threads1;
 
 // I block on mod3_a directly to avoid changin main via tokio::main
 // #[tokio::main]
