@@ -100,7 +100,6 @@ pub fn thread1a_move_issue() -> i32 {
 
 }
 
-
 /// Using thread builder with name to create a thread and send back a Vec.
 ///
 /// When we use this thread builder, we created this thread builder type,
@@ -302,10 +301,12 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
         // Here we make sure that s1 and s2 are complete before moving to the other thread.
         // However, s1 and s2 will be running at this position regardless if we called s1 join
         // over s2 join.
-        // Note; adding a small thread sleep duration time can show better intermingling
+        // Not to forget, s1 and s2 both have its own reference so the values printed are
+        // repeated, expect they threads print them simultaneously.
+        // Note: adding a small thread sleep duration time can show better intermingling
         s1.join().unwrap();
         s2.join().unwrap();
-        let s1 = s.spawn(|| {
+        let t1 = s.spawn(|| {
             if printable {
                 while let Some(val) = y.lock().unwrap().next() {
                     print!("{}**", val);
@@ -314,7 +315,7 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
                 println!();
             }
         });
-        let s2 = s.spawn(|| {
+        let t2 = s.spawn(|| {
             if printable {
                 while let Some(val) = z.lock().unwrap().next() {
                     print!("{}~~", val);
@@ -323,8 +324,10 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
                 println!();
             }
         });
-        s1.join().unwrap();
-        s2.join().unwrap();
+        // These two join will make sure that we have the same shared values and the print
+        // will give us unique values but time to time handled by t1 or t2.
+        t1.join().unwrap();
+        t2.join().unwrap();
         // we will get the issue here, v cannot be borrowed as mutable, as it was already borrowed
         // as immutable. This is when we have spawned threads in scope, that have already captured
         // the value as shared reference, but then we are using this thread and the closure infers
