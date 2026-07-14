@@ -74,9 +74,10 @@ async fn two() -> u8 {
 }
 
 fn mod1_a() {
-    use pointers_threads::lib_th1a::*;
+    // I dont need to do anymore: use pointers_threads::lib_th1a::*;
+    // Cause I have threads1 mod exposing lib_th1a functions
+    use threads1::*;
 
-    th1::thread1st();
     let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
     println!("a1 is :{:?}", a1);
 
@@ -101,6 +102,8 @@ fn mod1_a() {
     //     )
     // );
     println!("val for th scope vec is {:?}", thread1a_scope_vec((1..1000), ('a'..'j'), 'j', true));
+
+    println!("we got this thread id: {:?}", thread1st_get_current());
 }
 
 fn mod1_b() {
