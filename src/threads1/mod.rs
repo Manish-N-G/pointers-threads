@@ -1,5 +1,7 @@
 use std::thread;
 pub mod lib_th1a;
+pub mod lib_th1b;
+
 pub use lib_th1a::*;
 
 /// Simple function that creates threads
