@@ -1,5 +1,4 @@
 use std::thread;
-pub mod th1a;
 pub mod th1b;
 pub mod th1c;
 pub mod th1d;
