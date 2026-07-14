@@ -21,7 +21,7 @@ pub mod lib_th1a;
 /// assert_eq!("th2", th2.join().unwrap());
 /// ```
 /// This will join and assert the values
-pub fn thread1st() {
+pub fn thread1st_get_current() -> thread::ThreadId {
     let th1 = thread::spawn(th1_print_id);
     let th2 = thread::spawn(th1_print_id);
 
@@ -31,6 +31,7 @@ pub fn thread1st() {
     th1.join().unwrap();
     th2.join().unwrap();
     println!("Main thread id is {:?}", thread::current().id());
+    th1_print_id()
 }
 
 fn th1_print_id() -> thread::ThreadId {
