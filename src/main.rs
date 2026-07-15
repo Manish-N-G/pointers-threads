@@ -171,6 +171,11 @@ fn mod3_a() {
     rt.block_on(th3::th3a::thread3a_multi_async())
 }
 
+
 fn mod3_b() {
     th3::th3b::thread3b_async_runner();
+}
+
+fn mod3_c() {
+    //todomanish: Need to just implement for async
 }
