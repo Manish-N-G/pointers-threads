@@ -7,8 +7,15 @@ pub fn some_async() {
 
 }
 
+
+
+
+
+// ==================================
+// Created a TreadTimer type and implemented a future for it.
 pub struct ThreadTimer {
-    duration: std::time::Duration,
+    // initially was duration, but we need system time here
+    duration: std::time::SystemTime,
     // I am using tokio JoinHandle thinking that this will be using
     // Tokio and std Thread Handle
     thread_handle: Option<std::sync::Arc<std::sync::Mutex<tokio::task::JoinHandle<()>>>>,
@@ -21,7 +28,8 @@ pub struct ThreadTimer {
 impl ThreadTimer {
     pub fn new(duration: std::time::Duration) -> Self {
         Self {
-            duration,
+            // we need system time to see if its elapsed or not
+            duration: std::time::SystemTime::now() + duration,
             thread_handle: None,
             // I wonder why clone works here. I would imagine we need to use to_owned instead
             // which also works. I just see clone takes &T and produces T.
@@ -31,3 +39,18 @@ impl ThreadTimer {
     }
 }
 
+impl Future for ThreadTimer {
+    type Output = ();
+
+    fn poll(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>
+    ) -> std::task::Poll<Self::Output>
+    {
+        if self.duration <= std::time::SystemTime::now() {
+            std::task::Poll::Ready(())
+        } else {
+            std::task::Poll::Pending
+        }
+    }
+}
