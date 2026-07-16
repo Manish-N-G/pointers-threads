@@ -45,7 +45,7 @@ fn main() {
     //
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
-    mod1_a();
+    mod3_c();
     //
     //
 
@@ -178,4 +178,5 @@ fn mod3_b() {
 
 fn mod3_c() {
     //todomanish: Need to just implement for async
+    th3::th3c::some_async();
 }
