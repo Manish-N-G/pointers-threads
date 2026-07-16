@@ -126,24 +126,25 @@ impl Future for ThreadTimer {
         // its best to clone this part too. a concrete type is needed here
         *timer.waker.lock().unwrap() = cx.waker().clone();
 
-    // duration: std::time::SystemTime,
-    // thread_handle: Option<std::sync::Arc<std::sync::Mutex<tokio::task::JoinHandle<()>>>>,
-    // waker: std::sync::Arc<std::sync::Mutex<std::task::Waker>>,
-    // is_completed: std::sync::Arc<std::sync::Mutex<bool>>,
-
         if timer.thread_handle.is_none() {
             let duration = timer.duration;
             let waker = timer.waker.clone();
             let is_completed = timer.is_completed.clone();
 
-            timer.thread_handle = Some( std::thread::spawn(move || {
+            timer.thread_handle = Some( std::thread::spawn( move || {
                 // note, we dont need to have a tokio version here? 
                 // still need to verify if there is even any
                 std::thread::sleep( duration );
+                *is_completed.lock().unwrap() = true;
+                // we use wake by reference cause its not comsuming
                 waker.lock().unwrap().wake_by_ref();
             }));
         }
 
-        todo!()
+        if *timer.is_completed.lock().unwrap() {
+            std::task::Poll::Ready(())
+        } else {
+            std::task::Poll::Pending
+        }
     }
 }
