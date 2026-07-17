@@ -5,7 +5,10 @@ pub fn some_async() {
     // lets create our async future type here.
     // 1st we start by creating our future
     let fut = ThreadTimer::new(std::time::Duration::from_secs(3));
-    println!("some_async res is {:?}",  our_executor(fut) );
+    println!("res fut is {:?}",  our_executor(fut) );
+
+    let fut2 = TokioTimer::new(std::time::Duration::from_secs(3));
+    println!("res fut2 is {:?}",  our_executor(fut2) );
 
 }
 
@@ -194,107 +197,36 @@ impl Future for TokioTimer {
         let timer = self.get_mut();
         *timer.waker.lock().unwrap() = cx.waker().clone();
 
+        println!("hello1");
         if timer.thread_handle.is_none() {
             let duration = timer.duration;
             let waker = timer.waker.clone();
             let is_completed = timer.is_completed.clone();
 
+            println!("hello2");
             timer.thread_handle = Some( tokio::task::spawn( async move {
                 // note: Here we use await. If this is not called, the async fn sleep
                 // will not execute. awaiting the thread actually starts the sleep
                 // timer. Also await is not thread blocking to the runtime can schedule
                 // other tasks while this one is waiting.
-                tokio::time::sleep(duration).await;
+                // tokio::time::sleep(duration).await;
+                println!("hello3");
+                // facing issues with tokio sleep
+                tokio::time::sleep(duration);
                 // there is also tokio::sync::Mutex, but for our example, we currently
                 // dont need it. it takes more resources as well, and the reason you
                 // would want to use it is if we have locking in other tasks for
                 // the .await points.
                 *is_completed.lock().unwrap() = true;
-                waker.lock().unwrap().wake_by_ref();
+                // waker.lock().unwrap().wake_by_ref();
             }));
         }
 
+        println!("hello4");
         if *timer.is_completed.lock().unwrap() {
             std::task::Poll::Ready(())
         } else {
             std::task::Poll::Pending
         }
     }
-}
-
-
-struct TaskWaker(std::task::Waker);
-
-impl TaskWaker {
-    fn from_context(cx: &std::task::Context<'_>) -> Self {
-        Self(cx.waker().clone())
-    }
-
-    fn wake(self) {
-        self.0.wake();
-    }
-}
-
-
-
-// struct ThreadWaker(std::thread::Thread);
-// // is generally struct Thread { inner: Pin<Arc<Inner, _>> }
-//
-// impl ThreadWaker {
-//     // we will be able to attach the waker for the current
-//     // thread when we pass the Thread here
-//     fn get_current_thread_waker() -> Self {
-//         Self(std::thread::current())
-//     }
-// }
-//
-// impl std::task::Wake for ThreadWaker {
-//     fn wake(self: std::sync::Arc<Self>) {
-//         self.0.unpark();
-//     }
-// }
-
-
-
-fn our_tokio_executor<F: Future>(future: F) -> F::Output {
-    let mut fut_pin = std::pin::pin!(future);
-    // Now we know that we should be able to call the poll method here
-
-    // Next we an pass either our own waker or waker noop, which is a
-    // no operation waker.
-    // let waker = std::task::Waker::noop();
-    // Here we prefer to make our own waker using thread park
-    // and unpark to better utilize the cpu
-    let waker: std::task::Waker = std::task::Waker::from(
-        std::sync::Arc::new(ThreadWaker::get_current_thread_waker())
-    );
-    // could also do let waker = Arc::new(ThreadWaker::get_current_thread_waker()).into()
-    let mut counter = 1;
-    let val = loop {
-        match fut_pin
-            .as_mut()
-            // .poll(&mut std::task::Context::from_waker(std::task::Waker::noop()))
-            .poll(&mut std::task::Context::from_waker(&waker))
-        {
-            std::task::Poll::Ready(val) => break val,
-            _  => {
-                counter += 1;
-                // we should not wake here, cause it doesnt really do anything.
-                // we need to be parking thread thread and allow the waker that
-                // is passed to the thread handle for the future, to wake the 
-                // thread when its ready.
-                // waker.clone().wake(); // works, but better to do the followin
-                // waker.wake_by_ref();
-
-                // updating this to thread park allows us to get the desired value
-                // and doesnt unnecessary consume cpu time.
-                // There can also be sporious waking up of threads which is possible.
-                // and we need to keep a mind of this.
-                std::thread::park();
-            } 
-        }
-    };
-
-    println!("broke loop for our_executor: counter is {:#}", counter);
-    val
 }
