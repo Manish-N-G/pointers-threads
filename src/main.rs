@@ -106,6 +106,9 @@ fn mod1_a() {
     println!("we got this thread id: {:?}", thread1st_get_current());
 }
 
+
+
+
 fn mod1_b() {
     th1::th1b::thread1b_box();
     th1::th1b::thread1b_forget();

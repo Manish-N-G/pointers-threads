@@ -7,8 +7,8 @@ pub fn some_async() {
     let fut = ThreadTimer::new(std::time::Duration::from_secs(3));
     println!("res fut is {:?}",  our_executor(fut) );
 
-    let fut2 = TokioTimer::new(std::time::Duration::from_secs(3));
-    println!("res fut2 is {:?}",  our_executor(fut2) );
+    // let fut2 = TokioTimer::new(std::time::Duration::from_secs(3));
+    // println!("res fut2 is {:?}",  our_executor(fut2) );
 
 }
 
