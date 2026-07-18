@@ -6,10 +6,6 @@ pub fn some_async() {
     // 1st we start by creating our future
     let fut = ThreadTimer::new(std::time::Duration::from_secs(3));
     println!("res fut is {:?}",  our_executor(fut) );
-
-    // let fut2 = TokioTimer::new(std::time::Duration::from_secs(3));
-    // println!("res fut2 is {:?}",  our_executor(fut2) );
-
 }
 
 
@@ -164,69 +160,3 @@ impl Future for ThreadTimer {
     }
 }
 
-
-// ============================================================
-pub struct TokioTimer {
-    duration: std::time::Duration,
-    thread_handle: Option<tokio::task::JoinHandle<()>>,
-    waker: std::sync::Arc<std::sync::Mutex<std::task::Waker>>,
-    is_completed: std::sync::Arc<std::sync::Mutex<bool>>,
-}
-
-
-impl TokioTimer {
-    pub fn new(duration: std::time::Duration) -> Self {
-        Self {
-            duration,
-            thread_handle: None,
-            waker: std::sync::Arc::new(std::sync::Mutex::new(std::task::Waker::noop().clone())),
-            is_completed: std::sync::Arc::new(std::sync::Mutex::new(false)),
-        }
-    }
-}
-
-
-impl Future for TokioTimer {
-    type Output = ();
-
-    fn poll(
-        self: std::pin::Pin<&mut Self>,
-        cx: &mut std::task::Context<'_>
-    ) -> std::task::Poll<Self::Output>
-    {
-        let timer = self.get_mut();
-        *timer.waker.lock().unwrap() = cx.waker().clone();
-
-        println!("hello1");
-        if timer.thread_handle.is_none() {
-            let duration = timer.duration;
-            let waker = timer.waker.clone();
-            let is_completed = timer.is_completed.clone();
-
-            println!("hello2");
-            timer.thread_handle = Some( tokio::task::spawn( async move {
-                // note: Here we use await. If this is not called, the async fn sleep
-                // will not execute. awaiting the thread actually starts the sleep
-                // timer. Also await is not thread blocking to the runtime can schedule
-                // other tasks while this one is waiting.
-                // tokio::time::sleep(duration).await;
-                println!("hello3");
-                // facing issues with tokio sleep
-                tokio::time::sleep(duration);
-                // there is also tokio::sync::Mutex, but for our example, we currently
-                // dont need it. it takes more resources as well, and the reason you
-                // would want to use it is if we have locking in other tasks for
-                // the .await points.
-                *is_completed.lock().unwrap() = true;
-                // waker.lock().unwrap().wake_by_ref();
-            }));
-        }
-
-        println!("hello4");
-        if *timer.is_completed.lock().unwrap() {
-            std::task::Poll::Ready(())
-        } else {
-            std::task::Poll::Pending
-        }
-    }
-}
