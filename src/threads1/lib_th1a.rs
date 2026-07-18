@@ -3,8 +3,17 @@
 // the root of this crate. /// Will need to be appended only to
 // another module under this or we will have to use it on functions
 // which will show up the description in the doc file.
+// Despite being able to do this, it still would be best to respect
+// the way its handled in rust. We put comments to show how not to
+// do it.
+
+//! This module covers how different type of threads and pointers are used
 //!
-//! These select few functions is mainly used to thread creation
+//! In order to understand threads, we will also have to worry about
+//! pointers and what pointer is best to use. Hence all this is accessable
+//! in thei module.
+//!
+//! These selected few functions is mainly used for thread creation
 //! and errors that could be encountered when creating threads.
 use std::thread;
 

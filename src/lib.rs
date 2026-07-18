@@ -12,16 +12,35 @@
 //! We also cover async that shows how futures and async operate, sometimes with
 //! multithreading/tasks, under the hood.
 
+//! These module covers how different type of threads and pointers are used
+//!
+//! In order to understand threads, we will also have to worry about
+//! pointers and what pointer is best to use. Hence all this is accessable
+//! in these module.
+//!
+//! We will also be looking into Async and how they work and understand how
+//! operates under the hood. In a way, Our goal is to know to we can have
+//! concurrent and Async operations and how to use them.
+//!
+//! We can also log and analyse our functions and this are achivable for some 
+//! other libs that are present in this library.
+//!
 // not pub, dont need to create doc type here
 mod threads1;
 
-// We dont use //! and should not use it here, its its not the 1st line
+/*
+//NOTE: This is not good practice to add doc comment here like this. Its better
+//to create the doc comments at the start of the module/file in order to not attach
+//unnecessary docs that could leak to functions
+
+//NOTE: Even if we e dont use //! ,we should not use it here, as its not the 1st line
 /// This module covers how different type of threads and pointers are used
-//todomanish: Have to see if we if I add more modules in threads1, if the description
-//matches for all or how it works. Todo. and will happen soon
+//
+/// This module covers how different type of threads and pointers are used
 ///
 /// In order to understand threads, we will also have to worry about
 /// pointers and what pointer is best to use. Hence all this is accessable
 /// in thei module.
 ///
+*/
 pub use threads1::*;

@@ -1,3 +1,9 @@
+//! This module covers how different type of threads and pointers are used
+//!
+//! In order to understand threads, we will also have to worry about
+//! pointers and what pointer is best to use. Hence all this is accessable
+//! in this module.
+//
 use std::thread;
 pub mod lib_th1a;
 pub mod lib_th1b;
