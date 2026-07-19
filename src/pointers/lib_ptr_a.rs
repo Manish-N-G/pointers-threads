@@ -6,6 +6,7 @@
 /// testing this
 /// ```
 /// use pointers_threads::lib_ptr_a::*;
+/// use my_crate::assert_panic_message;
 /// let a = [1usize, 2, 3];
 ///
 /// // we have to be careful here when we pass the vec.
@@ -20,8 +21,13 @@
 ///
 /// // Its good to get a good idea how this works be looking
 /// // directly at the code for this function
-/// assert_eq!( unsafe_raw_vector_element_mutability(a), ())
+/// assert_eq!( unsafe {unsafe_raw_vector_element_mutability(a) }, ( 8208, 8209 ));
 /// ```
+/// # Safety
+///
+/// Just a note, this doesn't provide any safety and this function will panic if
+/// the length of the vec is less than 3. Its a good way to demonstrate that that
+/// unsafe functions have to be handled with care
 pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16) {
     // On purpose I used an unsafe get_unchecked element for
     // vector to illustrate how it could be used
