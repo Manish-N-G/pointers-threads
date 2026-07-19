@@ -4,27 +4,71 @@
 //!
 
 /// testing this
-pub fn testing1c() {
-    println!("testing");
-    let a = [1, 2, 3];
-    println!("a is {}", unsafe { a.get_unchecked(2) });
+/// ```
+/// use pointers_threads::lib_ptr_a::*;
+/// let a = [1usize, 2, 3];
+///
+/// // we have to be careful here when we pass the vec.
+/// // this function is inherently made so that this will
+/// // panic if the vec is less then 3 elements longs.
+///
+/// // However this function doesnt focus too much after
+/// // on the value as it just simple manuplates the value
+/// // by creating a new fixed one. We do this simple to show
+/// // how const mut raw pointers can be used to perform 
+/// // additions and casting.
+///
+/// // Its good to get a good idea how this works be looking
+/// // directly at the code for this function
+/// assert_eq!( unsafe_raw_vector_element_mutability(a), ())
+/// ```
+pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16) {
+    // On purpose I used an unsafe get_unchecked element for
+    // vector to illustrate how it could be used
+    // Safety: There is not safe and this should not
+    // be used. It will panic if vec is less than len 3. 
+    // We do this just to show how we can get/manipulate
+    // pointers
+    let mut element: u32 = unsafe { vec.get_unchecked(2) }.to_owned() as u32;
+    println!("a is {}", element);
 
-    // This works
+    element = 2151686160;         //10000000 01000000 00100000 00010000
+    #[allow(unused)]
+    // we convert this to &u16 from u32
+    let const_u16 = &element as *const u32 as *const u16; // 00100000 00010000
+    let mut_u16 = &mut element as *mut u32 as *mut u16;
+    //or
+    let const_u16 = std::ptr::addr_of!(element) as *const u16; // 00100000 00010000 // 8208
+
+    let (a, b) = unsafe { danger_pointer_val_inc(const_u16, mut_u16) };
+
+    // dereferencing raw pointers are unsafe
+    (a, b)
+}
+
+///
+///
+///
+///
+///
+///```
+    // This works also for our method
     // let mut b:u16 = 33;
     // let c = &b as *const u16;
     // let d = &mut b as *mut u16;
 
-    let mut b: u32 = 2151686160; //10000000 01000000 00100000 00010000
-    #[allow(unused)]
-    let c = &b as *const u32 as *const u16; // 00100000 00010000
-    let d = &mut b as *mut u32 as *mut u16;
-    //or
-    let c = std::ptr::addr_of!(b) as *const u16; // 00100000 00010000 // 8208
+    // I could also do
+    // let b:u16 = 33;
+    // let c = &b as *const u16;
+    // let d = c as *mut u16;
 
-    danger_pass(c, d);
-}
+    // I could also do
+    // let b:u32 = 33;
+    // let c = &b as *const u32 as *const 16;
+    // let d = c as *mut u16;
 
-fn danger_pass(a: *const u16, b: *mut u16) {
+///```
+unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 ){
     // as we are working with raw pointers, we can use unsafe
     unsafe {
         let before = *a; // val copied. Not a reference pointer
@@ -36,6 +80,7 @@ fn danger_pass(a: *const u16, b: *mut u16) {
                 before, after
             );
         }
+        (before, after)
     }
 }
 
