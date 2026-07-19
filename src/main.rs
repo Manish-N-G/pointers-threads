@@ -76,7 +76,10 @@ async fn two() -> u8 {
 fn mod1_a() {
     // I dont need to do anymore: use pointers_threads::lib_th1a::*;
     // Cause I have threads1 mod exposing lib_th1a functions
-    use threads1::*;
+    // But I still prefer to do it so that I can test based on the module.
+    // use threads1::*;
+    use pointers_threads::lib_th1a::*;
+    use threads1::thread1st_get_current;
 
     let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
     println!("a1 is :{:?}", a1);
@@ -105,9 +108,6 @@ fn mod1_a() {
 
     println!("we got this thread id: {:?}", thread1st_get_current());
 }
-
-
-
 
 fn mod1_b() {
     th1::th1b::thread1b_box();
