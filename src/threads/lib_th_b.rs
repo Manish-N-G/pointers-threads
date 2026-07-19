@@ -126,7 +126,7 @@ impl MyNums for isize{}
 /// assert_eq!(thread1b_box_leak((1..=10), false), 5usize);
 /// // 5 is the avg for 1 to 10 for rounder values
 /// ```
-pub fn thread1b_box_leak<I, T>(val: I, printable: bool) -> usize
+pub fn thread1b_box_leak_avg<I, T>(val: I) -> usize
 where I: Iterator<Item = T>,
       T: MyNums,
 {
@@ -147,23 +147,17 @@ where I: Iterator<Item = T>,
     let th = thread::spawn(|| {
         // even if we pub this in the lib, which is not required,
         // we can debug the value here in doc tests
-        for x in numbers.iter() {
-            println!("val is {}", x)
-        }
+        // for x in numbers.iter() {
+        //     println!("val is {}", x)
+        // }
+        
         let len = numbers.len();
         // remember that sum here is wrapping type, but will
         // panic in debug mode if beyond the T limit.
         let sum = numbers.iter().sum::<T>();
         sum.as_usize() / len // this thread gives us the average
     });
-    if printable {
-        println!("numbers is {:?}", numbers);
-    }
-    let avg = th.join().unwrap();
-    if printable {
-        println!("avg is {}", avg);
-    }
-    avg
+    th.join().unwrap()
 }
 
 /// This functions show that we can also leak memory if we

@@ -1,19 +1,9 @@
+//! Testing ptr_a
 //!
 //!
 //!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
-//!
+
+/// testing this
 pub fn testing1c() {
     println!("testing");
     let a = [1, 2, 3];
@@ -48,8 +38,6 @@ fn danger_pass(a: *const u16, b: *mut u16) {
         }
     }
 }
-
-
 
 
 fn main_test() {

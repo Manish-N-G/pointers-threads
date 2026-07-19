@@ -25,6 +25,7 @@
 //! We can also log and analyse our functions and this are achivable for some 
 //! other libs that are present in this library.
 //!
+
 // not pub, dont need to create doc type here
 mod threads;
 mod pointers;
@@ -34,9 +35,8 @@ mod pointers;
 //to create the doc comments at the start of the module/file in order to not attach
 //unnecessary docs that could leak to functions
 
-//NOTE: Even if we e dont use //! ,we should not use it here, as its not the 1st line
-/// This module covers how different type of threads and pointers are used
-//
+// NOTE: Even if we e dont use //! ,we should not use it here, as its not the 1st line
+
 /// This module covers how different type of threads and pointers are used
 ///
 /// In order to understand threads, we will also have to worry about
@@ -45,5 +45,4 @@ mod pointers;
 ///
 */
 pub use threads::*;
-
 pub use pointers::*;
