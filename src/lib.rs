@@ -26,7 +26,8 @@
 //! other libs that are present in this library.
 //!
 // not pub, dont need to create doc type here
-mod threads1;
+mod threads;
+mod pointers;
 
 /*
 //NOTE: This is not good practice to add doc comment here like this. Its better
@@ -43,4 +44,6 @@ mod threads1;
 /// in thei module.
 ///
 */
-pub use threads1::*;
+pub use threads::*;
+
+pub use pointers::*;

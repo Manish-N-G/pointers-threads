@@ -1,11 +1,11 @@
 use std::thread;
-pub mod lib_th1a;
-pub mod lib_th1b;
-pub mod lib_th1c;
+pub mod lib_th_a;
+pub mod lib_th_b;
+pub mod lib_th_c;
 
-pub use lib_th1a::*;
-pub use lib_th1b::*;
-pub use lib_th1c::*;
+pub use lib_th_a::*;
+pub use lib_th_b::*;
+pub use lib_th_c::*;
 
 /// Simple function that creates threads
 ///

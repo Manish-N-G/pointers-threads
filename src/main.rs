@@ -31,7 +31,7 @@ macro_rules! my_func {
 mod th1;
 mod th2;
 mod th3;
-mod threads1;
+mod threads;
 
 // I block on mod3_a directly to avoid changin main via tokio::main
 // #[tokio::main]
@@ -78,8 +78,8 @@ fn mod1_a() {
     // Cause I have threads1 mod exposing lib_th1a functions
     // But I still prefer to do it so that I can test based on the module.
     // use threads1::*;
-    use pointers_threads::lib_th1a::*;
-    use threads1::thread1st_get_current;
+    use pointers_threads::lib_th_a::*;
+    use threads::thread1st_get_current;
 
     let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
     println!("a1 is :{:?}", a1);
