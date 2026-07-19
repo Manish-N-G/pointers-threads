@@ -6,8 +6,8 @@
 /// testing this
 /// ```
 /// use pointers_threads::lib_ptr_a::*;
-/// use my_crate::assert_panic_message;
-/// let a = [1usize, 2, 3];
+/// // use my_crate::assert_panic_message;
+/// let a = vec![1usize, 2, 3];
 ///
 /// // we have to be careful here when we pass the vec.
 /// // this function is inherently made so that this will

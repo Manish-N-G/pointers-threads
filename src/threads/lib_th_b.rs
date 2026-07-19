@@ -115,7 +115,7 @@ impl MyNums for isize{}
 /// The way we can implement this is simple
 /// ```
 /// use std::thread;
-/// use pointers_threads::lib_th1b::*;
+/// use pointers_threads::lib_th_b::*;
 ///
 /// // produces a boxed slice via 
 /// // let v = into_boxed_slice for our (1..=10)
@@ -123,7 +123,7 @@ impl MyNums for isize{}
 /// // let addr: & static mut i32 = Box::leak(v);
 /// // This is then passed in the thread and we get the
 /// // value we wanted via sum of iter to produce our avg.
-/// assert_eq!(thread1b_box_leak((1..=10), false), 5usize);
+/// assert_eq!(thread1b_box_leak_avg(1..=10), 5usize);
 /// // 5 is the avg for 1 to 10 for rounder values
 /// ```
 pub fn thread1b_box_leak_avg<I, T>(val: I) -> usize
