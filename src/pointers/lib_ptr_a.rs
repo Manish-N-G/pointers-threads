@@ -4,6 +4,7 @@
 //!
 
 /// testing this
+/// rust,editable ??
 /// ```
 /// use pointers_threads::lib_ptr_a::*;
 /// // use my_crate::assert_panic_message;
@@ -52,29 +53,50 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
     (a, b)
 }
 
+/// Takes a const ref and mut ref of some values. And increment the
+/// deref of the 2nd arguement that is passed.
 ///
+/// This was intended to pass the addr of the same value to show
+/// how unsafe raw pointers to the same type can be done in a function
+/// signature, as well of passing values to it.
 ///
+/// rust,editable ??
+/// ```
+/// use pointers_threads::lib_ptr_a::*; 
 ///
+/// // This works also for our method
+/// let mut b:u16 = 33;
+/// let c = &b as *const u16;
+/// let d = &mut b as *mut u16;
+/// // Caution: passing the following will panic cause b will
+/// // become b = 34. then be comparing b and b +1 will produce an
+/// // error and this needs to be considered
+/// // assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (b, b+1));
+/// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (b-1, b));
+/// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (34, 35));
 ///
+/// // I could also do
+/// let b:u16 = 33;
+/// let c = &b as *const u16;
+/// let d = c as *mut u16;
+/// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (33, 34));
 ///
-///```
-    // This works also for our method
-    // let mut b:u16 = 33;
-    // let c = &b as *const u16;
-    // let d = &mut b as *mut u16;
-
-    // I could also do
-    // let b:u16 = 33;
-    // let c = &b as *const u16;
-    // let d = c as *mut u16;
-
-    // I could also do
-    // let b:u32 = 33;
-    // let c = &b as *const u32 as *const 16;
-    // let d = c as *mut u16;
-
-///```
-unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 ){
+/// // or even this
+/// let b:u32 = 33;
+/// let c = &b as *const u32 as *const u16;
+/// let d = c as *mut u16;
+/// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (33, 34));
+///
+/// ```
+/// # Safety
+///
+/// This function is marked as unsafe because we are trying to receive 
+/// raw pointers, as arguements. This is important to know and be will
+/// not be able to pass if without the unsafe tag. However, knowing this,
+/// this doesnt mean that this function is unsafe. what it does it takes 
+/// a const ref and mut ref of the same value and gives us the deref along
+/// with increment of the deref.
+pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 ){
     // as we are working with raw pointers, we can use unsafe
     unsafe {
         let before = *a; // val copied. Not a reference pointer
@@ -89,7 +111,6 @@ unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 ){
         (before, after)
     }
 }
-
 
 fn main_test() {
     let mut u = MyS::new(4u8);
