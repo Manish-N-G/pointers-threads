@@ -115,7 +115,7 @@ impl MyNums for isize{}
 /// The way we can implement this is simple
 /// ```
 /// use std::thread;
-/// use pointers_threads_lib::lib_th_b::*;
+/// use pointers_threads::lib_th_b::*;
 ///
 /// // produces a boxed slice via 
 /// // let v = into_boxed_slice for our (1..=10)

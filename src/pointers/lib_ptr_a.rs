@@ -6,8 +6,8 @@
 /// testing this
 /// rust,editable ??
 /// ```
-/// //use pointers_threads_lib::lib_ptr_a::*;
-/// use pointers_threads_lib::unsafe_raw_vector_element_mutability;
+/// //use pointers_threads::lib_ptr_a::*;
+/// use pointers_threads::unsafe_raw_vector_element_mutability;
 /// // use my_crate::assert_panic_message;
 /// let a = vec![1usize, 2, 3];
 ///
@@ -62,7 +62,7 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
 /// signature, as well of passing values to it.
 ///
 /// ```
-/// use pointers_threads_lib::lib_ptr_a::*; 
+/// use pointers_threads::lib_ptr_a::*; 
 ///
 /// // This works also for our method
 /// let mut b:u16 = 33;

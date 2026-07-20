@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [lib]
-name = "pointers_threads_lib"
+name = "pointers_threads"
 # Note, lib names cannot contain - and need to be _ instead
 path = "src/lib.rs"
 
