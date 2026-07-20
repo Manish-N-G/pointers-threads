@@ -6,7 +6,8 @@
 /// testing this
 /// rust,editable ??
 /// ```
-/// use pointers_threads::lib_ptr_a::*;
+/// //use pointers_threads_lib::lib_ptr_a::*;
+/// use pointers_threads_lib::unsafe_raw_vector_element_mutability;
 /// // use my_crate::assert_panic_message;
 /// let a = vec![1usize, 2, 3];
 ///
@@ -60,9 +61,8 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
 /// how unsafe raw pointers to the same type can be done in a function
 /// signature, as well of passing values to it.
 ///
-/// rust,editable ??
 /// ```
-/// use pointers_threads::lib_ptr_a::*; 
+/// use pointers_threads_lib::lib_ptr_a::*; 
 ///
 /// // This works also for our method
 /// let mut b:u16 = 33;
@@ -194,16 +194,18 @@ fn main_test() {
 }
 
 
-// copy clone doesnt matter here really
+/// Make this struct visible only to this crate
+/// copy clone doesnt matter here really
+///
 #[derive(Debug)]
-struct MyS {
+pub(crate) struct MyS {
     val: u8,
     ptr: Option<*const u8>,
 }
 
 // copy clone doesnt matter here really
 #[derive(Debug, Copy, Clone)]
-struct MyS2 {
+pub(crate) struct MyS2 {
     val: u8,
     ptr: Option<*const u8>,
     // when we use PhantomPinner: the MyS struct goes from

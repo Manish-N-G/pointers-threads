@@ -1,3 +1,4 @@
+#![doc(html_playground_url = "https://play.rust-lang.org/")]
 //! This lib has a collection of pointers and thread type functions availalbe
 //!
 //! This covers a lot of types. One is that we try to implement our own type
@@ -27,8 +28,8 @@
 //!
 
 // not pub, dont need to create doc type here
-mod threads;
-mod pointers;
+pub mod threads;
+pub mod pointers;
 
 /*
 //NOTE: This is not good practice to add doc comment here like this. Its better

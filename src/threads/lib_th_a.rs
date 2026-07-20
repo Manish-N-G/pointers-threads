@@ -25,7 +25,7 @@ use std::thread;
 /// This is a simple test thread that takes a vector, and adds the value
 /// 42 to it at the end of the vec
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// let v = vec![1,2,3,4,5];
@@ -55,7 +55,7 @@ pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
 /// This is a simple test thread that takes a vector, and adds a given value
 /// to it at the end of the vec
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// let v = vec![1,2,3,4,5];
@@ -84,7 +84,7 @@ pub fn thread1a_add_val(mut v: Vec<i32>, val: i32) -> Vec<i32> {
 /// required the closure to move the reference. Not implicit move can be called
 /// here cause we closure would only captured a reference.
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// let a1 = thread1a_move_issue();
@@ -118,7 +118,7 @@ pub fn thread1a_move_issue() -> i32 {
 /// and adds some extra steps. To build a thread builder, we do the following
 /// ```
 /// use std::thread;
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 ///
 /// let val_from_builder = thread1a_builder( vec![1,2,3,4,5], false);
 /// assert_eq!(&val_from_builder, &[1,2,3,4,5]);
@@ -153,7 +153,7 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 /// possible because the 'static lifetime exists for the life of 
 /// this executable/lib
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// assert_eq!(thread1a_stat(), "this is stat thread!");
@@ -189,7 +189,7 @@ pub fn thread1a_stat() -> &'static str{
 /// str and we get the same static string as a result. This will only
 /// print the value when calling the function
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// let val:&'static str = "hello world!";
@@ -224,7 +224,7 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 /// gives us an undstanding how to combine Generics with Iterators
 /// and create threads
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// assert_eq!(
@@ -236,7 +236,7 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 /// get a feel for how the thread works. In order to understand it
 /// better we need to implement the ptinr type.
 /// ```
-/// use pointers_threads::lib_th_a::*;
+/// use pointers_threads_lib::lib_th_a::*;
 /// use std::thread;
 ///
 /// // We can print the output when we run it as true.

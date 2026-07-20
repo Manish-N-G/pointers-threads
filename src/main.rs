@@ -77,8 +77,8 @@ fn mod1_a() {
     // Cause I have threads1 mod exposing lib_th1a functions
     // But I still prefer to do it so that I can test based on the module.
     // use threads1::*;
-    use pointers_threads::lib_th_a::*;
-    use pointers_threads::thread1st_get_current;
+    use pointers_threads_lib::lib_th_a::*;
+    use pointers_threads_lib::thread1st_get_current;
 
     let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
     println!("a1 is :{:?}", a1);
@@ -109,7 +109,7 @@ fn mod1_a() {
 }
 
 fn mod1_b() {
-    use pointers_threads::lib_th_b::*;
+    use pointers_threads_lib::lib_th_b::*;
 
     println!("leaked value from box leak for thread avg: {}", thread1b_box_leak_avg(1..=10) );
     thread1b_forget_leak();
