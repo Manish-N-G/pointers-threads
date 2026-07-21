@@ -1,4 +1,5 @@
 [package]
+# this can have either - or _.
 name = "pointers-threads"
 version = "0.1.0"
 edition = "2024"

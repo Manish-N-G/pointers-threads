@@ -28,8 +28,8 @@
 
 #![doc(html_playground_url = "https://play.rust-lang.org/")]
 // not pub, dont need to create doc type here
-pub mod threads;
-pub mod pointers;
+mod threads;
+mod pointers;
 
 /*
 //NOTE: This is not good practice to add doc comment here like this. Its better
