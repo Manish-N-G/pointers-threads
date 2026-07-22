@@ -15,6 +15,7 @@
 //!
 //! These selected few functions is mainly used for thread creation
 //! and errors that could be encountered when creating threads.
+//!
 use std::thread;
 
 // Remember, rust docs are not compiled inside lib_th_a
@@ -24,8 +25,24 @@ use std::thread;
 ///
 /// This is a simple test thread that takes a vector, and adds the value
 /// 42 to it at the end of the vec
-/// ```
-/// use pointers_threads::lib_th_a::*;
+/// ```rust,editable
+/// # // Note, the # will hide this from rust docs, but not from the 
+/// # // compiler. So essentially we are making 2 for the same functions
+/// # // and testing to see what works.
+/// # // So, we can include this or we could also ignore it
+/// # // as its not required in docs. However, it we are using a link
+/// # // to rust playground, we dont have a choice but to add this fn
+/// # // again. 
+/// # // The other options would be maybe push it to crates.io and then
+/// # // add this crate as a dependency. This way, we can make sure that
+/// # // we dont have issues with the crate
+/// # // use pointers_threads::lib_th_a::*;
+/// # pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
+/// #     thread::spawn(|| {
+/// #         v.push(42);
+/// #         v
+/// #     }).join().unwrap()
+/// # }
 /// use std::thread;
 ///
 /// let v = vec![1,2,3,4,5];
@@ -34,6 +51,8 @@ use std::thread;
 /// // we cant do print statement event with --show-output/ --nocapture
 /// assert_eq!(&a1, &[1,2,3,4,5,42])
 /// ```
+// /// [Rust Playground](https://play.rust-lang.org/?...)
+// #[doc(html_playground_url = "https://play.rust-lang.org/")]
 pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
     // println!("Testing th1a thread1a");
     // v is something like v = vec![1,2,3,4,5]; // this works

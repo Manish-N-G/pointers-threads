@@ -25,8 +25,32 @@
 //! We can also log and analyse our functions and this are achivable for some 
 //! other libs that are present in this library.
 //!
+//! Some notes to keep in mind. Rust docs doesn't generally run the code
+//! that are in "```". Instead it creates a temporary create that allows
+//! us to run the code. This is called crate injection. It would look
+//! something like this.
+//! **From**
+//! ~~~text
+//! ```
+//! assert_eq!(4, myadd());
+//! ```
+//! fn myadd() -> u8 {
+//!     2+2
+//! }
+//! ~~~
+//!
 
-#![doc(html_playground_url = "https://play.rust-lang.org/")]
+// Note, this will activate all run files for the code. This
+// currently is not needed as we will end up duplicating code 
+// but we could push this lib in crates.io and add it as a 
+// dependence to be able to see it in the code.
+// #![doc(html_playground_url = "https://play.rust-lang.org/")]
+
+#![doc(test(
+    no_crate_inject,
+    //attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
+))]
+
 // not pub, dont need to create doc type here
 mod threads;
 mod pointers;
