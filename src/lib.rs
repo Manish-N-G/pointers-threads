@@ -52,15 +52,17 @@
 ))]
 
 // not pub, dont need to create doc type here
+// meaning if we make it pub, we an see this in our docs.
 mod threads;
 mod pointers;
 
 /*
-//NOTE: This is not good practice to add doc comment here like this. Its better
-//to create the doc comments at the start of the module/file in order to not attach
-//unnecessary docs that could leak to functions
+// NOTE: This is not good practice to add doc comment here like this. Its better
+// to create the doc comments at the start of the module/file in order to not attach
+// unnecessary docs that could leak to functions
 
-// NOTE: Even if we e dont use //! ,we should not use it here, as its not the 1st line
+// NOTE: Even if we dont use //!, we should not use it here, as its not the 1st line
+// to a new create file
 
 /// This module covers how different type of threads and pointers are used
 ///
