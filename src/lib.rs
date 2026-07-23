@@ -11,7 +11,7 @@
 //!
 //! We also cover async that shows how futures and async operate, sometimes with
 //! multithreading/tasks, under the hood.
-
+//!
 //! These module covers how different type of threads and pointers are used
 //!
 //! In order to understand threads, we will also have to worry about
