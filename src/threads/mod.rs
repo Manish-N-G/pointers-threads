@@ -1,3 +1,5 @@
+// Since this module is not pub, these docs comments are not
+// going to be seen in the lib documentation
 use std::thread;
 pub mod lib_th_a;
 pub mod lib_th_b;
@@ -7,13 +9,15 @@ pub use lib_th_a::*;
 pub use lib_th_b::*;
 pub use lib_th_c::*;
 
-/// Simple function that creates threads
+/// Simple function that creates threads and get current 
+/// treadID
 ///
 /// Here the threads are run concurrently but we make sure that we
 /// are joining then at the end to ensure that they fill
 /// finish before this function gets done.
-/// ```rust
+/// ```
 /// use std::thread;
+/// use pointers_threads::thread1st_get_current;
 ///
 /// let th1 = thread::spawn(|| {
 ///     println!("th1 inside");
@@ -25,6 +29,10 @@ pub use lib_th_c::*;
 /// });
 /// assert_eq!("th1", th1.join().unwrap());
 /// assert_eq!("th2", th2.join().unwrap());
+///
+/// assert!( thread1st_get_current() != thread::spawn( || {
+///     thread::current().id()
+/// }).join().unwrap() );
 /// ```
 /// This will join and assert the values
 pub fn thread1st_get_current() -> thread::ThreadId {
@@ -40,6 +48,6 @@ pub fn thread1st_get_current() -> thread::ThreadId {
     th1_print_id()
 }
 
-fn th1_print_id() -> thread::ThreadId {
+pub(crate) fn th1_print_id() -> thread::ThreadId {
     thread::current().id()
 }
