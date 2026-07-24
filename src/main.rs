@@ -118,6 +118,90 @@ fn mod1_b() {
     thread1b_forget_leak();
 }
 
+
+
+fn main_test() {
+    use pointers_threads::lib_ptr_a::*;
+    let mut u = MyS::new(4u8);
+    u.put_ptr();
+    u.print_addr();
+    // this is dangerous, cause this is moved into a new
+    // varaiable, and hence, the values will have a new
+    // address
+    let mut v = u;
+    v.print_addr();
+    
+    v.update_val(7u8);
+    v.print_addr();
+    
+    println!("updated val {}", v.get_val());
+    v.put_ptr();
+    v.print_addr();
+    v.update_val_ptr(9u8);
+    v.print_addr();
+    
+    let mut u = MyS::new(4u8);
+    u.put_ptr();
+    let mut pu = Box::pin(u);
+    pu.get_val(); //  work
+    pu.update_val(44); // works
+    pu.update_val_ptr(48); // works
+    pu.print_addr();
+    
+    // pined options ------ with pin::new()
+    let mut u = MyS::new(4u8);
+    u.put_ptr();
+    // we do put ptr 1st cause later, after pin_u, we cant
+    // as we hand the mut ref to pin_u
+    let mut pin_u = std::pin::Pin::new(&mut u);
+    pin_u.put_ptr();
+    // but we could still do pin_u.put_ptr();
+    
+    // cant modify directly with u if we are using pin_u
+    // after the value. This way, we lock the value.
+    // u.val = 8;
+    
+    pin_u.val = 1;
+    println!("val pin_u get {:}", pin_u.get_val());
+    
+    // we have the option to choose here depending on the
+    // lifetime of the pin_u or u.
+    u.print_addr();
+    //pin_u.print_addr();
+    
+    // box pin options --- box::pin()
+    let mut u = MyS2::new(4u8);
+    u.put_ptr();
+    // note: we cannot use pin::new() here
+    // PhantomPinned cannot be unpinned
+    // let mut pin_u = std::pin::Pin::new(&mut u);
+    
+    // Now we cant unpin this data.
+    // what this means is that we wont be able to run some values
+    let pu = Box::pin(u);
+    pu.get_val(); // works
+    // pu.update_val(44); // cannot borrow data as mutable // doesnt work
+    // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
+    pu.print_addr();
+    
+    
+    // box pin options --- box::pin()
+    let mut u = MyS2::new(4u8);
+    u.put_ptr();
+    // note: we cannot use pin::new() here
+    // PhantomPinned cannot be unpinned
+    // let mut pin_u = std::pin::Pin::new(&mut u);
+    
+    // Now we cant unpin this data.
+    // what this means is that we wont be able to run some values
+    let pu = Box::pin(u);
+    pu.get_val(); // works
+    // pu.update_val(44); // cannot borrow data as mutable // doesnt work
+    // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
+    pu.print_addr();
+    
+}
+
 fn mod1_c() {
     th1::th1c::testing1c();
 }

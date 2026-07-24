@@ -23,6 +23,8 @@
 ///
 /// // Its good to get a good idea how this works be looking
 /// // directly at the code for this function
+/// // Safety: This function is not save, as we cannot have more than 
+/// // 2 values. We need to ensure safety, but I leave it as it is.
 /// assert_eq!( unsafe {unsafe_raw_vector_element_mutability(a) }, ( 8208, 8209 ));
 /// ```
 /// # Safety
@@ -72,6 +74,8 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
 /// // become b = 34. then be comparing b and b +1 will produce an
 /// // error and this needs to be considered
 /// // assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (b, b+1));
+/// // Safety: This function safe for types that dont exceed the
+/// // limits of u16. In increaments via raw pointers
 /// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (b-1, b));
 /// assert_eq!( unsafe { danger_pointer_val_inc(c,d) }, (34, 35));
 ///
@@ -112,103 +116,35 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
     }
 }
 
-fn main_test() {
-    let mut u = MyS::new(4u8);
-    u.put_ptr();
-    u.print_addr();
-    // this is dangerous, cause this is moved into a new
-    // varaiable, and hence, the values will have a new
-    // address
-    let mut v = u;
-    v.print_addr();
-    
-    v.update_val(7u8);
-    v.print_addr();
-    
-    println!("updated val {}", v.get_val());
-    v.put_ptr();
-    v.print_addr();
-    v.update_val_ptr(9u8);
-    v.print_addr();
-    
-    let mut u = MyS::new(4u8);
-    u.put_ptr();
-    let mut pu = Box::pin(u);
-    pu.get_val(); //  work
-    pu.update_val(44); // works
-    pu.update_val_ptr(48); // works
-    pu.print_addr();
-    
-    // pined options ------ with pin::new()
-    let mut u = MyS::new(4u8);
-    u.put_ptr();
-    // we do put ptr 1st cause later, after pin_u, we cant
-    // as we hand the mut ref to pin_u
-    let mut pin_u = std::pin::Pin::new(&mut u);
-    pin_u.put_ptr();
-    // but we could still do pin_u.put_ptr();
-    
-    // cant modify directly with u if we are using pin_u
-    // after the value. This way, we lock the value.
-    // u.val = 8;
-    
-    pin_u.val = 1;
-    println!("val pin_u get {:}", pin_u.get_val());
-    
-    // we have the option to choose here depending on the
-    // lifetime of the pin_u or u.
-    u.print_addr();
-    //pin_u.print_addr();
-    
-    // box pin options --- box::pin()
-    let mut u = MyS2::new(4u8);
-    u.put_ptr();
-    // note: we cannot use pin::new() here
-    // PhantomPinned cannot be unpinned
-    // let mut pin_u = std::pin::Pin::new(&mut u);
-    
-    // Now we cant unpin this data.
-    // what this means is that we wont be able to run some values
-    let pu = Box::pin(u);
-    pu.get_val(); // works
-    // pu.update_val(44); // cannot borrow data as mutable // doesnt work
-    // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
-    pu.print_addr();
-    
-    
-    // box pin options --- box::pin()
-    let mut u = MyS2::new(4u8);
-    u.put_ptr();
-    // note: we cannot use pin::new() here
-    // PhantomPinned cannot be unpinned
-    // let mut pin_u = std::pin::Pin::new(&mut u);
-    
-    // Now we cant unpin this data.
-    // what this means is that we wont be able to run some values
-    let pu = Box::pin(u);
-    pu.get_val(); // works
-    // pu.update_val(44); // cannot borrow data as mutable // doesnt work
-    // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
-    pu.print_addr();
-    
-}
-
-
-/// Make this struct visible only to this crate
-/// copy clone doesnt matter here really
+/// This struct shows a SelfReference type that has a value and a pointers.
+/// The methods on this struct call on creating a Self Reference where the 
+/// Option of the raw pointers points the value in this struct.
 ///
+/// We use this to illustrate how SelfReference types can be created and 
+/// how we need to be careful of this type but the methods we call.
+///
+/// The reason this is important is because if we were going to use a 
+/// async function using Self reference for tokio/threads, we need to 
+/// unsure memory is carefully handles. Imagine, if were to pass ownership
+/// and some files were copies, but the reference in ptr, points to the old
+/// address. For that very reason we try to simulate the methods we will be
+/// calling and how they are handled.
 #[derive(Debug)]
-pub(crate) struct MyS {
+pub struct MySelfReference {
+    // Note: the only way we an access these values are through the methods
+    // we will be calling on them.
     val: u8,
     ptr: Option<*const u8>,
 }
 
 // copy clone doesnt matter here really
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct MyS2 {
+pub(crate) struct MySelfReferencePinned {
+    // Note: the only way we an access these values are through the methods
+    // we will be calling on them.
     val: u8,
     ptr: Option<*const u8>,
-    // when we use PhantomPinner: the MyS struct goes from
+    // when we use PhantomPinner: the MySelfReference struct goes from
     // Unpin type ( via auto implementations ) to !Unpin type
     _mkr: std::marker::PhantomPinned,
     
@@ -219,7 +155,7 @@ pub(crate) struct MyS2 {
     // for types that are Unpin.
 }
 
-impl MyS {
+impl MySelfReference {
     fn new(val: u8) -> Self {
         Self { val, ptr: None }
     }
@@ -247,7 +183,7 @@ impl MyS {
     }
 }
 
-impl MyS2 {
+impl MySelfReferencePinned {
     fn new(val: u8) -> Self {
         Self { val, ptr: None, _mkr:std::marker::PhantomPinned }
     }
