@@ -133,7 +133,10 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
 pub struct MySelfReference {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
-    val: u8,
+    // Also, by calling a field pub(crate) which is available to the
+    // lib only internally, not externally, we can restrict some access
+    // Here, we will not use it, but its worth knowing how its done
+    pub(crate) val: u8,
     ptr: Option<*const u8>,
 }
 
@@ -155,28 +158,31 @@ pub(crate) struct MySelfReferencePinned {
     // for types that are Unpin.
 }
 
+/// How does the change for impl block
+/// Lets find out
 impl MySelfReference {
-    fn new(val: u8) -> Self {
+    /// Lets find out 2
+    pub fn new(val: u8) -> Self {
         Self { val, ptr: None }
     }
     
-    fn put_ptr(&mut self) {
+    pub fn put_ptr(&mut self) {
         self.ptr = Some( &raw const self.val );
     }
     
-    fn get_val(&self) -> u8 {
+    pub fn get_val(&self) -> u8 {
         unsafe { *self.ptr.unwrap() }
     }
     
-    fn update_val(&mut self, val: u8) {
+    pub fn update_val(&mut self, val: u8) {
         self.val = val;
     }
     
-    fn update_val_ptr(&mut self, val: u8) {
+    pub fn update_val_ptr(&mut self, val: u8) {
         *&mut self.val = *&val;
     }
     
-    fn print_addr(&self) {
+    pub fn print_addr(&self) {
         println!("add of variable is {:p}", &self);
         println!("add of val is {:p}", &raw const self.val);
         println!("add of ptr is {:p}\n", &self.ptr.unwrap());
