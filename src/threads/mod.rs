@@ -9,8 +9,7 @@ pub use lib_th_a::*;
 pub use lib_th_b::*;
 pub use lib_th_c::*;
 
-/// Simple function that creates threads and get current 
-/// treadID
+/// Simple function that creates threads and get current treadID
 ///
 /// Here the threads are run concurrently but we make sure that we
 /// are joining then at the end to ensure that they fill
@@ -43,11 +42,13 @@ pub fn thread1st_get_current() -> thread::ThreadId {
     println!("generally the threads start immediately");
 
     th1.join().unwrap();
-    th2.join().unwrap();
-    println!("Main thread id is {:?}", thread::current().id());
+    th2.join().unwrap(); println!("Main thread id is {:?}", thread::current().id());
     th1_print_id()
 }
 
+// This will not print docs types as this is available to this 
+// but not to outside implementations
+// Consider this as a helper function
 pub(crate) fn th1_print_id() -> thread::ThreadId {
     thread::current().id()
 }

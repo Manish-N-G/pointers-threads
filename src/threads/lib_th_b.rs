@@ -31,7 +31,7 @@ use std::fmt::Debug;
 use std::rc::Rc;
 use std::thread;
 
-// NOTE: done create MyNums<'a> as files will not hold 'a, 
+// NOTE: dont create MyNums<'a> as files will not hold 'a, 
 // rather, we need to do for<'a> Self for reference of types
 // holding 'a
 /// The MyNums traits its just our traits that we have implemented
@@ -52,7 +52,12 @@ use std::thread;
 /// if at all any, to help us like the other lib creates.
 /// We have made this pub for the moment
 pub trait MyNums
-where Self: std::fmt::Debug + std::fmt::Display + Copy +  Default,
+where Self: std::fmt::Debug + std::fmt::Display,
+      Self: Copy, // this also cause a trait to be not dyn compitable
+      // Cause Copy: Clone, and Clone(&self) -> Self. So rust cant know
+      // what time is Self will be
+      Self: Default, // default also does -> Self, which implies that 
+      // we cannot have Self return type of this trait
       Self: std::ops::Add<Output = Self>, 
       Self: std::ops::Sub<Output = Self>, 
       Self: std::ops::Mul<Output = Self>, 
@@ -61,9 +66,10 @@ where Self: std::fmt::Debug + std::fmt::Display + Copy +  Default,
       Self: 'static,
       Self: TryInto<isize>,
       Self: TryInto<usize>,
-      Self: Sized,
+      Self: Sized, // this is one of the reasons this trait is not dyn compitable
       for<'a> Self: std::iter::Sum<&'a Self>,
       for<'a> Self: std::iter::Product<&'a Self>,
+      // Even Arithmatic operators use Self which makes this dyn incompitable.
 {
     fn as_usize(self) -> usize {
         // Safety: We can use unwrap here, knowing we will get 0
