@@ -3,9 +3,12 @@
 //!
 //!
 
-/// testing this
-/// rust,editable ??
-/// ```
+/// An unsafe function that requires a vector of more then
+/// 2 elements, or else it would fail. It produces a tuple
+/// where the 1st element it the always 8208 and the next is
+/// 8209 as long as no wrapping is does if out of bound or 
+/// panic is vector it not larger than 2 elements.
+/// ```rust,editable
 /// //use pointers_threads::lib_ptr_a::*;
 /// use pointers_threads::unsafe_raw_vector_element_mutability;
 /// // use my_crate::assert_panic_message;
