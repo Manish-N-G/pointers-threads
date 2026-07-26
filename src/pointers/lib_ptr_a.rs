@@ -119,6 +119,7 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
     }
 }
 
+#[derive(Debug)]
 /// This struct shows a SelfReference type that has a value and a pointers.
 /// The methods on this struct call on creating a Self Reference where the 
 /// Option of the raw pointers points the value in this struct.
@@ -132,7 +133,6 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
 /// and some files were copies, but the reference in ptr, points to the old
 /// address. For that very reason we try to simulate the methods we will be
 /// calling and how they are handled.
-#[derive(Debug)]
 pub struct MySelfReference {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
@@ -140,12 +140,16 @@ pub struct MySelfReference {
     // lib only internally, not externally, we can restrict some access
     // Here, we will not use it, but its worth knowing how its done
     pub(crate) val: u8,
-    ptr: Option<*const u8>,
+    pub(crate) ptr: Option<*const u8>,
 }
 
 // copy clone doesnt matter here really
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct MySelfReferencePinned {
+/// This SelfReferencePinned type that has a value and a pointers and
+/// a marker Pinner Phantom type. We use methods on this type to set the
+/// ptr value.
+///
+struct MySelfReferencePinned {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
     val: u8,
