@@ -119,10 +119,9 @@ fn mod1_b() {
 }
 
 
-
 fn main_test() {
-    use pointers_threads::lib_ptr_a::*;
-    let mut u = MyS::new(4u8);
+    // use pointers_threads::lib_ptr_a::*;
+    let mut u = MySelfReference::new(4u8);
     u.put_ptr();
     u.print_addr();
     // this is dangerous, cause this is moved into a new
@@ -140,7 +139,7 @@ fn main_test() {
     v.update_val_ptr(9u8);
     v.print_addr();
     
-    let mut u = MyS::new(4u8);
+    let mut u = MySelfReference::new(4u8);
     u.put_ptr();
     let mut pu = Box::pin(u);
     pu.get_val(); //  work
@@ -149,7 +148,7 @@ fn main_test() {
     pu.print_addr();
     
     // pined options ------ with pin::new()
-    let mut u = MyS::new(4u8);
+    let mut u = MySelfReference::new(4u8);
     u.put_ptr();
     // we do put ptr 1st cause later, after pin_u, we cant
     // as we hand the mut ref to pin_u
@@ -161,7 +160,7 @@ fn main_test() {
     // after the value. This way, we lock the value.
     // u.val = 8;
     
-    pin_u.val = 1;
+    pin_u.val = 1; // todomanish
     println!("val pin_u get {:}", pin_u.get_val());
     
     // we have the option to choose here depending on the
@@ -271,3 +270,58 @@ fn mod3_c() {
     //todomanish: Need to just implement for async
     th3::th3c::some_async();
 }
+
+
+
+// For testing, I have these following
+//
+// This is my understanding.
+// For Lib crate:
+// If we will have to have a test module inside the lib create:
+// meaning: #[test], or #[cfg(test)], it will allow us to access all
+// the structs and fields and methods that are exposed to the create.
+// eg: #[cfg(test)] in lib.rs or lib modeule via pub(create) or withing
+// the same module ( used for helper, fields and edge cases)
+// Can have #[cfg(test)] and #[test]
+// NOTE: Only lib can access private items belonging to the lib crate
+// or module is path is correct.
+//
+//
+// NOTE: Integration test, meaning creating a test folder, is meant
+// to be used for lib create. This will not expose 
+// the pub create data types, unless they are completely public.
+// Integration tests creates its own create, that is separate from
+// lib, doc and binary creates. This depends on the package as a whole.
+// You, cannot expose main or any other binary file in integration tests
+// because they are not a library.
+//
+// For: Integration create: 
+// Rust creates a separate create for each file inside Integration folder.
+// We import lib here ( like how to do from any project ). And we can 
+// access the types depending if they are public or not.
+// Cant use private fields present for lib create
+// Can have #[cfg(test)] and #[test], but we dont need to really specify
+// the #[cfg(test)], cause its already in the test integration folder.
+// Simple #[test] is enough
+// We need to treat integration tests as thought we are an external 
+// used using this lib or binary.
+//
+// For Binary crate:
+// In the case for Binary crate, rust creates a spearate crate for each 
+// binary file recognised inside the root crate folders for bin. In
+// will test this be adding #[cfg(test)] or #[test] directly inside
+// on the binary crate. This is how we will manage them.
+// Cant use private fields present for lib create. ( has to be only
+// those in bin create is in correct module )
+// Can have #[cfg(test)] and #[test]
+//
+// Other crate types: 
+// Examples: This is another crate root used to test examples and
+// each file is considered as a seprarate crate
+// Benches: This is also another crate root used to test benchmarks
+// and each file is treated as a seprarate crate
+// Build: This is just a single file build.rs that creates one crate
+// that can be used to build a project
+// Can have #[cfg(test)] and #[test]. Generally we dont need to have
+// #[test] or #[cfg(test)] for build, but it still works
+//

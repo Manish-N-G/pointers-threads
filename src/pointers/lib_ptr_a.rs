@@ -143,13 +143,26 @@ pub struct MySelfReference {
     pub(crate) ptr: Option<*const u8>,
 }
 
-// copy clone doesnt matter here really
+// Copy clone doesnt matter here really
 #[derive(Debug, Copy, Clone)]
 /// This SelfReferencePinned type that has a value and a pointers and
 /// a marker Pinner Phantom type. We use methods on this type to set the
-/// ptr value.
+/// ptr value. We still use the Option of raw pointers to set the inner
+/// address
 ///
-struct MySelfReferencePinned {
+/// The purpose of using the SelfReferencePinned type
+///
+///
+/// We use this to illustrate how SelfReference types can be created and 
+/// how we need to be careful of this type but the methods we call.
+///
+/// The reason this is important is because if we were going to use a 
+/// async function using Self reference for tokio/threads, we need to 
+/// unsure memory is carefully handles. Imagine, if were to pass ownership
+/// and some files were copies, but the reference in ptr, points to the old
+/// address. For that very reason we try to simulate the methods we will be
+/// calling and how they are handled.
+pub struct MySelfReferencePinned {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
     val: u8,
