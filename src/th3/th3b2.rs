@@ -1,7 +1,7 @@
 #![allow(unused)]
 use trpl;
 
-fn test_async_spawn() {
+pub fn test_async_spawn() {
     println!("For one----");
     one();
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -22,6 +22,10 @@ fn test_async_spawn() {
     
     println!("\nFor three----");
     three();
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    println!("\nFor three_a----");
+    three_a();
     std::thread::sleep(std::time::Duration::from_secs(1));
     
     println!("\nFor four----");
@@ -74,13 +78,13 @@ fn one_a() {
 
 fn two(val1: u64, val2: u64) {
     trpl::run( async {
-        let tsk1 = async {
+        let fut1 = async {
             for x in 1..10 {
                 println!("[First-two]:{} for {val1}", x);
                 trpl::sleep(std::time::Duration::from_millis(val1)).await
             }
         };
-        let tsk2 = async {
+        let fut2 = async {
             for x in 1..5 {
                 println!("[Secont-two]:{} for {val2}", x);
                 trpl::sleep(std::time::Duration::from_millis(val2)).await
@@ -88,13 +92,17 @@ fn two(val1: u64, val2: u64) {
         };
         // here we use thread join. From my understanding, we will not
         // be producing two spawned tasks, however, this is run inside the
-        // main task. Here join works concurrently with tsk1 and tsk2, not
+        // main task. Here join works concurrently with fut1 and fut2, not
         // necessarly parallely. This means that join, internally, process a
         // single future, while consuming the other futures. and inside this
         // future, code is concurrently run. From my understanding, this code
         // what uses join should run a bit slower that if we were to 
         // implement task spawn separately.
-        trpl::join(tsk1, tsk2).await;
+        // Here, in terms of timing, total time is not val1 + val2, but
+        // its approximately max( val1, val2).
+        // Each await is not blocking in the task. So it will run concurrently
+        // in that sence.
+        trpl::join(fut1, fut2).await;
     });
 }
 
@@ -114,8 +122,41 @@ fn three() {
     });
 }
 
+fn three_a() {
+    trpl::run( async {
+        // notice, this happens sequentially as will not go to the next
+        // for block till this one gets complete.
+        for x in 1..10 {
+            println!("[First-three]:{}", x);
+            trpl::sleep(std::time::Duration::from_millis(500)).await
+        }
+        
+        let fut = async {
+            for x in 1..5 {
+                println!("[Second-three]:{}", x);
+                trpl::sleep(std::time::Duration::from_millis(500)).await;
+            }    
+        };
+
+        let tsk = trpl::spawn_task( async {
+            for x in 1..5 {
+                println!("[Thrid-three]:{}", x);
+                trpl::sleep(std::time::Duration::from_millis(500)).await;
+            }    
+        });
+        
+        // calling await here means that the task tsk will continue to run
+        // till this await point along with fut. Here we will see that the
+        // concurrency element between fut on main task and new task with tsk
+        // running.
+        fut.await;
+    });
+}
+
 fn four() {
     trpl::run( async {
+        // as we await it here, and since they are futures with async blocks
+        // and not tasks, this will run sequentially.
         async {
             for x in 1..10 {
                 println!("[First-four]:{}", x);
