@@ -48,7 +48,7 @@ fn main() {
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
     // mod1_b();
-    main_test();
+    main_test_SelfRef();
     //
     //
 
@@ -120,7 +120,7 @@ fn mod1_b() {
 }
 
 
-fn main_test() {
+fn main_test_SelfRef() {
     // use pointers_threads::lib_ptr_a::*;
     let mut u = MySelfReference::new(4u8);
     u.put_ptr();
@@ -170,8 +170,9 @@ fn main_test() {
     // lifetime of the pin_u or u.
     u.print_addr();
     //pin_u.print_addr();
+}
     
-    /*
+fn main_test_SelfRefPin() {
     // box pin options --- box::pin()
     let mut u = MyS2::new(4u8);
     u.put_ptr();
@@ -202,7 +203,6 @@ fn main_test() {
     // pu.update_val(44); // cannot borrow data as mutable // doesnt work
     // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
     pu.print_addr();
-    */
 }
 
 fn mod1_c() {
