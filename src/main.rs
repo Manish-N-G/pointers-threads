@@ -47,8 +47,12 @@ fn main() {
     //
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
+    {
     // mod1_b();
-    main_test_SelfRef();
+    // main_test_SelfRef();
+    use th3::th3b2::*;
+    test_async_spawn();
+    }
     //
     //
 
@@ -174,7 +178,7 @@ fn main_test_SelfRef() {
     
 fn main_test_SelfRefPin() {
     // box pin options --- box::pin()
-    let mut u = MyS2::new(4u8);
+    let mut u = MySelfReference::new(4u8);
     u.put_ptr();
     // note: we cannot use pin::new() here
     // PhantomPinned cannot be unpinned
@@ -190,7 +194,7 @@ fn main_test_SelfRefPin() {
     
     
     // box pin options --- box::pin()
-    let mut u = MyS2::new(4u8);
+    let mut u = MySelfReference::new(4u8);
     u.put_ptr();
     // note: we cannot use pin::new() here
     // PhantomPinned cannot be unpinned
