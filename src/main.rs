@@ -47,7 +47,8 @@ fn main() {
     //
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
-    mod1_b();
+    // mod1_b();
+    main_test();
     //
     //
 
@@ -160,14 +161,17 @@ fn main_test() {
     // after the value. This way, we lock the value.
     // u.val = 8;
     
-    pin_u.val = 1; // todomanish
-    println!("val pin_u get {:}", pin_u.get_val());
+    //todomanish:
+    // pin_u.val = 1; // todomanish, this will only works inside of lib crates
+    //                // as the fields are only pub to the crate
+    // println!("val pin_u get {:}", pin_u.get_val());
     
     // we have the option to choose here depending on the
     // lifetime of the pin_u or u.
     u.print_addr();
     //pin_u.print_addr();
     
+    /*
     // box pin options --- box::pin()
     let mut u = MyS2::new(4u8);
     u.put_ptr();
@@ -198,7 +202,7 @@ fn main_test() {
     // pu.update_val(44); // cannot borrow data as mutable // doesnt work
     // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
     pu.print_addr();
-    
+    */
 }
 
 fn mod1_c() {
@@ -324,4 +328,3 @@ fn mod3_c() {
 // that can be used to build a project
 // Can have #[cfg(test)] and #[test]. Generally we dont need to have
 // #[test] or #[cfg(test)] for build, but it still works
-//
