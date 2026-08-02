@@ -33,6 +33,7 @@ pub fn test_async_spawn() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 }
 
+
 fn one() {
     trpl::run( async {
         let tsk = trpl::spawn_task( async {
@@ -52,6 +53,7 @@ fn one() {
         tsk.await;
     });
 }
+
 
 fn one_a() {
     trpl::run( async {
@@ -75,6 +77,7 @@ fn one_a() {
         // dropped when the main process is completed.
     });
 }
+
 
 fn two(val1: u64, val2: u64) {
     trpl::run( async {
@@ -106,6 +109,7 @@ fn two(val1: u64, val2: u64) {
     });
 }
 
+
 fn three() {
     trpl::run( async {
         // notice, this happens sequentially as will not go to the next
@@ -121,6 +125,7 @@ fn three() {
         }    
     });
 }
+
 
 fn three_a() {
     trpl::run( async {
@@ -152,6 +157,7 @@ fn three_a() {
         fut.await;
     });
 }
+
 
 fn four() {
     trpl::run( async {

@@ -160,3 +160,29 @@ impl Future for ThreadTimer {
     }
 }
 
+fn other() {
+use std::thread;
+
+fn main() {
+    let ready = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+
+    let ready2 = ready.clone();
+
+    let handle = thread::spawn(move || {
+        while !ready2.load(std::sync::atomic::Ordering::Acquire) {
+            println!("Parking...");
+            thread::park();
+        }
+
+        println!("Done!");
+    });
+
+    thread::sleep(std::time::Duration::from_secs(1));
+
+    ready.store(true, std::sync::atomic::Ordering::Release);
+
+    handle.thread().unpark();
+
+    handle.join().unwrap();
+}
+}

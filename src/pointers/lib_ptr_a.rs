@@ -140,6 +140,8 @@ pub struct MySelfReference {
     // lib only internally, not externally, we can restrict some access
     // Here, we will not use it, but its worth knowing how its done
     pub(crate) val: u8,
+    // note: raw pointers dont automatically implement Send and Sync.
+    // Hence out file here makes out type not Send and Sync.
     pub(crate) ptr: Option<*const u8>,
 }
 
@@ -150,8 +152,8 @@ pub struct MySelfReference {
 /// ptr value. We still use the Option of raw pointers to set the inner
 /// address
 ///
+/// todomanish
 /// The purpose of using the SelfReferencePinned type
-///
 ///
 /// We use this to illustrate how SelfReference types can be created and 
 /// how we need to be careful of this type but the methods we call.
@@ -165,8 +167,16 @@ pub struct MySelfReference {
 pub struct MySelfReferencePinned {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
-    val: u8,
-    ptr: Option<*const u8>,
+    pub(crate) val: u8,
+
+    // Now note: We change our implementation because
+    // val: u8 cannot be accessed for !Unpin types. Hence
+    // we will use interior mutability for this.
+    // pub(crate) val: std::cell::Cell<u8>,
+
+    // Also this field is not Send and not Sync because rust 
+    // doesnt automatically make them so.
+    pub(crate) ptr: Option<*const u8>,
     // when we use PhantomPinner: the MySelfReference struct goes from
     // Unpin type ( via auto implementations ) to !Unpin type
     _mkr: std::marker::PhantomPinned,
@@ -179,6 +189,7 @@ pub struct MySelfReferencePinned {
 }
 
 /// How does the change for impl block
+///
 /// Lets find out
 impl MySelfReference {
     /// Lets find out 2
@@ -198,42 +209,120 @@ impl MySelfReference {
         self.val = val;
     }
     
+    // does the same as undate_val
+    #[allow(clippy::deref_addrof)]
     pub fn update_val_ptr(&mut self, val: u8) {
         *&mut self.val = *&val;
     }
     
-    pub fn print_addr(&self) {
+    pub fn print_addr(&self, condition: &str) {
+        if !condition.is_empty() {
+            println!("{condition}");
+        }
         println!("add of variable is {:p}", &self);
         println!("add of val is {:p}", &raw const self.val);
-        println!("add of ptr is {:p}\n", &self.ptr.unwrap());
+        // careful to not put & here in self, or it will be a 
+        // different address value
+        println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
     }
+    // pub(crate) ptr: Option<*const u8>,
 }
 
+/// I will have to do some unsafe impl here.
+/// NOTE: This havs to be to type &self not &mut self. 
+/// Or else PhantomPinned marker will complain and not
+/// allow you to do this. This is done specifically for
+/// safety. Our implementation is unsafe and this should 
+/// not be the way this is done. But its good know that 
+/// we could find a work aroudn it.. However, dont
+/// implement is this way.
 impl MySelfReferencePinned {
-    fn new(val: u8) -> Self {
-        Self { val, ptr: None, _mkr:std::marker::PhantomPinned }
+
+    pub fn new(val: u8) -> Self {
+        Self { val,ptr: None, _mkr:std::marker::PhantomPinned }
     }
-    
-    fn put_ptr(&mut self) {
+
+    // Notice I used &raw const and not as *const u8
+    // cause this will just convert the value into a 
+    // addr pointer.
+    pub fn put_ptr(&mut self) {
         self.ptr = Some( &raw const self.val );
     }
-    
-    fn get_val(&self) -> u8 {
+
+    // this is wrong. will convert 4 as a pointer value
+    // pub fn put_ptr(&mut self) {
+    //     // self.ptr = Some( &raw const *self.val.get_mut() ); // works too
+    //     self.ptr = Some( self.val as *const u8 );
+    // }
+
+    // remember, the add for self is not the same as the address
+    // values calling the function. This is because, the address
+    // is copied into this, and we use this copied address. However, 
+    // the address will point the correct value
+    // All this is is a variable holding the address, and this
+    // variable is copied.
+    pub fn put_ptr_cast(&self) {
+        let x = &self.val;
+        let mut _y = self.ptr.unwrap();
+        _y = x;
+
+
+        // let x = &self.val as *const u8;
+        // let mut _y = self.ptr.unwrap();
+        // _y = x;
+    }
+
+
+    pub fn get_val(&self) -> u8 {
+        // dont use casting for this, will produce the wrong value
+        // let x = self.ptr.unwrap() as u32 as *const u32;
         unsafe { *self.ptr.unwrap() }
     }
-    
-    fn update_val(&mut self, val: u8) {
+
+
+    pub fn update_val(&mut self, val: u8) {
         self.val = val;
     }
     
-    fn update_val_ptr(&mut self, val: u8) {
-        *&mut self.val = *&val;
+    /// # Safety
+    /// We this will be able to get the value
+    /// between val, and pass the address that way, and deref
+    /// that value. This in not recommended to process the values
+    /// this way, however, for implementation, it gives uf a 
+    /// brief of how it works.
+    /// Consider this as unsafe
+    pub unsafe fn update_val_cast(&self, val: u8) {
+        let mut _x = &self.val as *const u8 as *mut u8;
+        unsafe { *_x = val; }
     }
     
-    fn print_addr(&self) {
+    // does the same as undate_val
+    #[allow(clippy::deref_addrof)]
+    pub fn update_val_ptr(&mut self, val: u8) {
+        *&mut self.val = *&val;
+    }
+
+    /// Here we are tyring to update the value in val by
+    /// using the address what is in the ptr field. This is
+    /// a hack, but we could do it this way. An in practice,
+    /// this is not the best way to do this in there are
+    /// problems with the implementation.
+    #[allow(clippy::deref_addrof)]
+    pub fn update_val_ptr_cast(&self, val: u8) {
+        // let mut x = *self.ptr.unwrap() as *mut u8 ;
+        let mut _x = self.ptr.unwrap() as *mut u8;
+        unsafe {*_x = val; }
+    }
+
+    pub fn print_addr(&self, condition: &str) {
+        if !condition.is_empty() {
+            println!("{condition}");
+        }
         println!("add of variable is {:p}", &self);
         println!("add of val is {:p}", &raw const self.val);
-        println!("add of ptr is {:p}\n", &self.ptr.unwrap());
+        // careful to not put & here in self, or it will be a 
+        // different address value
+        println!("add of ptr is {:p}\n", self.ptr.unwrap());
     }
 }
 
