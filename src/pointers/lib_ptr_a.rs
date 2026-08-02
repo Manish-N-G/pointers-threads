@@ -262,16 +262,15 @@ impl MySelfReferencePinned {
     // All this is is a variable holding the address, and this
     // variable is copied.
     pub fn put_ptr_cast(&self) {
-        let x = &self.val;
-        let mut _y = self.ptr.unwrap();
-        _y = x;
+        let mut _z = Some( &raw const self.val );
+        let mut y = &self.ptr as *const Option<*const u8> as *mut Option<*const u8>;
+        unsafe { *y = _z; }
 
-
+        // didnt work
         // let x = &self.val as *const u8;
         // let mut _y = self.ptr.unwrap();
         // _y = x;
     }
-
 
     pub fn get_val(&self) -> u8 {
         // dont use casting for this, will produce the wrong value
@@ -310,6 +309,8 @@ impl MySelfReferencePinned {
     #[allow(clippy::deref_addrof)]
     pub fn update_val_ptr_cast(&self, val: u8) {
         // let mut x = *self.ptr.unwrap() as *mut u8 ;
+        // let mut _x = self.ptr.unwrap() as *mut u8;
+
         let mut _x = self.ptr.unwrap() as *mut u8;
         unsafe {*_x = val; }
     }
