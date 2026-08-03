@@ -2,8 +2,8 @@
 //!
 //!
 //!
-//pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16) {
 
+//pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16) {
 /// An unsafe function that requires a vector of more then
 /// 2 elements, or else it would fail. It produces a tuple
 /// where the 1st element it the always 8208 and the next is
@@ -139,6 +139,11 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
 /// and some files were copies, but the reference in ptr, points to the old
 /// address. For that very reason we try to simulate the methods we will be
 /// calling and how they are handled.
+///
+/// These types are also affected by how the Box::pin, Pin::new and pin! 
+/// operations work. We will have to dive deeper into how those operate,
+/// and they to will be discussed in the next part.
+/// NOTE: todomanish.
 pub struct MySelfReference {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
@@ -330,7 +335,6 @@ impl MySelfReference {
         self.val = val;
     }
     
-
     /// We use the update_val_ptr call to update the value in
     /// the field via pointer dereferencing. This essentially is the
     /// came as update_val, but tells us how to use pointers instead.
@@ -421,7 +425,11 @@ impl MySelfReference {
     }
 }
 
+/// NOTE: Despite being available for Send, we have to proceed
+/// with caution.
 unsafe impl Send for MySelfReference {}
+/// NOTE: Despite being available for Sync, we have to proceed
+/// with caution.
 unsafe impl Sync for MySelfReference {}
 
 /// I will have to do some unsafe impl here.
@@ -432,15 +440,37 @@ unsafe impl Sync for MySelfReference {}
 /// not be the way this is done. But its good know that 
 /// we could find a work aroudn it.. However, dont
 /// implement is this way.
+/// ```
+/// use pointers_threads::lib_ptr_a::*; 
+///
+/// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+///
+/// my_self_ref.put_ptr();
+///
+/// assert_eq!(3u8, my_self_ref.get_val());
+/// ```
+/// Also, for this type, since we have PhantomPinned type, we should 
+/// avoid using ptr manipulation in order to access values.
+/// **NOTE: These types are only meant to be used with Box::pin
+/// but for the sake of understanding why it could cause problems,
+/// we will also look at pin::new ( even if its not possible at the start)
+/// at pin! macro.**
 impl MySelfReferencePinned {
 
+    /// This simple block to create a new MySelfReferencePinned type
+    /// This type has PhantomPinned, so turning this struct from a
+    /// Unpin to !Unpin type. !Unpin tells us that this value
+    /// has its fields addresses constant, and locked in place
+    /// unless we use unsafe rust code.
     pub fn new(val: u8) -> Self {
         Self { val,ptr: None, _mkr:std::marker::PhantomPinned }
     }
 
+
     // Notice I used &raw const and not as *const u8
     // cause this will just convert the value into a 
     // addr pointer.
+    // starthere
     pub fn put_ptr(&mut self) {
         self.ptr = Some( &raw const self.val );
     }
@@ -458,8 +488,9 @@ impl MySelfReferencePinned {
     // All this is is a variable holding the address, and this
     // variable is copied.
     pub fn put_ptr_cast(&self) {
-        let mut _z = Some( &raw const self.val );
-        // todomanish:
+        let _z = Some( &raw const self.val );
+        // todomanish: Perhaps this is still not correct?
+        // even it it works for box::pin
         let mut y = &self.ptr as *const Option<*const u8> as *mut Option<*const u8>;
         unsafe { *y = _z; }
 
