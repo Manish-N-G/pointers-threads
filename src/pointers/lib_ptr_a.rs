@@ -1,9 +1,84 @@
-//! Testing ptr_a
+//! This module covers raw pointer manuplication and assignemet along with 
+//! structs of self references types.
 //!
+//! In the case of raw pointers, we only manuplicate the value and pass it
+//! via const and mut pointers. This is unsafe and uses unsafe rust. And 
+//! understanding this helps to give us better understarding as we go
+//! forward.
 //!
+//! Along with the raw pointer functions, we have structs what reference
+//! themselves. This is included in this module, beceause is shows how data
+//! can be misleading when we move ownership for certain self reference
+//! types. We have SelfReference and SelfReferencePinned /* not to mention
+//! SelfReferenceState */ which shows how they are impacted when we move 
+//! these types.
 //!
+//! What is important to keep in mind is how these struct are eventually going 
+//! to be used [`std::future`] and [`std::thread`]. For these concurrent 
+//! implementations, how we move data between threads/tasks, its important to keep in 
+//! mind how self references could pose some risks. However, rust tries to
+//! help by using the [`std::marker::Unpin`] and `!Unpin` trait bounds.
+//! And by using [`std::pin::Pin`], we will be able to define the conditions
+//! for the `Unpin` and `!Unpin` traits with `Pin`.
+//! 
+//! # Pinning
+//!
+//! To simple explain, Pinning an Unpin type allows us to change its field 
+//! values while providing certain guarantees that its memory address remains
+//! stable for the duration of the pin. 
+//! Basically The Pin wrapper restricts moving the value out of its memory location,
+//! but it allows mutation. There are methods on the pinned type that can modify
+//! its fields as long as they are not meant to be moved.
+//!
+//! **`Pin`** is a pointer which **pins** its pointee in place. Pointee here being
+//! the actual type the Pin pointes to in memory.
+//! Pin is also a wrapper around some kind of pointer Ptr.
+//!
+//! And and api provided in the [`std::pin`] work differntly and doesn't always give
+//! us the expected results. Look at the following.
+//! - [`std::pin::Pin`]
+//! - [`std::pin::pin`]
+//! - [`std::boxed::Box::pin`]
+//!
+//! `NOTE`: `Pin<P>` does not physically fix the memory address; it is a `type-level`
+//! guarantee that the pointee will not be moved through that specific pointer.
+//! Basically this just hints to use that this type P, is not supposed to me moved.
+//!
+//! With type `P: Unpin`, is just wrap P in Pin, while having no concerte effects; 
+//! as the value can actually me moved freely. We could do this through [`std::mem::swap`]
+//! for example. You can safely obtain a mutable reference (&mut T) via get_mut to modify
+//! fields because the compiler guarantees the type does not rely on a stable memory address. 
+//!
+//! Therefore, Implementing Pin on Unpin will not do much except proving mutability 
+//! via pointers. The Pin pointer itself is movable (if it implements Unpin), but it 
+//! restricts access to the underlying data to prevent moves that could invalidate
+//! self-reference types. 
+//!
+//! However, for types that are !Unpin (such as compiler-generated Futures or 
+//! self-referential structs), obtaining a standard &mut T is prohibited in safe code.
+//! This restriction ensures that the pointee’s address remains stable, preventing 
+//! dangling pointers if the value were to be moved.
+//! 
+//! `NOTE`: We might need to manually implement `!Unpin`, if we are using raw pointers
+//! for example in our struct type. Look at **SelfReferencedPinned** via 
+//! [`std::marker::PhantomPinned`].
+//!
+//! In short, pinning an Unpin type prevents moves through the pinned pointer,
+//! allowing safe mutation of fields, but it does not physically lock the value in 
+//! memory if other mutable references exist. For !Unpin types, the pinning guarantee
+//! is stricter, preventing any move through the pinned pointer to maintain safety 
+//! for self-referential structures.
+//!
+//! For !Unpin types, Pin enforces that the address will not change for the lifetime
+//! of the pin. We also cannot obtain a standard mutable reference (&mut T) to modify 
+//! fields safely; you must use unsafe methods or specialized constructors 
+//! (like Box::pin or pin!) that guarantee the pointee remains at a stable memory location.
+//!
+//! To Summerize:
+//! Unpin: Address is not stable; fields can be modified via **&mut T**; pinning is a no-op. 
+//! !Unpin: Address is stable while pinned; fields cannot be modified via **&mut T** ( unless 
+//! via unsafe rust); pinning prevents moves.
 
-//pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16) {
 /// An unsafe function that requires a vector of more then
 /// 2 elements, or else it would fail. It produces a tuple
 /// where the 1st element it the always 8208 and the next is

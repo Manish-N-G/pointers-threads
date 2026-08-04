@@ -19,6 +19,11 @@ fn test_self_ref() {
     println!(" --------------------------- Test Self Ref ----------------------------");
     println!("Normal ======================");
     let mut u = MySelfReference::new(4u8);
+
+    // This assert_val functing will compile
+    // fn assert_val<T: Unpin>() {}
+    // assert_val::<MySelfReference>();
+
     u.put_ptr();
     u.print_addr( &format!("Created new SelfRef and put ptr {}", u.get_val()) );
     // this can be dangerous, cause this value gets moved into a new
