@@ -206,12 +206,12 @@ fn test_self_ref_pin() {
     let pu = Box::pin(_u);
     // pu.print_addr( "box pin for pinned" ); // this will panic. Call ptr on None type
     // pu.put_ptr(); // this will not works
-    pu.put_ptr_cast(); // this will works
+    unsafe { pu.put_ptr_cast(); } // this will works 
     pu.print_addr( &format!("Put ptr with cast as val is {}", pu.get_val()) );
     //pu.update_val(44); // cannot borrow data as mutable // doesnt work
 
     pu.update_val_ptr_cast(94); // cannot borrow data as mutable // doesnt work
-    pu.print_addr( &format!("Update ptr cast val {}", u.get_val()) );
+    pu.print_addr( &format!("Update ptr cast val {}", pu.get_val()) );
     // NOTE: Notice here, when we call update value, it doesnt give us the
     // correct info, as the address points to the old one. This is same
     // as the Update_val function
@@ -228,7 +228,7 @@ fn test_self_ref_pin() {
     pu.print_addr("");
 
 
-    pu.put_ptr_cast(); // this will works again. and seems to correct the update value
+    unsafe { pu.put_ptr_cast(); } // this will works again. and seems to correct the update value
     // Will update the correct address when we call this put ptr cast
     pu.print_addr( &format!("Put ptr with cast again for val {}", pu.get_val()) );
     
@@ -252,14 +252,15 @@ fn test_self_ref_pin() {
     u.print_addr( &format!("Add for Put Ptr before pin pin! {}", u.get_val()) );
 
     let pin_u = std::pin::pin!(u);
+    unsafe { pin_u.put_ptr_cast(); }
     pin_u.print_addr( &format!("Put ptr with cast as val is {}", pin_u.get_val()) );
-
+                                    //
     // pin_u.update_val(5u8); // cannot use this
     pin_u.update_val_ptr_cast(93); // cannot borrow data as mutable // doesnt work
     pin_u.print_addr( &format!("before put_ptr after pin pin!: {}", pin_u.get_val()) );
 
     // pin_u.put_ptr(); // This will not work.
-    pin_u.put_ptr_cast(); // This not needed. But harmless to have
+    unsafe { pin_u.put_ptr_cast(); }// This not needed. But harmless to have
 
     // we have the option to choose here depending on the
     // lifetime of the pin_u or u.

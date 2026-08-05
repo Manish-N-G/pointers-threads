@@ -215,10 +215,10 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
 /// address. For that very reason we try to simulate the methods we will be
 /// calling and how they are handled.
 ///
-/// These types are also affected by how the Box::pin, Pin::new and pin! 
+/// These types are also affected by how the `Box::pin`, `Pin::new` and `pin!` 
 /// operations work. We will have to dive deeper into how those operate,
 /// and they to will be discussed in the next part.
-/// NOTE: todomanish.
+/// Look at the `lib_ptr_a` for more details
 pub struct MySelfReference {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
@@ -231,49 +231,6 @@ pub struct MySelfReference {
     pub(crate) ptr: Option<*const u8>,
 }
 
-// Copy clone done seem to matter here really
-#[derive(Debug, Copy, Clone)]
-/// This SelfReferencePinned type that has a value and a pointers and
-/// a marker Pinner Phantom type. We use methods on this type to set the
-/// ptr value. We still use the Option of raw pointers to set the inner
-/// address
-///
-/// The purpose of using the SelfReferencePinned type is similar to the
-/// SelfReference type. We can access these values through the methods,
-/// However, we will soon discover why using PhantomPinned to make this 
-/// type a !Unpin, proves to be tricky.
-///
-/// Here, how this works with async is that, it defines the type to be
-/// !Unpin. And if its unpinned, it indicates that it should be used 
-/// with mainly Box::pin and not the pin::new and pin! operations. Despite
-/// finding ways to implement this for pin::new and pin! safely but working
-/// with some workaround, it best to avoid this. Self reference are dangerous
-/// if not handles correctly. And we want to limit the possibility of
-/// creating more error with using them in async operations.
-/// To illustrate: We make this !Unpin type, cause we just want to tell the
-/// compiler that this value should not be moved. Its fields will should
-/// always hold the same address.
-pub struct MySelfReferencePinned {
-    // Note: the only way we an access these values are through the methods
-    // we will be calling on them.
-    pub(crate) val: u8,
-
-    // Also, this field is not Send and not Sync because rust 
-    // doesnt automatically make them so as we have used raw pointers.
-    pub(crate) ptr: Option<*const u8>,
-
-    // when we use PhantomPinner: the MySelfReference struct goes from
-    // Unpin type ( via auto implementations ) to !Unpin type
-    _mkr: std::marker::PhantomPinned,
-    
-    // in the case a type is Unpin, we can use Pin::new(), Box::pin()
-    // and pin!(). and those methods works in general.
-    // However, if use make the type !Unpin, then this will not work 
-    // properly for pin::new() cause pin::new() as this doesnt work with
-    // !Unpin. And despite working with pin!(), we also that that this can
-    // be really tricky, and we need to be careful about this.
-}
-
 /// For this impl block, the methods exposed to it are generally
 /// safe. They still use some unsafe code, however, we should be able to
 /// manage them. There can still be risk with using async/threads for this
@@ -284,7 +241,7 @@ pub struct MySelfReferencePinned {
 ///
 /// let mut my_self_ref = MySelfReference::new(3u8);
 ///
-/// // To unsure the pointers point to the correct
+/// // To make sure the pointers point to the correct
 /// // address in memory
 /// my_self_ref.put_ptr();
 ///
@@ -320,7 +277,7 @@ impl MySelfReference {
     ///
     /// let mut my_self_ref = MySelfReference::new(3u8);
     ///
-    /// // this put_ptr show now point to the correct memory
+    /// // this put_ptr should now point to the correct memory
     /// my_self_ref.put_ptr();
     ///
     /// let (val, ptr) = my_self_ref.get_addresses();
@@ -507,6 +464,53 @@ unsafe impl Send for MySelfReference {}
 /// with caution.
 unsafe impl Sync for MySelfReference {}
 
+
+// Copy clone done seem to matter here really
+#[derive(Debug, Copy, Clone)]
+/// This SelfReferencePinned type that has a value and a pointers and
+/// a marker Pinner Phantom type. We use methods on this type to set the
+/// ptr value. We still use the Option of raw pointers to set the inner
+/// address
+///
+/// The purpose of using the SelfReferencePinned type is similar to the
+/// SelfReference type. We can access these values through the methods,
+/// However, we will soon discover why using PhantomPinned to make this 
+/// type a !Unpin, proves to be tricky.
+///
+/// Here, how this works with async is that, it defines the type to be
+/// !Unpin. And if its unpinned, it indicates that it should be used 
+/// with mainly Box::pin and not the pin::new and pin! operations. Despite
+/// finding ways to implement this for pin::new and pin! safely but working
+/// with some workaround, it best to avoid this. Self reference are dangerous
+/// if not handles correctly. And we want to limit the possibility of
+/// creating more error with using them in async operations.
+/// To illustrate: We make this !Unpin type, cause we just want to tell the
+/// compiler that this value should not be moved. Its fields will should
+/// always hold the same address.
+///
+/// Look at [MySelfReference] for Comparison between the types.
+pub struct MySelfReferencePinned {
+    // Note: the only way we an access these values are through the methods
+    // we will be calling on them.
+    pub(crate) val: u8,
+
+    // Also, this field is not Send and not Sync because rust 
+    // doesnt automatically make them so as we have used raw pointers.
+    pub(crate) ptr: Option<*const u8>,
+
+    // when we use PhantomPinner: the MySelfReference struct goes from
+    // Unpin type ( via auto implementations ) to !Unpin type
+    _mkr: std::marker::PhantomPinned,
+    
+    // in the case a type is Unpin, we can use Pin::new(), Box::pin()
+    // and pin!(). and those methods works in general.
+    // However, if use make the type !Unpin, then this will not work 
+    // properly for pin::new() cause pin::new() as this doesnt work with
+    // !Unpin. And despite working with pin!(), we also that that this can
+    // be really tricky, and we need to be careful about this.
+}
+
+
 /// I will have to do some unsafe impl here.
 /// NOTE: This havs to be to type &self not &mut self. 
 /// Or else PhantomPinned marker will complain and not
@@ -537,6 +541,17 @@ impl MySelfReferencePinned {
     /// Unpin to !Unpin type. !Unpin tells us that this value
     /// has its fields addresses constant, and locked in place
     /// unless we use unsafe rust code.
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*; 
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// // To make sure the pointers point to the correct
+    /// // address in memory
+    /// my_self_ref_to_pin.put_ptr();
+    ///
+    /// assert_eq!(3u8, my_self_ref_to_pin.get_val());
+    /// ```
     pub fn new(val: u8) -> Self {
         Self { val,ptr: None, _mkr:std::marker::PhantomPinned }
     }
@@ -545,7 +560,35 @@ impl MySelfReferencePinned {
     // Notice I used &raw const and not as *const u8
     // cause this will just convert the value into a 
     // addr pointer.
-    // starthere
+    /// put_ptr should be called immediately after creating
+    /// the pinned type to ensure that the address is not 
+    /// None if the ptr field.
+    /// ```should_panic
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// // we need to call put_val first
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    ///
+    /// assert_eq!( val, ptr );
+    /// ```
+    ///
+    /// This would be the correct implementation to make sure
+    /// we have put_ptr in our code
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// // this put_ptr should now point to the correct memory
+    /// my_self_ref_to_pin.put_ptr();
+    ///
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    ///
+    /// assert_eq!( val, ptr );
+    ///
+    /// ```
     pub fn put_ptr(&mut self) {
         self.ptr = Some( &raw const self.val );
     }
@@ -562,12 +605,84 @@ impl MySelfReferencePinned {
     // the address will point the correct value
     // All this is is a variable holding the address, and this
     // variable is copied.
-    pub fn put_ptr_cast(&self) {
+    /// This is unsafe function to manually copy the address in
+    /// from self val to self ptr. This is not safe, because we find
+    /// complications if we were to pin the value via `Box::pin` or
+    /// `pin::Pin` or `pin!`. The function is created for `!Unpin types`
+    /// but nothing stops us from using it for Unpin types also.
+    /// # Safety
+    ///
+    /// This is not safe, and we have to be careful, as this could 
+    /// potentially fail. We can fix this in the next module were we 
+    /// use states instead.
+    ///
+    /// This would be the correct implementation to make sure
+    /// we have put_ptr in our code
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// // this put_ptr should now point to the correct memory
+    /// unsafe { my_self_ref_to_pin.put_ptr_cast(); }
+    ///
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    ///
+    /// Box implementation for this
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// let pin_self_ref_pin = Box::pin(my_self_ref_to_pin);
+    ///
+    /// let pin_self_ref_pin = my_self_ref_to_pin;
+    /// // this put_ptr should now point to the correct memory
+    /// unsafe {my_self_ref_to_pin.put_ptr_cast(); }
+    ///
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    ///
+    /// Pin::new implementation. Pin::new cannot work for !Unpin types. <br>
+    /// **This will not compile**
+    /// ```compile_fail
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// let pin_self_ref_pin = std::pin::Pin::new(&mut my_self_ref_to_pin);
+    ///
+    /// let pin_self_ref_pin = my_self_ref_to_pin;
+    /// // this put_ptr should now point to the correct memory
+    /// unsafe {my_self_ref_to_pin.put_ptr_cast(); }
+    ///
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    ///
+    /// Pin::new implementation. Pin::new cannot work for !Unpin types
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    ///
+    /// let pin_self_ref_pin = std::pin::pin!(my_self_ref_to_pin);
+    ///
+    /// let pin_self_ref_pin = my_self_ref_to_pin;
+    /// // this put_ptr should now point to the correct memory
+    /// unsafe {my_self_ref_to_pin.put_ptr_cast(); }
+    ///
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    pub unsafe fn put_ptr_cast(&self) {
         let _z = Some( &raw const self.val );
-        // todomanish: Perhaps this is still not correct?
-        // even it it works for box::pin
-        let mut y = &self.ptr as *const Option<*const u8> as *mut Option<*const u8>;
-        unsafe { *y = _z; }
+        // let mut _y = &self.ptr as *const Option<*const u8> as *mut Option<*const u8>;
+        let mut _y = &raw const self.ptr as *mut Option<*const u8>;
+        unsafe { *_y = _z; }
 
         // didnt work
         // let x = &self.val as *const u8;
@@ -575,7 +690,25 @@ impl MySelfReferencePinned {
         // _y = x;
     }
 
-    /// We get the value via ptr from the 
+    /// We get the value via ptr from the type.
+    /// Dont forget to do `put_ptr_cast`
+    /// ```should_panic
+    /// # use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    ///
+    /// assert_eq!( 3, my_self_ref.get_val() );
+    /// ```
+    /// Should be 
+    /// ```
+    /// # use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    ///
+    /// unsafe {my_self_ref.put_ptr_cast(); }
+    ///
+    /// assert_eq!( 3, my_self_ref.get_val() );
+    /// ```
     pub fn get_val(&self) -> u8 {
         // dont use casting for this, will produce the wrong value
         // let x = self.ptr.unwrap() as u32 as *const u32;
@@ -583,6 +716,39 @@ impl MySelfReferencePinned {
     }
 
 
+    /// update_val for the SelfReferencePinned type that is meant
+    /// to be used before Pinning is done
+    ///
+    /// # Warning
+    /// Despite being able to update_val, we still have to proceed with
+    /// caution.
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    ///
+    /// my_self_ref.update_val(8u8);
+    /// ```
+    /// Instead do this
+    ///
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReference::new(3u8);
+    /// // Dont forget to use put_ptr 1st
+    /// my_self_ref.put_ptr();
+    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// assert_eq!( val, ptr );
+    ///
+    /// my_self_ref.update_val(8u8);
+    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// assert_eq!( val, ptr );
+    ///
+    /// my_self_ref.update_val(18u8);
+    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// assert_eq!( val, ptr );
+    ///
+    /// ```
     pub fn update_val(&mut self, val: u8) {
         self.val = val;
     }
@@ -616,7 +782,30 @@ impl MySelfReferencePinned {
         // let mut _x = self.ptr.unwrap() as *mut u8;
 
         let mut _x = self.ptr.unwrap() as *mut u8;
-        unsafe {*_x = val; }
+        unsafe { *_x = val; }
+    }
+
+    /// To get the addresses for the value and the ptr raw
+    /// address ptr. This is unsafe, and we have to proceed
+    /// with caution
+    /// ```
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    /// my_self_ref_to_pin.put_ptr();
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    /// The following will panic if we dont set the ptr 1st.
+    /// ```should_panic
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReference::new(3u8);
+    /// let (val, ptr) = my_self_ref_to_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// ```
+    pub fn get_addresses(&self) -> (&u8, &u8) {
+        ( &self.val, unsafe { &*self.ptr.unwrap() } )
     }
 
     pub fn print_addr(&self, condition: &str) {
