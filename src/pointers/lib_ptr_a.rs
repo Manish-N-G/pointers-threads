@@ -760,12 +760,44 @@ impl MySelfReferencePinned {
     /// this way, however, for implementation, it gives uf a 
     /// brief of how it works.
     /// Consider this as unsafe
+    ///
+    /// Here via pointer casting, we update the values
+    /// ```
+    /// # use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    /// // Dont forget to use put_ptr 1st
+    /// my_self_ref.put_ptr();
+    /// # let (val, ptr) = my_self_ref.get_addresses();
+    /// # assert_eq!( val, ptr );
+    ///
+    /// unsafe {my_self_ref.update_val_cast(10); }
+    /// # let (val, ptr) = my_self_ref.get_addresses();
+    /// # assert_eq!( val, ptr );
+    /// assert_eq!( 10, my_self_ref.get_val());
+    /// ```
     pub unsafe fn update_val_cast(&self, val: u8) {
         let mut _x = &self.val as *const u8 as *mut u8;
         unsafe { *_x = val; }
     }
     
-    // does the same as undate_val
+    /// This does the same as undate_val. This is just
+    /// implemented via updating the value via the ptr
+    /// address in ptr field.
+    /// ```
+    /// # use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    /// // Dont forget to use put_ptr 1st
+    /// my_self_ref.put_ptr();
+    /// # let (val, ptr) = my_self_ref.get_addresses();
+    /// # assert_eq!( val, ptr );
+    ///
+    /// unsafe {my_self_ref.update_val_ptr(10); }
+    /// # let (val, ptr) = my_self_ref.get_addresses();
+    /// # assert_eq!( val, ptr );
+    /// assert_eq!( 10, my_self_ref.get_val());
+    /// ```
     #[allow(clippy::deref_addrof)]
     pub fn update_val_ptr(&mut self, val: u8) {
         *&mut self.val = *&val;
@@ -776,11 +808,28 @@ impl MySelfReferencePinned {
     /// a hack, but we could do it this way. An in practice,
     /// this is not the best way to do this in there are
     /// problems with the implementation.
-    #[allow(clippy::deref_addrof)]
+    /// ```
+    /// # use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    /// // Dont forget to use put_ptr 1st
+    /// # my_self_ref.put_ptr();
+    /// # let (val, ptr) = my_self_ref.get_addresses();
+    /// # assert_eq!( val, ptr );
+    /// # let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    ///
+    /// let my_self_ref_pin = Box::pin(my_self_ref);
+    /// unsafe { my_self_ref_pin.put_ptr_cast(); }
+    ///
+    /// // This function is unsafe, but allows us to do this in the
+    /// // unsafe implementation but this function is in itself 
+    /// // an unsafe call.
+    /// unsafe {my_self_ref_pin.update_val_ptr_cast(10); }
+    /// let (val, ptr) = my_self_ref_pin.get_addresses();
+    /// assert_eq!( val, ptr );
+    /// assert_eq!( 10, my_self_ref_pin.get_val());
+    /// ```
     pub fn update_val_ptr_cast(&self, val: u8) {
-        // let mut x = *self.ptr.unwrap() as *mut u8 ;
-        // let mut _x = self.ptr.unwrap() as *mut u8;
-
         let mut _x = self.ptr.unwrap() as *mut u8;
         unsafe { *_x = val; }
     }
@@ -808,6 +857,24 @@ impl MySelfReferencePinned {
         ( &self.val, unsafe { &*self.ptr.unwrap() } )
     }
 
+    /// Prints the address for the type and its fields and inner fields.
+    /// ```should_panic
+    /// // Some command that could help
+    /// // cargo test --doc -- --list
+    /// // cargo test --doc MySelfReferencePinned::print_addr
+    /// // cargo test --doc "MySelfReferencePinned::print_addr"
+    /// // NOTE: --nocapture and --show-output causes issue for doc tests
+    /// // cargo test --doc MySelfReferencePinned::print_addr -- --nocapture
+    ///
+    /// use pointers_threads::lib_ptr_a::*;
+    ///
+    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
+    /// my_self_ref_to_pin.put_ptr();
+    /// my_self_ref_to_pin.print_addr("Extra condition");
+    ///
+    /// // to see print statements, we manually panic
+    /// panic!("Manual Panic here for print_addr -------------");
+    /// ```
     pub fn print_addr(&self, condition: &str) {
         if !condition.is_empty() {
             println!("{condition}");
