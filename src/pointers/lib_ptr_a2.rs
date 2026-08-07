@@ -336,7 +336,7 @@ impl<T: MyNums> MySelfRefStatePin<T> {
 /// Unpin, making it not the best for Sending and Syncing over
 /// threads, even if it can be done safely. I Prefer to know have 
 /// This as Send and Sync till we get the `MySelfRefStatePin` type.
-/// unsafe impl<T: MyNums> !Send for MySelfRefState<T> {} here is 
+/// unsafe impl<T: MyNums> !Send for `MySelfRefState<T>` {} here is 
 /// nightly, but I used PhantomDate to set our type to !Send
 /// and !Sync.
 ///
