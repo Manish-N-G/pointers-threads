@@ -489,6 +489,8 @@ unsafe impl Sync for MySelfReference {}
 /// always hold the same address.
 ///
 /// Look at [MySelfReference] for Comparison between the types.
+/// # Todo:
+/// `Comming Soon`: Async with MySelfReference types
 pub struct MySelfReferencePinned {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
@@ -887,3 +889,10 @@ impl MySelfReferencePinned {
     }
 }
 
+
+/// NOTE: Despite being available for Send, we have to proceed
+/// with caution.
+unsafe impl Send for MySelfReferencePinned {}
+/// NOTE: Despite being available for Sync, we have to proceed
+/// with caution.
+unsafe impl Sync for MySelfReferencePinned {}
