@@ -26,7 +26,8 @@ use crate::MyNums;
 /// This SelfRefState type is taken inspiration from the 
 /// [`crate::MySelfReferencePinned`] type. Like the `MySelfReferencePinned`
 /// type, we will use `PhantomPinned`, to make sure that we annotate
-/// this type with !Unpin trait properties.
+/// this type with !Unpin trait properties when we change the state
+/// to [`crate::MySelfRefStatePin`].
 ///
 /// We introduce a state machine pattern that starts from this type,
 /// in order to make this public, while the other structs are kept 
@@ -34,7 +35,10 @@ use crate::MyNums;
 /// that help guild the states.
 ///
 /// Here, how this works with async a lot better, we also manually use the 
-/// `Box::pin` type for make it simple, and not the pin::new and pin! operations.
+/// `Box::pin` type for make it simple, and not the pin::new and pin! operations,
+/// when we transform out type to `MySelfRefStatePin`. However, in order to
+/// prevent Send and Sync for this `MySelfRefState` type, we introduce a
+/// phantomData type.
 ///
 /// Also, we will not restrict our type to a single type, but to a
 /// whole number system that is defined by the `MyNums` trait.
@@ -42,13 +46,32 @@ use crate::MyNums;
 /// `Coming Soon`: Async with MySelfReference types
 pub struct MySelfRefState<T: MyNums> {
     val: T,
+    // I prefer to make this type !Send and !Sync till we
+    // change states.
+    _mkr: std::marker::PhantomData<std::cell::Cell<u8>>,
 }
 
 
 /// The pupose for this is maninly to expose the type to the user,
 /// to ensure only certain methods that allows control of how a
 /// seft ref type is used
-/// # Todo:
+/// The two methods used are as follows
+/// ```
+/// # use pointers_threads::lib_ptr_a2::*; 
+/// let mut my_ref = MySelfRefState::new(3u8);
+///
+/// // This state machine patter will not let this compile anymore.
+/// // we will have to use the put_ptr first.
+/// //let add = unsafe { my_ref.get_addresses() };
+///
+/// let mut my_ref_pin = my_ref.put_ptr();
+/// 
+/// // Now, we are able to make sure that we have the State used
+/// // update values for Self References
+/// 
+/// assert_eq!( 3u8, unsafe { *(my_ref_pin.get_addresses().1) } );
+///
+/// ```
 impl<T: MyNums> MySelfRefState<T> {
 
     /// Create new MySelfRefState type
@@ -64,7 +87,7 @@ impl<T: MyNums> MySelfRefState<T> {
     /// assert_eq!( 3u8, unsafe { std::mem::transmute::<MySelfRefState<u8>, u8>(my_ref) } );
     /// ```
     pub fn new(val: T) -> Self {
-        Self { val }
+        Self { val, _mkr: std::marker::PhantomData }
     }
 
     // NOTE: "cargo test --doc MySelfRefState" will work for all the tests
@@ -79,7 +102,7 @@ impl<T: MyNums> MySelfRefState<T> {
     // 
     /// This function changes the state pattern to the 
     /// `Box::Pin(MySelfRefStatePin)` type. Here the address
-    /// gets setup automatically on addition for this type.
+    /// gets setup automatically on addition to making it Pin.
     /// ```
     /// use pointers_threads::lib_ptr_a2::*;
     ///
@@ -105,12 +128,13 @@ impl<T: MyNums> MySelfRefState<T> {
         // are updated to match each other. This way we ensure that
         // we dont have changes to making errors in the addresses
         let my_pin = Box::pin( _my_ref );
-        // this was wrong
+        // notice this doesnt work
         // let pointer_val = &my_pin.val;
         // let mut _pointer_ptr = my_pin.ptr;
         // _pointer_ptr = pointer_val;
-        // my_pin
-        // this is also wrong as we have PhantomPinned making our type !Unpin
+
+        // this is also wrong as we have PhantomPinned making our
+        // type !Unpin. Push Box Pin will have to be mut
         // let pointer_val = &raw const my_pin.val;
         // my_pin.as_mut().get_mut().ptr = pointer_val;
 
@@ -122,15 +146,30 @@ impl<T: MyNums> MySelfRefState<T> {
 }
 
 
+/// This is a continuations from the [`crate::MySelfRefState`] struct
+/// where, we get the MySelfRefStatePin types. We cannot manually 
+/// create this type without gonig through the `MySelfRefState` struct
+/// and this way, we are able to maintain the state and expose
+/// only those methods that would be able to update the value safely
+/// as well as be able to work with futures and threads without
+/// worrying how the self reference type could incorrectly point to
+/// the wrong address when we pass ownership.
+///
+/// We make use of the PhantomPinned type, that makes the type a 
+/// `!Unpin' type. This will prevent us from moving this type to
+/// a differnt memory address, via the help of Pinning
 pub struct MySelfRefStatePin<T: MyNums> {
-    pub val: T,
-    pub ptr: *const T,
+    val: T,
+    ptr: *const T,
     // this converts to !Unpin type
-    pub _mkr: std::marker::PhantomPinned,
+    _mkr: std::marker::PhantomPinned,
 }
 
 
-/// I will have to do some unsafe impl here.
+// I will have to do some unsafe impl here.
+/// We use the methods here the way we want to in order to
+/// understand control how to update the value inside the 
+/// pinned type.
 /// NOTE: This havs to be to type &self not &mut self. 
 /// Or else PhantomPinned marker will complain and not
 /// allow you to do this. This is done specifically for
@@ -139,101 +178,94 @@ pub struct MySelfRefStatePin<T: MyNums> {
 /// we could find a work aroudn it.. However, dont
 /// implement is this way.
 /// ```
-/// use pointers_threads::lib_ptr_a2::*; 
+/// # use pointers_threads::lib_ptr_a2::*; 
 ///
-/// let mut my_ref = MySelfRefState::new(3u8);
+/// let my_ref = MySelfRefState::new(3u8);
 ///
-/// let my_ref_state = my_ref.put_ptr();
+/// let mut my_ref_pin = my_ref.put_ptr();
 ///
-/// // assert_eq!(3u8, my_self_ref.get_val());
-/// //todo:
+/// assert_eq!( 3u8, unsafe { *(my_ref_pin.get_addresses().1) } );
+/// assert_eq!( 3u8, my_ref_pin.get_val_by_ptr() );
+///
+/// my_ref_pin.update_val_by_ptr(10u8);
+/// assert_eq!( 10u8, unsafe { *(my_ref_pin.get_addresses().1) } );
+/// assert_eq!( 10u8, my_ref_pin.get_val_by_ptr() );
 /// ```
-/// Also, for this type, since we have PhantomPinned type, we should 
-/// avoid using ptr manipulation in order to access values.
-/// **NOTE: These types are only meant to be used with Box::pin
-/// but for the sake of understanding why it could cause problems,
-/// we will also look at pin::new ( even if its not possible at the start)
-/// at pin! macro.**
+/// ** These types are only meant to be used with Box::pin
+/// which is why, we manually do it through the 
+/// [`crate::MySelfRefState::put_ptr`] method. And the fields
+/// make private on purpose.
 impl<T: MyNums> MySelfRefStatePin<T> {
 
-    /*
     /// We get the value via ptr from the type.
-    /// Dont forget to do `put_ptr_cast`
-    /// ```should_panic
+    /// This will not compile, as we didnt use `put_ptr`
+    /// ```ignore
     /// # use pointers_threads::lib_ptr_a2::*;
     ///
-    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    /// let mut my_self_ref = MySelfRefState::new(3u8);
     ///
-    /// assert_eq!( 3, my_self_ref.get_val() );
+    /// assert_eq!( 3, my_self_ref.get_val_by_ptr() );
     /// ```
-    /// Should be 
+    /// Here we added the put_ptr for make out type
+    /// the `MySelfRefStatePin` type.
     /// ```
     /// # use pointers_threads::lib_ptr_a2::*;
     ///
-    /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
+    /// let my_self_ref = MySelfRefState::new(3u8);
     ///
-    /// unsafe {my_self_ref.put_ptr_cast(); }
+    /// let mut my_pin = my_self_ref.put_ptr();
     ///
-    /// assert_eq!( 3, my_self_ref.get_val() );
+    /// assert_eq!( 3, my_pin.get_val_by_ptr() );
     /// ```
-    */
     pub fn get_val_by_ptr( &self ) -> T {
         // We get the value via pointers
         unsafe { *self.ptr }
     }
 
-    /*
-    /// update_val for the SelfReferencePinned type that is meant
-    /// to be used before Pinning is done
+    /// Updates the value for the SelfRefStatePin type that
+    /// can now only be done as this type is always `Pinned`.
+    /// ```ignore
+    /// # use pointers_threads::lib_ptr_a2::*;
     ///
-    /// # Warning
-    /// Despite being able to update_val, we still have to proceed with
-    /// caution.
+    /// let mut my_self_ref = MySelfRefState::new(3u8);
+    ///
+    /// my_self_ref.update_val_by_ptr(8u8);
+    /// ```
+    /// But, now, via its state machine, we can do is this way
+    ///
     /// ```
     /// use pointers_threads::lib_ptr_a2::*;
     ///
-    /// let mut my_self_ref = MySelfRefPin::new(3u8);
-    ///
-    /// my_self_ref.update_val(8u8);
-    /// ```
-    /// Instead do this
-    ///
-    /// ```
-    /// use pointers_threads::lib_ptr_a::*;
-    ///
-    /// let mut my_self_ref = MySelfReference::new(3u8);
+    /// let my_self_ref = MySelfRefState::new(3u8);
     /// // Dont forget to use put_ptr 1st
-    /// my_self_ref.put_ptr();
-    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// let mut my_self_ref = my_self_ref.put_ptr();
+    ///
+    /// let (_, val, ptr) = unsafe { my_self_ref.get_addresses() };
     /// assert_eq!( val, ptr );
     ///
-    /// my_self_ref.update_val(8u8);
-    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// my_self_ref.update_val_by_ptr(8u8);
+    /// let (_, val, ptr) = unsafe { my_self_ref.get_addresses() }; 
     /// assert_eq!( val, ptr );
     ///
-    /// my_self_ref.update_val(18u8);
-    /// let (val, ptr) = my_self_ref.get_addresses();
+    /// my_self_ref.update_val_by_ptr(18u8);
+    /// let (_, val, ptr) = unsafe { my_self_ref.get_addresses() }; 
     /// assert_eq!( val, ptr );
     ///
     /// ```
-    */
-    pub fn update_val_by_ptr(&self, val: T) {
+    pub fn update_val_by_ptr(self: &mut std::pin::Pin<Box<Self>>, val: T) {
+    // pub fn update_val_by_ptr(&mut self, val: T) {
+        // worked when we had &self, cause Pin<Box<Self<T>>>
+        // doesnt implement derefmut
+        
         let ptr_val = &raw const self.val as *mut T;
         unsafe { *ptr_val = val; }
     }
     
 
     /// To get the addresses for the value and the ptr raw
-    /// address ptr. This is unsafe, and we have to proceed
-    /// with caution
-    /// ```
-    /// use pointers_threads::lib_ptr_a2::*;
-    ///
-    /// let my_self_ref = MySelfRefState::new(3u8);
-    /// let my_self_ref_to_pin = my_self_ref.put_ptr();
-    /// let (_, val, ptr) = unsafe { my_self_ref_to_pin.get_addresses() };
-    /// assert_eq!( val, ptr );
-    /// ```
+    /// address ptr. This is unsafe, as we should easily expose
+    /// the pointers to values so easily after this type is
+    /// already `Pinned`, and is `!Unpin`.
     // NOTE:
     // The following will not compile as we see that its not possible
     // to fine the get_addresses function. We dont use compile_fail, but
@@ -249,13 +281,27 @@ impl<T: MyNums> MySelfRefStatePin<T> {
     /// let (_, val, ptr) = my_self_ref.get_addresses();
     /// assert_eq!( val, ptr );
     /// ```
+    /// We have to make sure that we Pin the value 1st
+    /// ```
+    /// # use pointers_threads::lib_ptr_a2::*;
+    ///
+    /// let my_self_ref = MySelfRefState::new(3u8);
+    /// let my_self_ref_to_pin = my_self_ref.put_ptr();
+    /// let (_, val, ptr) = unsafe { my_self_ref_to_pin.get_addresses() };
+    /// assert_eq!( val, ptr );
+    /// ```
     /// # Safety
-    /// something to do
+    /// Here the Safety arguement is that, we will be able to 
+    /// use the addresses for general testing, but the danger 
+    /// lies in exposing the addresses easily. This will allow
+    /// others to exploit this, which is not what we want for our
+    /// safe State machine. Here, we use unsafe as well because
+    /// we dereference raw pointers. Otherise, we are able to 
+    /// get the addresses as expected.
     pub unsafe fn get_addresses(&self) -> ( &Self, &T, &T) {
         unsafe {( self, &self.val,  &*self.ptr ) }
     }
 
-    /*
     /// Prints the address for the type and its fields and inner fields.
     /// ```should_panic
     /// // Some command that could help
@@ -264,17 +310,15 @@ impl<T: MyNums> MySelfRefStatePin<T> {
     /// // cargo test --doc "MySelfReferencePinned::print_addr"
     /// // NOTE: --nocapture and --show-output causes issue for doc tests
     /// // cargo test --doc MySelfReferencePinned::print_addr -- --nocapture
+    /// # use pointers_threads::lib_ptr_a2::*;
     ///
-    /// use pointers_threads::lib_ptr_a::*;
-    ///
-    /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
-    /// my_self_ref_to_pin.put_ptr();
-    /// my_self_ref_to_pin.print_addr("Extra condition");
+    /// let mut my_self_ref_to_pin = MySelfRefState::new(3u8);
+    /// let my_pin = my_self_ref_to_pin.put_ptr();
+    /// my_pin.print_addr("Extra condition");
     ///
     /// // to see print statements, we manually panic
     /// panic!("Manual Panic here for print_addr -------------");
     /// ```
-    */
     pub fn print_addr(&self, condition: &str) {
         if !condition.is_empty() {
             println!("{condition}");
@@ -287,11 +331,19 @@ impl<T: MyNums> MySelfRefStatePin<T> {
 }
 
 
-// NOTE: Despite being available for Send, we have to proceed
-// with caution.
-// unsafe impl Send for MySelfReferencePinned {}
-// NOTE: Despite being available for Sync, we have to proceed
-// with caution.
-// unsafe impl Sync for MySelfReferencePinned {}
+/// Our state machine of MySelfRefState does not yet have the 
+/// Pin trait for it. And this type would expose our type as
+/// Unpin, making it not the best for Sending and Syncing over
+/// threads, even if it can be done safely. I Prefer to know have 
+/// This as Send and Sync till we get the `MySelfRefStatePin` type.
+/// unsafe impl<T: MyNums> !Send for MySelfRefState<T> {} here is 
+/// nightly, but I used PhantomDate to set our type to !Send
+/// and !Sync.
+///
+/// However, out state machine is now more secure to be passed between threads
+/// or tasks, when it become `MySelfRefStatePin`, if we were to pass
+/// this type, we know that state will not expose us to get the
+/// value unsafely, which is our main goal.
+unsafe impl<T: MyNums> Sync for MySelfRefStatePin<T> {}
 
 
