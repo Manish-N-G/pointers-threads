@@ -42,8 +42,6 @@ use crate::MyNums;
 ///
 /// Also, we will not restrict our type to a single type, but to a
 /// whole number system that is defined by the `MyNums` trait.
-/// # Todo:
-/// `Coming Soon`: Async with MySelfReference types
 pub struct MySelfRefState<T: MyNums> {
     val: T,
     // I prefer to make this type !Send and !Sync till we
@@ -158,6 +156,8 @@ impl<T: MyNums> MySelfRefState<T> {
 /// We make use of the PhantomPinned type, that makes the type a 
 /// `!Unpin' type. This will prevent us from moving this type to
 /// a differnt memory address, via the help of Pinning
+/// # Todo:
+/// `Coming Soon`: Async with MySelfRefStatePin types
 pub struct MySelfRefStatePin<T: MyNums> {
     val: T,
     ptr: *const T,
@@ -346,4 +346,4 @@ impl<T: MyNums> MySelfRefStatePin<T> {
 /// value unsafely, which is our main goal.
 unsafe impl<T: MyNums> Sync for MySelfRefStatePin<T> {}
 
-
+//todomanish: Have to set up examples function for this as well.

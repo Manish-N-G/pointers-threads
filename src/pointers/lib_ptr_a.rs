@@ -219,6 +219,8 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
 /// operations work. We will have to dive deeper into how those operate,
 /// and they to will be discussed in the next part.
 /// Look at the `lib_ptr_a` for more details
+/// # Todo:
+/// `Coming Soon`: Async with MySelfReference types
 pub struct MySelfReference {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
@@ -490,7 +492,7 @@ unsafe impl Sync for MySelfReference {}
 ///
 /// Look at [MySelfReference] for Comparison between the types.
 /// # Todo:
-/// `Comming Soon`: Async with MySelfReference types
+/// `Comming Soon`: Async with MySelfReferencePinned types
 pub struct MySelfReferencePinned {
     // Note: the only way we an access these values are through the methods
     // we will be calling on them.
