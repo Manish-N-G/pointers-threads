@@ -4,45 +4,10 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 
-pub fn thread1d_mutex_lock_attempt() {
-    let x = Mutex::new(11u8);
-    // this is just to illustrate that mutex lock, when not received for Lock(), doesnt mean that
-    // the tread will panic, instead the thread is put to sleep while waiting for the lock to
-    // be released. Here, the lock is never released before the other lock() is called, and hence
-    // this will be hung forever and called be passed on.
-    thread::scope(|s| {
-        let th1 = s.spawn(|| {
-            println!("Before calling double lock");
-            {
-                let y = x.lock().unwrap();
-                println!("first lock received");
-                drop(y); // if this drop was not here, this program will hang forever
-                #[allow(unused)]
-                let z = x.lock().unwrap();
-                // drop(z); // This drop will happen automatically
-            }
-            println!("I doesn't panic, it just get stuck falls asleep if we dont/blocked if two locks are
-                received at the same time");
-        });
+use rayon::prelude::*;
 
-        //NOTE: what if we use rayon here. //todomanish:
-        for _ in 0..100 {
-            thread::sleep(std::time::Duration::from_millis(100));
-            println!("trying to unpark/wakeup");
-            th1.thread().unpark();
-            if let Ok(mut v) = x.try_lock() {
-                println!("got the lock");
-                *v += 1;
-            } else {
-                println!("trying to unpark/wakeup");
-            }
-        }
-        println!(
-            "finished loop, if dont see any print after this for his function, thread failed, "
-        );
-    });
-    println!("passed"); // this is not possible
 
+pub fn thread1c_mutex_lock_attempt() {
     {
         println!("simple test for references");
         let mx = std::sync::Mutex::new(22u8);
@@ -94,7 +59,102 @@ pub fn thread1d_mutex_lock_attempt() {
     }
 }
 
-pub fn thread1d_park_mutex() {
+
+
+
+
+pub fn thread1c_mutex_lock_attempt_drop(
+    val: Mutex<u8>, is_dropable: bool, is_rayon: bool, printable: bool) -> Mutex<u8>
+{
+    let toprint = |s:&str| { 
+        if printable { println!("{}", s) }
+    }; 
+
+    let finish = Mutex::new(false);
+    // this is just to illustrate that mutex lock, when not received for Lock(), doesnt mean that
+    // the tread will panic, instead the thread is put to sleep while waiting for the lock to
+    // be released. Here, the lock is never released before the other lock() is called, and hence
+    // this will be hung forever and called be passed on.
+    thread::scope(|s| {
+        let th1 = s.spawn(||loop {
+            toprint("Before calling double lock");
+            {
+                // Note: Mutex Guard arent using a lifetime here in the sence that
+                // the check, doesnt drop it when we dont use y. This mean that we
+                // will manually have to drop it, before another lock is called for 
+                // that variable, of it would hang that thread.
+                let y = val.lock().unwrap();
+                toprint( &format!("first lock received {}", y) );
+                if is_dropable {
+                    toprint("lock is dropped");
+                    // if this drop was not here, this program will hang forever
+                    drop(y);
+                } else {
+                    toprint("lock not dropped");
+                }
+                #[allow(unused)]
+                let z = val.lock().unwrap();
+                toprint( &format!("second lock received {}", z) );
+                // drop(z); // This drop will happen automatically
+            }
+            toprint("Notice: It doesn't panic, lock can block thread if a second lock \
+                is called at the same time, for that variable.\n");
+            std::thread::park(); // we manually park this thread casee we loop it.
+            toprint( "th1 got unparked");
+            // Note: this could panic potentially panic in production, but for simplicity
+            // we use unwrap for showing how to work with locks.
+            if *finish.lock().unwrap() { break }
+        });
+
+        //NOTE: what if we use rayon here.
+        //Since, rayon can create multiple processes at the same time here,
+        //the issues when using mutexes and locks, if not properly configured,
+        //could result in errors. A common error is how we park and unpark will
+        //be used during parallel calls. The unpark call happens in parallel, 
+        //causing the main thread to complete, without without any account taken
+        //if the th1 thread is still parked or not.
+        //In this situation, we can see that it causes issues and not what we
+        //wanted.
+        let cal = |i: u8| {
+            thread::sleep(std::time::Duration::from_millis(100));
+            toprint( &format!("trying to unpark/wakeup spawned thread. Loop iteration {}", i) );
+            th1.thread().unpark();
+                toprint( "main got it: main");
+            if let Ok(mut v) = val.try_lock() {
+                toprint( &format!("got the lock for loop {}", i) );
+                *v += 1;
+            } else {
+                toprint( &format!("didnt get lock for loop {}", i) );
+            }
+        };
+        if is_rayon {
+            (1..=100u8).into_par_iter().for_each( |i| {
+                cal(i);
+            });
+        } else {
+            for i in 1..=100u8 {
+                cal(i);
+            }
+        }
+
+        toprint( "Loop finished, if you dont see any print statements after this, thread failed");
+        //NOTE: Since we could use Rayon, there is a very high change that the
+        //main thread doesnt unpark the th1 thread. So we manually call 
+        //unpark here.
+        th1.thread().unpark();
+        *finish.lock().unwrap() = true;
+    });
+    toprint("However, thread passed\n"); // this is not possible
+    val
+}
+
+
+
+
+
+
+
+pub fn thread1c_park_mutex() {
     // this is just to illustrate that mutex lock, when not received for Lock(), doesnt mean that
     // the tread will panic, instead the thread is put to sleep while waiting for the lock to
     // be released. Here, the lock is never released before the other lock() is called, and hence
@@ -173,7 +233,10 @@ pub fn thread1d_park_mutex() {
     });
 }
 
-pub fn thread1d_arc_mutex() {
+
+
+
+pub fn thread1c_arc_mutex() {
     #[derive(Debug)]
     struct TestMutex<'a> {
         a: std::sync::Mutex<u8>,

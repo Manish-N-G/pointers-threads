@@ -47,12 +47,12 @@ fn main() {
     //
     // my_func!('m', 2, a);
     // my_func!('m', 1, g).await;
-    {
+    //
     // mod1_b();
     // main_test_SelfRef();
     use th3::th3b2::*;
-    test_async_spawn();
-    }
+    thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, true, true);
+    thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, false, true);
     //
     //
 
