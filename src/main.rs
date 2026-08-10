@@ -51,14 +51,23 @@ fn main() {
     // mod1_b();
     // main_test_SelfRef();
     use th3::th3b2::*;
-    thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, true, true);
-    thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, false, true);
+    // thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, true, true);
+    // thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, false, true);
+    //
+    thread1c_mutex_lock_attempt(true, 33);
+    // thread1c_mutex_hangs_forever( 5, true );
     //
     //
 
     let rt = tokio::runtime::Runtime::new().expect("testing");
     let t = rt.block_on(two());
     println!("t is {t}");
+
+
+    trait All {};
+    struct One;
+    impl All for One {};
+
 }
 
 async fn one(val: u8) {

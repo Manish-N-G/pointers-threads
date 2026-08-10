@@ -119,6 +119,9 @@ impl<T: MyNums> MySelfRefState<T> {
         let _my_ref = MySelfRefStatePin { 
             val: self.val,
             ptr: std::ptr::null(),
+            // cause of nonnul, I would have to look for something
+            // like NonNull::from(self.val).cast()
+            //
             _mkr: std::marker:: PhantomPinned
         };
 
@@ -156,11 +159,17 @@ impl<T: MyNums> MySelfRefState<T> {
 /// We make use of the PhantomPinned type, that makes the type a 
 /// `!Unpin' type. This will prevent us from moving this type to
 /// a differnt memory address, via the help of Pinning
+///
+/// We could also use [`std::ptr::NonNull`] for our implementation, 
+/// but for the moment, we stick to raw pointers. Out implementation 
+/// will change if we use `NonNull` a bit.
 /// # Todo:
 /// `Coming Soon`: Async with MySelfRefStatePin types
 pub struct MySelfRefStatePin<T: MyNums> {
     val: T,
     ptr: *const T,
+    // ptr: std::ptr::NonNull<T>, // Via NonNull
+
     // this converts to !Unpin type
     _mkr: std::marker::PhantomPinned,
 }

@@ -1,4 +1,10 @@
 //todomanish: Have to make the lib for this.
+// I can use the eample here to make sure that we are able to see hwo the
+// threads area actually going to be pushed.
+//! Here we start with the th c module.
+//! ``` 
+//! let x = 4u8;
+//! ``` 
 use std::collections::vec_deque::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -6,63 +12,206 @@ use std::time::Duration;
 
 use rayon::prelude::*;
 
+/// This function will hang forever when using mutexes this way.
+/// 
+/// This is just an illustration for [`std::sync::Mutex`] that, when we dont receive the lock
+/// from `Lock()`, doesnt mean that the thread will panic, instead the thread is put to sleep
+/// while waiting for the lock to be released. Here, the lock is never released before the
+/// other lock() is called, and hence this will be hung forever and called be passed on.
+/// ```ignore
+/// # use pointers_threads::lib_th_c::*;
+/// assert_eq!( 5u8, thread1c_mutex_hangs_forever(5, true) );
+/// ```
+pub fn thread1c_mutex_hangs_forever(val: u8, printable: bool) -> u8 {
+    let toprint = |s:&str| { 
+        if printable { println!("{}", s) }
+    }; 
 
-pub fn thread1c_mutex_lock_attempt() {
+    let x = std::sync::Mutex::new(val);
+    toprint("Before calling double lock");
     {
-        println!("simple test for references");
-        let mx = std::sync::Mutex::new(22u8);
-        let mut v: Vec<u8> = vec![];
-        let mxv = std::sync::Mutex::new(vec![1]);
-
-        std::thread::scope(|s| {
-            s.spawn(|| {
-                let mut guard = mx.lock().unwrap();
-                // but this is dangerous... 2 locks at the same time without dropping 1st one.
-                // let mut guard = mx.lock().unwrap();
-                *guard += 1;
-                v.push(*guard); // this works but can un unsafe as ordering will cause issues
-                // if not accounted for. eg, we may push 23 or 24 fepending on
-                // which thread runs 1st
-                let mut guard2 = mxv.lock().unwrap();
-                guard2.push(*guard);
-            });
-            s.spawn(|| {
-                let mut guard = mx.lock().unwrap();
-                *guard += 1;
-                // via captured variables it doesnt work, but through the mutex pointer
-                // it does.
-                // v.push(*guard); // this doesnt work
-                let mut guard2 = mxv.lock().unwrap();
-                guard2.push(*guard);
-            });
-        });
-
-        println!("val is now {:?}", mx);
-        println!("val is now v {:?}", mxv);
-
-        let m = Arc::new(mx);
-        let m1 = m.clone();
-        let th1 = thread::spawn(move || {
-            let mut guard = m1.lock().unwrap();
-            // but this is dangerous... 2 locks at the same time without dropping 1st one.
-            // let mut guard = mx.lock().unwrap();
-            *guard += 1;
-        });
-        let m1 = m.clone();
-        let th2 = thread::spawn(move || {
-            let mut guard = m1.lock().unwrap();
-            *guard += 1;
-        });
-        th1.join().unwrap();
-        th2.join().unwrap();
-        println!("val is now {:?}", m);
+        #[allow(unused)]
+        let y = x.lock().unwrap();
+        toprint("first lock received");
+        #[allow(unused)]
+        let z = x.lock().unwrap();
     }
+    
+    // We will not see this statement printed.
+    toprint("It doesn't panic, it just get stuck (deadlock) if a second lock is called. \
+        Dead lock tried to get the lock even it knows that it cant as the 1st lock is not \
+        dropped before using the 2nd.");
+    
+    // This will not be possible
+    *x.lock().unwrap()
+}
+
+
+/// A simple function to illustrate how we have to use thread locking. This function just
+/// give us back an increment of plus 200 of the value we passed if it doesnt overflow. Otherwise,
+/// It will give us the max u16 value.
+/// 
+/// We call the 'Lock' method on the 'Mutex' to get the lockguard for the threads called
+/// inside this fucntion. Here, we can run this as printable to understand the workflow of
+/// how the threads try to get the lock. Its quite possible that the lock is already been
+/// acquired by another threads, and hence the thread seeking the lock will have to wait 
+/// till it gets free. Remember, that the thread will not panic in this instance.
+/// ```
+/// # use pointers_threads::lib_th_c::*;
+///
+/// let val = 5u16;
+/// assert_eq!( val + 200, thread1c_mutex_lock_attempt(true, val) );
+///
+/// let val = 65500u16;
+/// assert_eq!( u16::MAX, thread1c_mutex_lock_attempt(true, val) );
+/// ```
+pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
+    let toprint = |s:&str| {
+        if printable { print!("{}", s) }
+    };
+
+    toprint("simple test for references\n");
+    let mx = std::sync::Mutex::new(val);
+    let mut v: Vec<u16> = vec![];
+    let mxv = std::sync::Mutex::new(vec![1]);
+
+    // Note for scope, we dont have to pass the value via arc, becaues scope takes a 
+    // referenct for the mutex. This way, we know that lifetimes are respected and will
+    // not forget to join before main thread is finished.
+    std::thread::scope(|s| {
+        s.spawn(|| for _ in 1..=20 {
+            let mut guard = mx.lock().unwrap();
+            // but this is dangerous... 2 locks at the same time without dropping 1st one.
+            // Also lifetime for mx and guard needs to be observed as it doesnt necessarily 
+            // mean that it will end at the last call. I could end at the end of the scope.
+            // let mut guard = mx.lock().unwrap();
+
+            *guard = guard.saturating_add(1);
+            v.push(*guard); 
+            // this works but can un unsafe as ordering will cause issues
+            // if not accounted for. eg, we may push 23 or 24 depending on
+            // which thread runs 1st, if val is 22.
+            let mut guard2 = mxv.lock().unwrap();
+            guard2.push(*guard);
+        });
+        s.spawn(|| for _ in 1..=20 {
+            let mut guard = mx.lock().unwrap();
+            *guard = guard.saturating_add(1);
+
+            // via captured variables it doesnt work, but through the mutex pointer
+            // it does. The reasone it doesnt work is because we already have borrowed
+            // the value in the 1st thread, and we cant borrow it again. This is the 
+            // reason when we prefer to use it via Mutexes.
+            // v.push(*guard); // this doesnt work
+
+            let mut guard2 = mxv.lock().unwrap();
+            guard2.push(*guard);
+        });
+    });
+
+    toprint( &format!("val for mx is now :{:?}.\n", mx) );
+    toprint( &format!("val for vec is now :{:?}\n", mxv) );
+
+    let mut temp = mx.lock().unwrap();
+    *temp = temp.saturating_add(100);
+    // Dont forget to drop the temp value.
+    drop(temp);
+
+    let m = Arc::new(mx);
+    let m1 = m.clone();
+
+    // For standalone spawned thread, we will have to pass the value via arc, because
+    // if plan on using more than one threads.
+    let th1 = thread::spawn(move || for _ in 0..20{
+        let mut guard = m1.lock().unwrap();
+        // but this is also dangerous... 2 locks at the same time without dropping
+        // the 1st one, can lead to thread blocking permanently.
+        // let mut guard = mx.lock().unwrap();
+
+        *guard = guard.saturating_add(1);
+    });
+
+
+    let m1 = m.clone();
+    let th2 = thread::spawn(move || for _ in 0..20{
+        let mut guard = m1.lock().unwrap();
+        *guard = guard.saturating_add(1);
+    });
+
+
+    let m2 = m.clone();
+    let th3 = thread::spawn(move || for _ in 0..20{
+        let mut guard = m2.lock().unwrap();
+        *guard = guard.saturating_add(1);
+    });
+
+    th1.join().unwrap();
+    th2.join().unwrap();
+    th3.join().unwrap();
+
+    toprint( &format!("val is now total :{:?}\n", m) );
+    toprint( &format!("val for vec elements :{:?}\n", m) );
+    *m.lock().unwrap()
 }
 
 
 
-
-
+/// This function is a bit more complex the the different operations it can do. However, 
+/// essentially it tries to add 100 to the value that is passed to it. 
+///
+/// We do have the option to run this via Rayon, but we can see the complications for this
+/// when we do so. As we use parking and unparking operations for this thread, we observe
+/// that the rayon make it more complicated for thread parking, and generally its intended
+/// to not use rayon for such operations.
+/// 
+/// We also have the option to run it normally without rayon, which make our function 
+/// run as expected. This function allus us to also print some details when we execte this
+/// function. This function encomposes mutexes, locks, parking, unparking and rayon, but
+/// its good to get a hang of how this works. 
+///
+/// This test should pass, we dont use rayon here
+/// ```
+/// # use pointers_threads::lib_th_c::*;
+/// let val = 5u8;
+/// // For this implementation, notice we dont use rayon here.
+/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), true, false, true );
+///
+/// assert_eq!(105u8, *val.lock().unwrap() );
+/// ```
+/// # Warning
+///
+/// This function has a high potential of failing. However, there are changes where it could also
+/// pass. This is because we will be using rayon here. Just tries to run the park and unpark 
+/// synchronization parallelly. This implementation is incorrect, and should not be used.
+///
+/// Rayon should be handled carefully when we work with threads/tasks in general.
+/// ```
+/// # use pointers_threads::lib_th_c::*;
+/// let val = 5u8;
+/// // For this implementation, we use rayon
+/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), true, true, true );
+///
+/// // Notice here, I use the greater than and equal-to check rahter than just equal-to 
+/// // check, because there is a very good chance of this implmentation, not being
+/// // able to output an value that is an increment of the arguement passed.
+/// assert!(105u8 >= *val.lock().unwrap() );
+/// ```
+///
+/// # Warning
+///
+/// If we were to provide the false value for the drop arguement, we will notice that
+/// this will hang forever, and this goes to show that we will have to always drop the value
+/// if were to ask for another lock within the same scope. There should never to more than
+/// one lock statment if there already exists a mutexguard for the variable in question.
+///
+/// ```ignore
+/// # use pointers_threads::lib_th_c::*;
+/// let val = 5u8;
+/// // For this implementation, we pass drop to false, causing it to hang forever.
+/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), false, true, true );
+///
+/// assert_eq!(105u8, *val.lock().unwrap() );
+/// ```
 pub fn thread1c_mutex_lock_attempt_drop(
     val: Mutex<u8>, is_dropable: bool, is_rayon: bool, printable: bool) -> Mutex<u8>
 {
@@ -116,13 +265,13 @@ pub fn thread1c_mutex_lock_attempt_drop(
         //In this situation, we can see that it causes issues and not what we
         //wanted.
         let cal = |i: u8| {
-            thread::sleep(std::time::Duration::from_millis(100));
+            thread::sleep(std::time::Duration::from_millis(10));
             toprint( &format!("trying to unpark/wakeup spawned thread. Loop iteration {}", i) );
             th1.thread().unpark();
                 toprint( "main got it: main");
             if let Ok(mut v) = val.try_lock() {
                 toprint( &format!("got the lock for loop {}", i) );
-                *v += 1;
+                *v = v.saturating_add(1)
             } else {
                 toprint( &format!("didnt get lock for loop {}", i) );
             }
@@ -150,26 +299,7 @@ pub fn thread1c_mutex_lock_attempt_drop(
 
 
 
-
-
-
-
 pub fn thread1c_park_mutex() {
-    // this is just to illustrate that mutex lock, when not received for Lock(), doesnt mean that
-    // the tread will panic, instead the thread is put to sleep while waiting for the lock to
-    // be released. Here, the lock is never released before the other lock() is called, and hence
-    // this will be hung forever and called be passed on.
-    // {
-    //     let x = std::sync::Mutex::new(3);
-    //     println!("Before calling double lock");
-    //     {
-    //         let y = x.lock().unwrap();
-    //         println!("first lock received");
-    //         let z = x.lock().unwrap();
-    //     }
-    //     println!("I doesn't panic, it just get stuck falls asleep if we dont/blocked if two locks are
-    //         received at the same time");
-    // }
 
     println!("---------------------------thread park for mutex-----------------------");
     let queue = Mutex::new(VecDeque::<Option<u8>>::new());
