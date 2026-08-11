@@ -155,7 +155,6 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 }
 
 
-
 /// This function is a bit more complex the the different operations it can do. However, 
 /// essentially it tries to add 100 to the value that is passed to it. 
 ///
@@ -169,12 +168,26 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 /// function. This function encomposes mutexes, locks, parking, unparking and rayon, but
 /// its good to get a hang of how this works. 
 ///
-/// This test should pass, we dont use rayon here
+/// # Warning
+///
+/// This test should pass, we dont use rayon here. However, it will definitely depend on the 
+/// timing values sent, otherwise we not not be able to get the results we want
 /// ```
 /// # use pointers_threads::lib_th_c::*;
 /// let val = 5u8;
 /// // For this implementation, notice we dont use rayon here.
-/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), true, false, true );
+/// let val = thread1c_mutex_lock_attempt_inc_drop( std::sync::Mutex::new(val), true, false, true, 40 );
+///
+/// assert_eq!(105u8, *val.lock().unwrap() );
+/// ```
+/// This has a good change of panicking, if we reduce the time, and increase the value
+/// even if value if small, we can see issues, but will be more definate when we increase the
+/// size. 
+/// ```should_panic
+/// # use pointers_threads::lib_th_c::*;
+/// let val = 5u8;
+/// // For this implementation, notice we dont use rayon here.
+/// let val = thread1c_mutex_lock_attempt_inc_drop( std::sync::Mutex::new(val), true, false, true, 0 );
 ///
 /// assert_eq!(105u8, *val.lock().unwrap() );
 /// ```
@@ -189,12 +202,15 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 /// # use pointers_threads::lib_th_c::*;
 /// let val = 5u8;
 /// // For this implementation, we use rayon
-/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), true, true, true );
+/// let val = thread1c_mutex_lock_attempt_inc_drop( std::sync::Mutex::new(val), true, true, true, 20 );
 ///
 /// // Notice here, I use the greater than and equal-to check rahter than just equal-to 
 /// // check, because there is a very good chance of this implmentation, not being
 /// // able to output an value that is an increment of the arguement passed.
 /// assert!(105u8 >= *val.lock().unwrap() );
+///
+/// // This could very likely fail as loop increment size increases.
+/// // assert!(105u8 > *val.lock().unwrap() );
 /// ```
 ///
 /// # Warning
@@ -208,12 +224,14 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 /// # use pointers_threads::lib_th_c::*;
 /// let val = 5u8;
 /// // For this implementation, we pass drop to false, causing it to hang forever.
-/// let val = thread1c_mutex_lock_attempt_drop( std::sync::Mutex::new(val), false, true, true );
+/// let val = thread1c_mutex_lock_attempt_inc_drop( std::sync::Mutex::new(val), false, true, true, 10 );
 ///
 /// assert_eq!(105u8, *val.lock().unwrap() );
 /// ```
-pub fn thread1c_mutex_lock_attempt_drop(
-    val: Mutex<u8>, is_dropable: bool, is_rayon: bool, printable: bool) -> Mutex<u8>
+pub fn thread1c_mutex_lock_attempt_inc_drop(
+    val: Mutex<u8>, is_dropable: bool, is_rayon: bool,
+    printable: bool, time_ms: u64
+) -> Mutex<u8>
 {
     let toprint = |s:&str| { 
         if printable { println!("{}", s) }
@@ -265,7 +283,9 @@ pub fn thread1c_mutex_lock_attempt_drop(
         //In this situation, we can see that it causes issues and not what we
         //wanted.
         let cal = |i: u8| {
-            thread::sleep(std::time::Duration::from_millis(10));
+            //NOTE: This timing value if not correctly configured, will cause the
+            //function to fail
+            thread::sleep(std::time::Duration::from_millis( time_ms ));
             toprint( &format!("trying to unpark/wakeup spawned thread. Loop iteration {}", i) );
             th1.thread().unpark();
                 toprint( "main got it: main");
@@ -298,19 +318,44 @@ pub fn thread1c_mutex_lock_attempt_drop(
 }
 
 
+/// testing park_mut
+/// ```
+/// # use pointers_threads::lib_th_c::*;
+///
+/// // We will have to get a vec of 100 elements, that should be in theory
+/// // arranged in the correct order
+/// let val = thread1c_park_mutex_create_vec_size( 100, true, 0 );
+///
+/// assert_eq!(
+///     val.unwrap().into_iter().map(|v| v as u16).sum::<u16>(),
+///     (1..=100u16).into_iter().sum::<u16>()
+/// );
+/// ```
+pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: u64) -> Option<Vec<u8>> {
+    let toprint = |s:&str| { 
+        if printable { println!("{}", s) }
+    }; 
+    toprint("---------------------------thread park for mutex-----------------------");
+    // for 0 values, we send expty vector
+    if val == u8::MIN { return Some(vec![])};
 
-pub fn thread1c_park_mutex() {
+    // We dont need this, but we are just playing around with the code to see how we can
+    // convert this type. And as we are using thread scope, I dont need to worry about
+    // putting it into a mutex.
+    let mut v = VecDeque::<Option<u8>>::new();
 
-    println!("---------------------------thread park for mutex-----------------------");
-    let queue = Mutex::new(VecDeque::<Option<u8>>::new());
+    // Technically, we should be looking at having a huge capicity, as elements should
+    // be popped off in tandom.
+    let queue = Mutex::new(VecDeque::<Option<u8>>::with_capacity(10));
     thread::scope(|s| {
         // loop is called we have to get all the values from the vector
         let t1 = s.spawn(|| {
             loop {
-                // Works , but this will be infinite loop. So I will break it up so that
+                // Works, but this will be infinite loop. So I will break it up so that
                 // we accommodate for break in the loop. This was originally for VecDeque u8. Not
                 // VecDeque option u8
                 // let guard = queue.lock().unwrap().pop_back();
+                // 
                 // // the guard lock is not used after this. I imagine the compiler is able to hand
                 // // over the lock to a different thread if needed from this point onwards
                 // if let Some(g) = guard {
@@ -330,11 +375,14 @@ pub fn thread1c_park_mutex() {
                 // statement. So the below statement is not recommented
                 // match queue.lock().unwrap().pop_back() {
                 // Hence: it is better to break it up like the way we have it below
+                // In Polonius, this will change, and should be able to handle the lifetime check
+                // without getting any problems.
                 let value = queue.lock().unwrap().pop_back();
                 // mutexguard already discarded after this cause no variable directly holds it
                 match value {
                     Some(Some(val)) => {
-                        dbg!(val);
+                        toprint( &format!("{}", val ) );
+                        v.push_front( Some(val) );
                     }
                     Some(None) => break,
                     None => thread::park(),
@@ -342,30 +390,51 @@ pub fn thread1c_park_mutex() {
             }
         });
 
-        for x in 1..=10 {
-            // mutexguard is released immediately as its not held in a variable
+        for x in 1..=val {
+            // Mutexguard is released immediately as its not held in a variable
+            // If we added this in a variable, even with lifetimes, this would 
+            // cause problems
             queue.lock().unwrap().push_front(Some(x));
-            // by unparking this thread, it will be able to trigger the thread to wake up
+            // By unparking this thread, it will be able to trigger the thread to wake up
             // so that is will print all the items it needed
             t1.thread().unpark();
             // having sleep or not should not affect the thread in this scenerio
-            thread::sleep(Duration::from_millis(500));
-            if x == 10 {
+            // We sleep hoping the park has waken up the t1 thread
+            thread::sleep(Duration::from_millis( milli_sec ));
+
+            // We arrive at the end of our call
+            if x == val {
                 queue.lock().unwrap().push_front(None);
                 // its important to call thread unpark or else the thread could be stuck in park if
-                // the filan value is not handled for Some of None.
+                // the value is not handled for Some of None.
                 t1.thread().unpark();
             }
         }
+
         // this wont work as it only drops the thread handle if we need to stop the thread
         // drop(t1);
         println!(" we have final for queue {:?}", queue.lock().unwrap());
     });
+
+    // this runs in O(1), as there is no reallocation from vec to vecdeque. 
+    // but we will have to accocate for vec in this case.
+    // Again, we dont need to do this, its quite useless, but it a good way
+    // to get familiar with this.
+    // std::collections::VecDeque::from(vec![1,2,3,4,5]);
+    // let x: Vec<i32> = std::collections::VecDeque::from([1,2,3,4,5]).into();
+    
+    // We also should not be getting and None elements
+    // Some( v.iter().map(|val| val.unwrap_or(0)).collect::<Vec<u8>>() )
+    // Safety:
+    // We always pass only Some(val) type in the creation of v, so we should
+    // never get None.
+    Some( v.iter().map(|val| unsafe { val.unwrap_unchecked() } ).collect::<Vec<u8>>() )
 }
 
 
 
 
+// todomanish:
 pub fn thread1c_arc_mutex() {
     #[derive(Debug)]
     struct TestMutex<'a> {
