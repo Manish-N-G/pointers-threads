@@ -331,13 +331,38 @@ pub fn thread1c_mutex_lock_attempt_inc_drop(
 ///     (1..=100u16).into_iter().sum::<u16>()
 /// );
 /// ```
+/// The inner loop will park threads like this.
+/// ```
+/// let queue = std::sync::Mutex::new( std::collections::VecDeque::new());
+/// std::thread::scope(|s| {
+///     let t1 = s.spawn(|| loop {
+///         let value = queue.lock().unwrap().pop_back();
+///         match value {
+///             Some(Some(val)) => {
+///                 // do something with val
+///             }
+///             Some(None) => break,
+///             None => std::thread::park(),
+///         }
+///     });
+///     for x in 1..=10 {
+///         queue.lock().unwrap().push_front(Some(x));
+///         t1.thread().unpark();
+///         std::thread::sleep(std::time::Duration::from_millis( 80 ));
+///         if x == 10 {
+///             queue.lock().unwrap().push_front(None);
+///             t1.thread().unpark();
+///         }
+///     }
+/// })
+/// ```
 pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: u64) -> Option<Vec<u8>> {
     let toprint = |s:&str| { 
         if printable { println!("{}", s) }
     }; 
     toprint("---------------------------thread park for mutex-----------------------");
     // for 0 values, we send expty vector
-    if val == u8::MIN { return Some(vec![])};
+    if val == u8::MIN { return Some(vec![]) };
 
     // We dont need this, but we are just playing around with the code to see how we can
     // convert this type. And as we are using thread scope, I dont need to worry about
@@ -430,8 +455,6 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
     // never get None.
     Some( v.iter().map(|val| unsafe { val.unwrap_unchecked() } ).collect::<Vec<u8>>() )
 }
-
-
 
 
 // todomanish:
