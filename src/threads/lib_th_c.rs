@@ -457,169 +457,301 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
 }
 
 
-// todomanish:
-pub fn thread1c_arc_mutex() {
-    #[derive(Debug)]
-    struct TestMutex<'a> {
-        a: std::sync::Mutex<u8>,
-        b: std::sync::Mutex<u16>,
-        c: std::sync::Mutex<&'a str>,
-    }
-    let x = Mutex::new(33);
-    let y = Mutex::new(88);
-    let z = Mutex::new("Hello there");
-    // x,y,z are all moved the tmutx here
-    let tmutx = TestMutex { a: x, b: y, c: z };
-    println!("struct TestMutex before: {:#?}", tmutx);
+// Just a simple struct to show how values look for mutexes
+#[allow(unused)]
+#[derive(Debug)]
+pub struct TestMutexArc<'a> {
+    a: std::sync::Mutex<u8>,
+    b: std::sync::Mutex<u16>,
+    c: std::sync::Mutex<&'a str>,
+}
 
-    // this will give us a locked value of data
-    let x_ = tmutx.a.lock();
-    println!("struct TestMutex after: {:#?}", tmutx);
-    drop(x_);
-
-    println!("\n-------------------------Arc move------------------------------");
-    let a = Arc::new(33);
-    let b = Arc::clone(&a);
-    let c = Arc::clone(&a);
-
-    thread::spawn(move || {
-        println!("b that is moved in this pointer arc is {}", b);
-    })
-    .join()
-    .unwrap();
-
-    thread::spawn(move || {
-        println!("c is also moved in this arc is {}", c);
-    })
-    .join()
-    .unwrap();
-
-    // we can omit creating var like b,c by calling it inside the scope to make it cleaner
-    let jn = thread::spawn({
-        let a = a.clone();
-        move || {
-            println!("new a arch is {}", a);
-        }
-    });
-
-    jn.join().unwrap();
-
-    println!("\n-------------------------Arc Looping------------------------------");
-    let x = std::sync::Arc::new(std::sync::Mutex::new(33u64));
-    let y = std::sync::Arc::clone(&x);
-    let z = std::sync::Mutex::new(vec![1, 2, 3, 4, 5]);
-    let func = || {
-        // y is passed here as reference, not moved
-        // cause closures in itself dont need to have static
-        // reference lifetimes. This is only a requireemnt
-        // on thread spawn. If we however call thread spawn
-        // inside of a thread scope object, it is able o use
-        // this reference as it seen in func and func2
-        // if let Ok(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
-        if let Ok(mut guard) = y.lock() {
-            // for x in 1..=1_000_000_000 {
-            // todomanish: see if we can use rayon here
-            for x in 1..=1_000 {
-                *guard += x;
-            }
-            println!("mutex mutated in spawned thread for y is {}", guard);
-        } else {
-            println!("didnt get the lock for y");
-        }
+/// Function used to see the states for a mutex and how they are diplayed.
+/// 
+/// This will allows to have a peak of how this works and what we are to 
+/// expect when certain values are locked or now. Simple approach to understand 
+/// when we are working with Mutexes
+///
+pub fn thread1c_arc_mutex_display( display: &[&str], printable: bool) -> Vec<String> {
+    // todomanish: we deliverately are using &mut vec<string> as arguement,
+    // I would be easier to have the toprint function be just add the vector elements,
+    // however it fun to put the limits of this implementation.
+    let toprint = move |s:&str, can_print: bool| {
+        if can_print { println!("{s}"); }
     };
 
-    let func2 = || {
-        // since y was taken as reference before for func,
-        // y can be taken as ref again as y was dropped before I imagine
-        // if let Ok(ref mut guard) = y.lock() { // also works
-        if let Ok(mut guard) = y.lock() {
-            // for x in 1..=1_000_000_000 {
-            for x in 1..=1_000 {
-                *guard += x;
+    let mut vec_string: Vec<String> = vec![];
+
+    fn lock_display( print: fn(&str), vec_string: &mut Vec<String> ) {
+        vec_string.push("\n-------------------------Lock display------------------------------".to_string() );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+
+        let x = std::sync::Mutex::new(33);
+        let y = std::sync::Mutex::new(88);
+        let z = std::sync::Mutex::new("Hello there");
+
+        // x,y,z are all moved to the tmutx here
+        let tmutx = TestMutexArc { a: x, b: y, c: z };
+
+        vec_string.push( format!("Struct TestMutexArc before: {:#?}", tmutx) );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+
+        // this will give us a locked value of data
+        let _x = tmutx.a.lock();
+        vec_string.push( format!("Struct TestMutexArc after: {:#?}\n", tmutx) );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+    } // drop(_x); called automatically
+
+
+    fn arc_move( print: fn(&str), vec_mut: &mut Vec<String> ) {
+        let mut vec_string: Vec<String> = vec![];
+        vec_string.push("\n-------------------------Arc move------------------------------".to_string() );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+
+        let a = std::sync::Arc::new(33);
+        let b = std::sync::Arc::clone(&a);
+        let c = std::sync::Arc::clone(&a);
+
+        vec_string.push( format!("Creating Arcs: \na:{a:?}\nb:{b:?}\nc:{c:?}" ) );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+
+        //NOTE: We could add scope threads here to avoid, but it wanted to use
+        //spawn to see how it would look
+        let mut vec_string = std::thread::spawn(move || {
+            vec_string.push( format!("b that is moved in this pointer arc is {}", b) );
+            print( unsafe { vec_string.last().unwrap_unchecked() });
+            vec_string
+        })
+        .join()
+        .unwrap();
+
+        let mut vec_string = std::thread::spawn(move || {
+            vec_string.push( format!("c is also moved in this arc is {}", c) );
+            print( unsafe { vec_string.last().unwrap_unchecked() });
+            vec_string
+        })
+        .join()
+        .unwrap();
+
+        // we can omit creating var like b,c by calling it inside the scope to make it cleaner
+        let jn = std::thread::spawn({
+            let a = a.clone();
+            move || {
+                vec_string.push( format!("new a arch is {}\n", a) );
+                print( unsafe { vec_string.last().unwrap_unchecked() });
+                vec_string
             }
-            println!("mutex mutated in scawned thread for new y is {}", *guard);
-        } else {
-            println!("didnt get the lock for y new");
-        }
-    };
+        });
 
-    // this will not work. as spawn needs static lifetime.
-    // we will have to use a scope thread that has spawn inside it.
-    // thread::spawn(func);
+        vec_mut.append(&mut jn.join().unwrap() );
+    } // a is dropped here, even if use clone
 
-    let func3 = || {
-        loop {
-            // can be same a lock, except that this will not hand for try_lock if lock not recieved
-            // if let Ok(ref mut vec) = z.try_lock() {  // works
-            if let Ok(mut vec) = z.try_lock() {
-                println!("lock received for z");
-                if let Some(val) = vec.get_mut(4) {
-                    *val += 10;
+
+    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String> ) {
+        use rayon::prelude::*;
+
+        // I dont need to define a new vec_string
+        // let mut vec_string: Vec<String> = vec![];
+        vec_string.push("\n-------------------------Arc Looping------------------------------".to_string() );
+        print( unsafe { vec_string.last().unwrap_unchecked() });
+
+        let x = std::sync::Arc::new(std::sync::Mutex::new(33u64));
+        let y = std::sync::Arc::clone(&x);
+        let z = std::sync::Mutex::new(vec![1, 2, 3, 4, 5]);
+
+        let func = || {
+            let mut vec_clone: Vec<String> = vec![];
+            // y is passed here as reference, not moved
+            // cause closures in itself dont need to have static
+            // reference lifetimes. This is only a requireemnt
+            // on thread spawn. If we however call thread spawn
+            // inside of a thread scope object, it is able to use
+            // this reference as it seen in func and func2
+            // if let Ok(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
+            if let Ok(mut guard) = y.lock() {
+                // for x in 1..=1_000_000_000 {
+                // NOTE: it not okay to use rayon like this. This is because we will
+                // have to pass arc and not MutexGuard, as rayon will complain that we can
+                // use Send for MutexGuard.
+                for x in 1..=1000 {
+                    *guard += x;
                 }
-                println!("vec is {:?}", vec);
-                break;
+                vec_clone.push( format!("Fun1: Mutex mutated in \
+                    spawned thread for y is {}", guard) );
+                print( unsafe { vec_clone.last().unwrap_unchecked() });
             } else {
-                println!("lock not received");
-                thread::sleep(std::time::Duration::from_millis(200));
+                vec_clone.push( "Fun1 else: didnt get the lock for y".to_string() );
+                print( unsafe { vec_clone.last().unwrap_unchecked() });
             }
-        }
-    };
+            vec_clone
+        };
 
-    // even for vecs, this will work for func4
-    // let func4 = || {
-    //     loop {
-    //         // can be same a lock, except that this will not hand when lock is not recieved
-    //         if let Ok(ref mut vec) = z.try_lock() {
-    //             println!("lock received for z");
-    //             if let Some(val) = vec.get_mut(4) {
-    //                 *val+=10;
-    //             }
-    //             println!("vec is {:?}", vec);
-    //             break;
-    //         } else {
-    //             println!("lock not received");
-    //             thread::sleep(std::time::Duration::from_millis(200));
-    //         }
-    //     }
-    // };
+        let func2 = || {
+            let mut vec_clone: Vec<String> = vec![];
+            // since y was taken as reference before for func,
+            // y can be taken as ref again as y was dropped before I imagine
+            // if let Ok(ref mut guard) = y.lock() { // also works
+            if let Ok(mut guard) = y.lock() {
+                // for x in 1..=1_000_000_000 {
+                for x in 1..=1_000_000 {
+                    *guard += x;
+                }
+                vec_clone.push( format!("Fun2: mutex mutated in \
+                    spawned thread for new y is {}", *guard) );
+                print( unsafe { vec_clone.last().unwrap_unchecked() });
+            } else {
+                vec_clone.push( "Fun2 else: didnt get the lock for y new".to_string() );
+                print( unsafe { vec_clone.last().unwrap_unchecked() });
+            }
+            vec_clone
+        };
 
-    let m = std::sync::Mutex::new(0);
-    let n = std::sync::Arc::new(m);
-    thread::scope(|s| {
-        s.spawn(func);
-        s.spawn(func2);
-        s.spawn(func3);
-        for x in 1..=10 {
-            // 10 threads are spawned here. So its all okay to testing
-            let n = std::sync::Arc::clone(&n);
-            // since x would have been taken as refernece for print statement, we have to use
-            // move cause we cant be sure that it will life long enougth
-            // The compiler cant verify even it this is possible.
-            // And because we will have to end up using move, we have to pass our data in Arc clone
-            s.spawn(move || {
-                loop {
-                    // try lock will not block it tests if it gets the lock
-                    // but we will have to keep attempting to get the lock which is why we put
-                    // it in a loop
-                    if let Ok(mut guard) = n.try_lock() {
-                        for y in 1..=20 {
-                            *guard += 1;
-                            // to avoid too many print statements
-                            if y % 5 == 0 {
-                                println!("Loop {}: guard is now {} at {}", x, *guard, y);
-                            }
-                        }
-                        break;
-                    } else {
-                        println!("didnt get lock for {x}, trying after some milli seconds");
-                        thread::sleep(std::time::Duration::from_millis(200));
+        let func2_rayon = || {
+            let vec_clone_arc: std::sync::Arc<std::sync::Mutex<Vec<String>>> = 
+                std::sync::Arc::new(std::sync::Mutex::new(vec![]));
+            (1..=1_000_000).into_par_iter().for_each( |x| {
+                let y = y.clone();
+                let vec_c = vec_clone_arc.clone();
+                if let Ok(mut guard) = y.lock() {
+                    *guard += x;
+                    if x == 1_000_000 {
+                        vec_c.lock().unwrap().push(format!("Fun2 Rayon: mutex mutated in \
+                            spawned thread for new y is {}", *guard) );
+                        let cloned_vec = vec_c.lock().unwrap();
+                        print( unsafe { (cloned_vec).last().unwrap_unchecked() });
                     }
+                } else {
+                    vec_c.lock().unwrap().push(format!("Fun2 Rayon else: didnt get the lock for y \
+                        new 1_000_000 for {} loop", x) );
+                    let cloned_vec = vec_c.lock().unwrap();
+                    print( unsafe { (cloned_vec).last().unwrap_unchecked() });
                 }
             });
-        }
-    }); // all thread join here
-    // Here, we take Arc -> into_inner => mutex. and into_inner whick also works
-    // assert_eq!(Arc::into_inner(n).unwrap().into_inner().unwrap(), 200);
-    // lock should be dropped automatially after this scope
-    assert_eq!(*n.lock().unwrap(), 300);
+            match vec_clone_arc.lock() {
+                Ok(val) => val.to_vec(),
+                // we use into inner here to get the value even if its poisoned
+                // I dont need to worry about clearing poison here.
+                Err(poisoned) => poisoned.into_inner().to_vec(),
+            }
+        };
+
+        // this will not work directly, as spawn needs static lifetime.
+        // we will have to use a scope thread that has spawn inside it.
+        // thread::spawn(func);
+
+        let func3 = || {
+            let mut vec_clone: Vec<String> = vec![];
+            loop {
+                // can be same a lock, except that this will not hang for try_lock if 
+                // lock not recieved 
+                // if let Ok(ref mut vec) = z.try_lock() {  // works
+                if let Ok(mut vec) = z.try_lock() {
+                    vec_clone.push( "Fun3: lock received for z".to_string() );
+                    print( unsafe { vec_clone.last().unwrap_unchecked() });
+                    if let Some(val) = vec.get_mut(4) {
+                        *val += 10;
+                    }
+                    vec_clone.push( "Fun3: lock received for z".to_string() );
+                    print( unsafe { vec_clone.last().unwrap_unchecked() });
+                    println!("vec is {:?}", vec);
+                    break;
+                } else {
+                    vec_clone.push("Fun3: lock not received".to_string());
+                    print( unsafe { vec_clone.last().unwrap_unchecked() });
+                    thread::sleep(std::time::Duration::from_millis(200));
+                }
+            }
+            vec_clone
+        };
+
+        let m = std::sync::Mutex::new(0);
+        let n = std::sync::Arc::new(m);
+
+        let v = std::sync::Mutex::new(vec_string);
+        let v = std::sync::Arc::new(v);
+
+        thread::scope( |s| {
+            let vec1 = s.spawn(func);
+            let vec2 = s.spawn(func2);
+            let vec3 = s.spawn(func2_rayon);
+            let vec4 = s.spawn(func3);
+
+            for x in 1..=10 {
+                // 10 threads are spawned here. So its all okay to testing
+                let n = std::sync::Arc::clone(&n);
+                let vec_c = v.clone();
+                // since x would have been taken as refernece for print statement, we have to use
+                // move cause we cant be sure that it will life long enougth
+                // The compiler cant verify even it this is possible.
+                // And because we will have to end up using move, we have to pass our data in Arc clone
+                s.spawn(move || {
+                    loop {
+                        // try lock will not block it tests if it gets the lock
+                        // but we will have to keep attempting to get the lock which is why we put
+                        // it in a loop
+                        if let Ok(mut guard) = n.try_lock() {
+                            for y in 1..=20 {
+                                *guard += 1;
+                                // to avoid too many print statements
+                                if y % 5 == 0 {
+                                    vec_c.lock().unwrap().push( format!("Main Loop {}: guard is now \
+                                        {} at {}", x, *guard, y) );
+                                    let v = vec_c.lock().unwrap();
+                                    print( unsafe { v.last().unwrap_unchecked() });
+                                }
+                            }
+                            break;
+                        } else {
+                            vec_c.lock().unwrap().push( format!("didnt get lock for {x}, trying \
+                                after some milli seconds") );
+                            let v = vec_c.lock().unwrap();
+                            print( unsafe { v.last().unwrap_unchecked() });
+                            thread::sleep(std::time::Duration::from_millis(200));
+                        }
+                    }
+                });
+            }
+
+            let mut vec_c = v.lock().unwrap();
+            vec_c.append( &mut vec1.join().unwrap() );
+            vec_c.append( &mut vec2.join().unwrap() );
+            vec_c.append( &mut vec3.join().unwrap() );
+            vec_c.append( &mut vec4.join().unwrap() );
+
+        }); // all thread join here
+        // Here, we take Arc -> into_inner => mutex. and into_inner whick also works
+        // assert_eq!(Arc::into_inner(n).unwrap().into_inner().unwrap(), 200);
+        // lock should be dropped automatially after this scope
+        assert_eq!(*n.lock().unwrap(), 300);
+    }
+
+    // for val in display.iter() {
+    //     match *val {
+    //         "display" => { lock_display( toprint, &mutvec_string )},
+    //         "move" => {}
+    //         "loop" => {}
+    //     }
+    // }
+
+
+    /*
+    pub fn thread1c_arc_mutex_display( display: &[&str], printable: bool) -> Vec<String> {
+
+    fn lock_display( print: fn(&str), vec_string: &mut Vec<String> ) {
+        vec_string.push("\n-------------------------Lock display------------------------------".to_string() );
+
+
+    fn arc_move( print: fn(&str), vec_mut: &mut Vec<String> ) {
+        let mut vec_string: Vec<String> = vec![];
+        vec_string.push("\n-------------------------Arc move------------------------------".to_string() );
+        
+    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String> ) {
+        use rayon::prelude::*;
+
+        // I dont need to define a new vec_string
+        // let mut vec_string: Vec<String> = vec![];
+        vec_string.push("\n-------------------------Arc Looping------------------------------".to_string() );
+
+    */
+    todo!()
 }
