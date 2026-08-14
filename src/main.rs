@@ -58,13 +58,17 @@ fn main() {
     // thread1c_mutex_hangs_forever( 5, true );
     //
     //
-    crate::th3::th3d::normal_music_impl();
-    crate::th3::th3d::erasure_music_impl();
+    // crate::th3::th3d::normal_music_impl();
+    // crate::th3::th3d::erasure_music_impl();
+    //
+    println!( "vec is :");
+    for vec in thread1c_arc_mutex_display( &["display", "move", "loop"], false) {
+        println!( "{}", vec );
+    }
 
     // let rt = tokio::runtime::Runtime::new().expect("testing");
     // let t = rt.block_on(two());
     // println!("t is {t}");
-
 
 }
 
