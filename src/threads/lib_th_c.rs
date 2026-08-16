@@ -1,11 +1,96 @@
-//todomanish: Have to make the lib for this.
-// I can use the eample here to make sure that we are able to see hwo the
-// threads area actually going to be pushed.
-// todomanish: finish this documentation
-//! Here we start with the th c module.
+/*
+//! This module tell us how we need to be await when we are using threads.
+//! If we are not careful, we risk the potential of making the threads
+//! hang forever, as our threads could end up waiting for a `lock` to release
+//! that might never happen. See [`std::sync::Mutex::lock`]. Consider the 
+//! following example
+//! ```ignore
+//! let x = std::sync::Mutex::new(10);
+//! {
+//!     let y = x.lock().unwrap();
+//!     // y is not dropped. and lifetimes for y ends only that the end of
+//!     // scope. z is not stuck forever waiting to acquire the lock. while
+//!     // y lock is yet not dropped
+//!     // let z = x.lock().unwrap();
+//! }
+//! println!("finished");
 //! ``` 
-//! let x = 4u8;
-//! ``` 
+//! This is classic example of what might happen, and we have to be sure that these
+//! types of implementation dont happen, as we will encounter this problem.
+//!
+//! Consider this way instead
+//! ```
+//! let m = std::sync::Arc::new(std::sync::Mutex::new(100u8));
+//! let m_clone = m.clone();
+//!
+//! // For standalone spawned thread, we will have to pass the value via arc, because
+//! // of if we plan on using more than one threads.
+//! let th1 = std::thread::spawn(move || for _ in 0..20{
+//!     let mut guard = m_clone.lock().unwrap();
+//!     *guard = guard.saturating_add(1);
+//! });
+//!
+//! let m_clone = m.clone();
+//! let th2 = std::thread::spawn(move || for _ in 0..20{
+//!     let mut guard = m_clone.lock().unwrap();
+//!     *guard = guard.saturating_add(1);
+//! });
+//!
+//!
+//! let c_clone = m.clone();
+//! let th3 = std::thread::spawn(move || for _ in 0..20{
+//!     let mut guard = c_clone.lock().unwrap();
+//!     *guard = guard.saturating_add(1);
+//! });
+//!
+//! th1.join().unwrap();
+//! th2.join().unwrap();
+//! th3.join().unwrap();
+//!
+//! assert_eq!( 100+20+20+20, *m.lock().unwrap() );
+//! ```
+//
+// let mx = std::sync::Mutex::new(val);
+// let mut v: Vec<u16> = vec![];
+// let mxv = std::sync::Mutex::new(vec![1]);
+//
+// std::thread::scope(|s| {
+//     s.spawn(|| for _ in 1..=20 {
+//         let mut guard = mx.lock().unwrap();
+//         // but this is dangerous... 2 locks at the same time without dropping 1st one.
+//         // Also lifetime for mx and guard needs to be observed as it doesnt necessarily 
+//         // mean that it will end at the last call. I could end at the end of the scope.
+//         // let mut guard = mx.lock().unwrap();
+//
+//         *guard = guard.saturating_add(1);
+//         v.push(*guard); 
+//         // this works but can un unsafe as ordering will cause issues
+//         // if not accounted for. eg, we may push 23 or 24 depending on
+//         // which thread runs 1st, if val is 22.
+//         let mut guard2 = mxv.lock().unwrap();
+//         guard2.push(*guard);
+//     });
+//     s.spawn(|| for _ in 1..=20 {
+//         let mut guard = mx.lock().unwrap();
+//         *guard = guard.saturating_add(1);
+//
+//         // via captured variables it doesnt work, but through the mutex pointer
+//         // it does. The reasone it doesnt work is because we already have borrowed
+//         // the value in the 1st thread, and we cant borrow it again. This is the 
+//         // reason when we prefer to use it via Mutexes.
+//         // v.push(*guard); // this doesnt work
+//
+//         let mut guard2 = mxv.lock().unwrap();
+//         guard2.push(*guard);
+//     });
+// });
+//
+// let mut temp = mx.lock().unwrap();
+// *temp = temp.saturating_add(100);
+// // Dont forget to drop the temp value.
+// drop(temp);
+//
+*/
 use std::collections::vec_deque::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::thread;
