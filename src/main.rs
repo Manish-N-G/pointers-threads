@@ -56,40 +56,17 @@ fn main() {
     //
     // thread1c_mutex_lock_attempt(true, 33); //todomanish: I was here
     // thread1c_mutex_hangs_forever( 5, true );
-    //
+    // crate::th3::th3b2::test_async_spawn();
     //
     // crate::th3::th3d::normal_music_impl();
     // crate::th3::th3d::erasure_music_impl();
-    //
-    println!( "vec is :");
-    for vec in thread1c_arc_mutex_display( &["display", "move", "loop"], false) {
-        println!( "{}", vec );
-    }
 
-    // let rt = tokio::runtime::Runtime::new().expect("testing");
-    // let t = rt.block_on(two());
-    // println!("t is {t}");
-
+    // println!( "vec is :");
+    // for vec in thread1c_arc_mutex_display( &["display", "move", "loop"], false) {
+    //     println!( "{}", vec );
+    // }
 }
 
-async fn one(val: u8) {
-    println!("one - {val}");
-}
-
-async fn two() -> u8 {
-    one(0).await;
-    println!("two 1");
-    one(1);
-    println!("two 2");
-    one(2).await;
-    println!("two 3");
-    one(3);
-    println!("two 4");
-    one(4);
-    println!("two 5");
-    one(5).await;
-    5
-}
 
 fn mod1_a() {
     // I dont need to do anymore: use pointers_threads::lib_th1a::*;

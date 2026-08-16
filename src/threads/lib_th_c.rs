@@ -1,6 +1,7 @@
 //todomanish: Have to make the lib for this.
 // I can use the eample here to make sure that we are able to see hwo the
 // threads area actually going to be pushed.
+// todomanish: finish this documentation
 //! Here we start with the th c module.
 //! ``` 
 //! let x = 4u8;

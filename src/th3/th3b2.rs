@@ -2,6 +2,7 @@
 use trpl;
 
 pub fn test_async_spawn() {
+    /*
     println!("For one----");
     one();
     std::thread::sleep(std::time::Duration::from_secs(1));
@@ -31,6 +32,9 @@ pub fn test_async_spawn() {
     println!("\nFor four----");
     four();
     std::thread::sleep(std::time::Duration::from_secs(1));
+    */
+    five();
+    six();
 }
 
 
@@ -176,4 +180,71 @@ fn four() {
             }
         }.await;
     });
+}
+
+
+fn five() {
+
+    let (tx, mut rx) = trpl::channel();
+
+    let tx_fut = async {
+        let vals = vec![
+            String::from("hi"),
+            String::from("from"),
+            String::from("the"),
+            String::from("future"),
+        ];
+
+        for val in vals {
+            tx.send(val).unwrap();
+            trpl::sleep(std::time::Duration::from_millis(500)).await;
+        }
+        // I need to drop here
+        // or else this will hang forever
+        drop(tx);
+    };
+
+    let rx_fut = async {
+        while let Some(value) = rx.recv().await {
+            println!("received '{value}'");
+        }
+    };
+
+    // we have to use an asynce block inside run if we need to do this 
+    // as we would. This is another way we can do this as well 
+    // As because we dont await the async block at the top level, this means
+    // the botton level of await wont count, and the top level async blocks
+    // are still lazy. This would mean that we can pass them into the run
+    // block for trpl.
+    trpl::run(
+        trpl::join(tx_fut, rx_fut)
+    );
+    println!("finish five");
+}
+
+fn six () {
+    println!("start six");
+    async fn one(val: u8) {
+        println!("one - {val}");
+    }
+
+    async fn two() -> u8 {
+        one(0).await;
+        println!("two 1");
+        one(1);
+        println!("two 2");
+        one(2).await;
+        println!("two 3");
+        one(3);
+        println!("two 4");
+        one(4);
+        println!("two 5");
+        one(5).await;
+        5
+    }
+
+    let rt = tokio::runtime::Runtime::new().expect("testing");
+    let t = rt.block_on(two());
+    println!("t is {t}");
+
 }
