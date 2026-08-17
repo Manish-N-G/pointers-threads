@@ -687,10 +687,25 @@ pub struct TestMutexArc<'a> {
 /// // this produces a vec<string> of the log for the function
 /// # use pointers_threads::lib_th_c::*;
 /// let _ = thread1c_arc_mutex_display( &["display", "move"], false);
-/// let _ = thread1c_arc_mutex_display( &["loop"], false);
 ///
 /// // success would if the function doesnt panic
-/// ````
+/// ```
+/// ```ignore
+/// # use pointers_threads::lib_th_c::*;
+/// // this loop function is a dangerous way to implement rayon for loop. 
+/// // this is something we should avoid in order to be careful
+/// let _ = thread1c_arc_mutex_display( &["loop"], false);
+///     // territory
+///     // Thread A                  Thread B
+///     // lock(y)                   lock(vec_c)
+///     //    │                         │
+///     //    ▼                         ▼
+///     // needs vec_c               needs y
+///     //    │                         │
+///     //    └────────┐   ┌────────────┘
+///     //             ▼   ▼
+///     //           DEADLOCK
+///```
 pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<String> {
     // NOTE: deliverately are using &mut vec<string> as arguement,
     // I would be easier to use toprint function be just add the vector elements,
@@ -772,7 +787,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
     } // a is dropped here, even if use clone
 
 
-    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String> ) {
+    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String>, arg: &str ) {
         use rayon::prelude::*;
 
         // I dont need to define a new vec_string
@@ -831,7 +846,9 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
             vec_clone
         };
 
-        let func2_rayon = || {
+        // WARNING: this is very unsafe, and we should not implement this. It has a high 
+        // potential to get into deadlock territory
+        let func_rayon_bad = || {
             let vec_clone_arc: std::sync::Arc<std::sync::Mutex<Vec<String>>> = 
                 std::sync::Arc::new(std::sync::Mutex::new(vec![]));
             (1..=1_000_000).into_par_iter().for_each( |x| {
@@ -839,18 +856,96 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
                 let vec_c = vec_clone_arc.clone();
                 if let Ok(mut guard) = y.lock() {
                     *guard += x;
+                    let message = format!("Fun2 Rayon: mutex mutated in \
+                        spawned thread for new y is {}", *guard);
+                    // NOTE: for rayon, there is a change still in this implementation that we 
+                    // could have a deadlock. We have to be careful. This is the rason I prefer
+                    // to drop the lock as soon as possible.
+                    drop(guard); 
+
                     if x == 1_000_000 {
-                        vec_c.lock().unwrap().push(format!("Fun2 Rayon: mutex mutated in \
-                            spawned thread for new y is {}", *guard) );
-                        let cloned_vec = vec_c.lock().unwrap();
-                        print( unsafe { (cloned_vec).last().unwrap_unchecked() });
+                        let mut vec_guard = vec_c.lock().unwrap();
+                        vec_guard.push(message);
+                        print( unsafe { (vec_guard).last().unwrap_unchecked() });
                     }
                 } else {
-                    vec_c.lock().unwrap().push(format!("Fun2 Rayon else: didnt get the lock for y \
+                    let mut vec_guard = vec_c.lock().unwrap();
+                    vec_guard.push(format!("Fun2 Rayon else: didnt get the lock for y \
                         new 1_000_000 for {} loop", x) );
-                    let cloned_vec = vec_c.lock().unwrap();
-                    print( unsafe { (cloned_vec).last().unwrap_unchecked() });
+                    print( unsafe { (vec_guard).last().unwrap_unchecked() });
                 }
+            });
+            match vec_clone_arc.lock() {
+                Ok(val) => val.to_vec(),
+                // we use into inner here to get the value even if its poisoned
+                // I dont need to worry about clearing poison here.
+                Err(poisoned) => poisoned.into_inner().to_vec(),
+            }
+        };
+
+        // WARNING: This is some what better, but still dangerous
+        let func_rayon_better = || {
+            let vec_clone_arc =
+                std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+
+            (1..=1_000_000).into_par_iter().for_each( |x| {
+                let y = y.clone();
+                let vec_c = vec_clone_arc.clone();
+
+                let value = {
+                    let mut guard = y.lock().unwrap();
+                    *guard += x;
+                    *guard
+                };
+
+                if x == 1_000_000 {
+                    let mut vec_guard = vec_c.lock().unwrap();
+                    vec_guard.push( format!(
+                        "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
+                        value
+                    ));
+
+                    if let Some(last) = vec_guard.last() {
+                        print( last );
+                    }
+                }
+
+            });
+            match vec_clone_arc.lock() {
+                Ok(val) => val.to_vec(),
+                // we use into inner here to get the value even if its poisoned
+                // I dont need to worry about clearing poison here.
+                Err(poisoned) => poisoned.into_inner().to_vec(),
+            }
+        };
+
+
+        let func_rayon_correct = || {
+            let vec_clone_arc =
+                std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+
+            (1..=1_000_000).into_par_iter().map( |x| {
+                let y = y.clone();
+                let vec_c = vec_clone_arc.clone();
+
+                let value = {
+                    let mut guard = y.lock().unwrap();
+                    *guard += x;
+                    *guard
+                };
+
+                if x == 1_000_000 {
+                    let mut vec_guard = vec_c.lock().unwrap();
+                    vec_guard.push( format!(
+                        "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
+                        value
+                    ));
+
+                    if let Some(last) = vec_guard.last() {
+                        print( last );
+                    }
+                }
+
             });
             match vec_clone_arc.lock() {
                 Ok(val) => val.to_vec(),
@@ -898,8 +993,15 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
         thread::scope( |s| {
             let vec1 = s.spawn(func);
             let vec2 = s.spawn(func2);
-            let vec3 = s.spawn(func2_rayon);
-            let vec4 = s.spawn(func3);
+            let vec3 = s.spawn(func3);
+
+            let vec4 = if arg == "rayon_bad" {
+                s.spawn(func_rayon_bad)
+            } else if arg == "rayon_good" {
+                s.spawn(func_rayon_bad)
+            } else {
+                s.spawn(func_rayon_bad) // could add another type here
+            };
 
             for x in 1..=10 {
                 // 10 threads are spawned here. So its all okay to testing
@@ -927,7 +1029,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
                             }
                             break;
                         } else {
-                            vec_c.lock().unwrap().push( format!("didnt get lock for {x}, trying \
+                            vec_c.lock().unwrap().push( format!("Main: didnt get lock for {x}, trying \
                                 after some milli seconds") );
                             let v = vec_c.lock().unwrap();
                             print( unsafe { v.last().unwrap_unchecked() });
@@ -962,12 +1064,16 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
 
     }
 
-
     for val in input.iter() {
-        match *val {
-            "display" => { lock_display( toprint, &mut vec_string ) },
-            "move" => { arc_move( toprint, &mut vec_string ) },
-            "loop" => { arc_looping( toprint, &mut vec_string ) },
+        let split_input = val.split_once(" -").unwrap_or( (val, "") );
+
+        println!("split {:?}", split_input);
+        match split_input {
+            ( "display", _ ) => { lock_display( toprint, &mut vec_string ) },
+            ( "move", _ ) => { arc_move( toprint, &mut vec_string ) },
+            ( "loop", b ) if b == "rayon_bad" => { arc_looping( toprint, &mut vec_string, split_input.1 ) },
+            ( "loop", b ) if b == "rayon_better" => { arc_looping( toprint, &mut vec_string, split_input.1 ) },
+            ( "loop", _ ) => { arc_looping( toprint, &mut vec_string, "" ) },
             _ =>  {}
         }
     }

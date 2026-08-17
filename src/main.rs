@@ -54,17 +54,19 @@ fn main() {
     // thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, true, true);
     // thread1c_mutex_lock_attempt_drop(std::sync::Mutex::new(100u8), true, false, true);
     //
-    thread1c_mutex_lock_attempt(true, 33); 
+    // thread1c_mutex_lock_attempt(true, 33); 
     // thread1c_mutex_hangs_forever( 5, true );
     // crate::th3::th3b2::test_async_spawn();
     //
     // crate::th3::th3d::normal_music_impl();
     // crate::th3::th3d::erasure_music_impl();
 
-    // println!( "vec is :");
-    // for vec in thread1c_arc_mutex_display( &["display", "move", "loop"], false) {
-    //     println!( "{}", vec );
-    // }
+    for _ in 0..10 {
+        println!( "vec is :");
+        for vec in thread1c_arc_mutex_display( &["display", "move", "loop -rayon_better"], false) {
+            println!( "{}", vec );
+        }
+    }
 }
 
 
