@@ -61,11 +61,9 @@ fn main() {
     // crate::th3::th3d::normal_music_impl();
     // crate::th3::th3d::erasure_music_impl();
 
-    for _ in 0..10 {
-        println!( "vec is :");
-        for vec in thread1c_arc_mutex_display( &["display", "move", "loop -rayon_better"], false) {
-            println!( "{}", vec );
-        }
+    println!( "vec is :");
+    for vec in thread1c_arc_mutex_display( &["display", "move", "loop -1"], 100_000, false) {
+        println!( "{}", vec );
     }
 }
 

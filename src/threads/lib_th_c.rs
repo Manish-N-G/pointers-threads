@@ -1,10 +1,9 @@
-/*
 //! This module tell us how we need to be await when we are using threads.
 //! If we are not careful, we risk the potential of making the threads
 //! hang forever, as our threads could end up waiting for a `lock` to release
 //! that might never happen. See [`std::sync::Mutex::lock`]. Consider the 
 //! following example
-//! ```ignore
+//! ```
 //! let x = std::sync::Mutex::new(10);
 //! {
 //!     let y = x.lock().unwrap();
@@ -49,48 +48,92 @@
 //!
 //! assert_eq!( 100+20+20+20, *m.lock().unwrap() );
 //! ```
-//
-// let mx = std::sync::Mutex::new(val);
-// let mut v: Vec<u16> = vec![];
-// let mxv = std::sync::Mutex::new(vec![1]);
-//
-// std::thread::scope(|s| {
-//     s.spawn(|| for _ in 1..=20 {
-//         let mut guard = mx.lock().unwrap();
-//         // but this is dangerous... 2 locks at the same time without dropping 1st one.
-//         // Also lifetime for mx and guard needs to be observed as it doesnt necessarily 
-//         // mean that it will end at the last call. I could end at the end of the scope.
-//         // let mut guard = mx.lock().unwrap();
-//
-//         *guard = guard.saturating_add(1);
-//         v.push(*guard); 
-//         // this works but can un unsafe as ordering will cause issues
-//         // if not accounted for. eg, we may push 23 or 24 depending on
-//         // which thread runs 1st, if val is 22.
-//         let mut guard2 = mxv.lock().unwrap();
-//         guard2.push(*guard);
-//     });
-//     s.spawn(|| for _ in 1..=20 {
-//         let mut guard = mx.lock().unwrap();
-//         *guard = guard.saturating_add(1);
-//
-//         // via captured variables it doesnt work, but through the mutex pointer
-//         // it does. The reasone it doesnt work is because we already have borrowed
-//         // the value in the 1st thread, and we cant borrow it again. This is the 
-//         // reason when we prefer to use it via Mutexes.
-//         // v.push(*guard); // this doesnt work
-//
-//         let mut guard2 = mxv.lock().unwrap();
-//         guard2.push(*guard);
-//     });
-// });
-//
-// let mut temp = mx.lock().unwrap();
-// *temp = temp.saturating_add(100);
-// // Dont forget to drop the temp value.
-// drop(temp);
-//
-*/
+//! Consider the following. Here we see thread scope that takes values via reference that 
+//! dont need to be `Static`. This is quite important, as scoped threads are joined
+//! immediately at the end of the scope for the scope threads unless explicitely assed to
+//! join.
+//! ```
+//! let val = 30u16;
+//! let mx = std::sync::Mutex::new(val);
+//! let mut v: Vec<u16> = vec![];
+//! let mxv = std::sync::Mutex::new(vec![1]);
+//!
+//! std::thread::scope(|s| {
+//!     s.spawn(|| for _ in 1..=20 {
+//!         let mut guard = mx.lock().unwrap();
+//!         
+//!         // NOTE: dont call lock when lock already exists for the value
+//!         // This would be dangerous.
+//!         // let mut guard2= mx.lock().unwrap()
+//!
+//!         *guard = guard.saturating_add(1);
+//!         v.push(*guard); 
+//!         let mut guard2 = mxv.lock().unwrap();
+//!         guard2.push(*guard);
+//!     });
+//!     s.spawn(|| for _ in 1..=20 {
+//!         let mut guard = mx.lock().unwrap();
+//!         *guard = guard.saturating_add(1);
+//!
+//!         let mut guard2 = mxv.lock().unwrap();
+//!         guard2.push(*guard);
+//!     });
+//! });
+//!
+//! let mut temp = mx.lock().unwrap();
+//! *temp = temp.saturating_add(100);
+//! assert_eq!( *temp, 170 );
+//! ```
+//! Also look the what we have for parallel processing. For example we have some examples
+//! functions in the module that use [`rayon`]. This allows us to work with *Concurrency*
+//! and *Parallelism*. This has the potential to speed up our process rapidly, but adds
+//! complexity and risks with regards with `Mutexes`.
+//!
+//! Here a simple process to show off what we could do with Rayon
+//! ```
+//! use rayon::prelude::*;
+//! let z = std::sync::Arc::new(std::sync::Mutex::new(33u64));
+//! let y = z.clone();
+//! let set_limit = 1000;
+//! std::thread::scope( |s| {
+//!     s.spawn( move || {
+//!         (1..=set_limit).into_par_iter().for_each( |x| {
+//!             if let Ok(mut guard) = y.lock() {
+//!                 *guard += x;
+//!             }
+//!         });
+//!     });
+//!
+//!     // main loop
+//!     for _ in 1..=10 {
+//!         s.spawn( {
+//!             let y = z.clone();
+//!             move || loop { 
+//!                 let y = y.clone();
+//!                 if let Ok(mut guard) = y.try_lock() {
+//!                     for _ in 1..=20 {
+//!                         *guard += 1;
+//!                     }
+//!                     break;
+//!                 }
+//!                 else {
+//!                     // we didnt get the lock, so we sleep the thread a bit.
+//!                     std::thread::sleep(std::time::Duration::from_millis(50));
+//!                 }
+//!             }
+//!         });
+//!     }
+//! }); // all thread join here
+//!
+//! assert_eq!( 
+//!     unsafe { *z.lock().unwrap_unchecked() },
+//!     33+(1..=1000).sum::<u64>()+ 200
+//! );
+//! ```
+//!
+//!
+//!
+
 use std::collections::vec_deque::VecDeque;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -269,13 +312,14 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 /// This has a good change of panicking, if we reduce the time, and increase the value
 /// even if value if small, we can see issues, but will be more definate when we increase the
 /// size. 
-/// ```should_panic
+/// ```ignore
+/// // This could panic, but sometimes it could execute correctly
 /// # use pointers_threads::lib_th_c::*;
 /// let val = 5u8;
 /// // For this implementation, notice we dont use rayon here.
 /// let val = thread1c_mutex_lock_attempt_inc_drop( std::sync::Mutex::new(val), true, false, true, 0 );
 ///
-/// assert_eq!(105u8, *val.lock().unwrap() );
+/// assert!(105u8, *val.lock().unwrap() );
 /// ```
 /// # Warning
 ///
@@ -524,7 +568,7 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
 
         // this wont work as it only drops the thread handle if we need to stop the thread
         // drop(t1);
-        println!(" we have final for queue {:?}", queue.lock().unwrap());
+        toprint( &format!(" we have final for queue {:?}", queue.lock().unwrap()) );
     });
 
     // this runs in O(1), as there is no reallocation from vec to vecdeque. 
@@ -614,6 +658,7 @@ pub struct TestMutexArc<'a> {
 /// use rayon::prelude::*;
 /// let x = std::sync::Arc::new(std::sync::Mutex::new(33u64));
 /// let y = std::sync::Arc::clone(&x);
+/// let set_limit = 1000;
 /// let func = || {
 ///     // y is passed here as reference, not moved cause closures in itself 
 ///     // dont need to have static reference lifetimes. This is only a requirement
@@ -633,7 +678,7 @@ pub struct TestMutexArc<'a> {
 /// };
 /// let func2 = || {
 ///     if let Ok(mut guard) = y.lock() {
-///         for x in 1..=100_000 {
+///         for x in 1..=set_limit {
 ///             *guard += x;
 ///         }
 ///     }
@@ -642,7 +687,7 @@ pub struct TestMutexArc<'a> {
 /// // This implementation is not the best, as arc is expensive, but it servers
 /// // our purpose to show how we could use rayon here.
 /// let func2_rayon = || {
-///     (1..=100_000).into_par_iter().for_each( |x| {
+///     (1..=set_limit).into_par_iter().for_each( |x| {
 ///         // I have to clone it as we pass many arc values for the parallel iterator
 ///         let y = y.clone();
 ///         if let Ok(mut guard) = y.lock() {
@@ -679,22 +724,24 @@ pub struct TestMutexArc<'a> {
 ///
 /// // Here, we take Arc -> into_inner => mutex. and into_inner whick also works
 /// assert_eq!( unsafe { *x.lock().unwrap_unchecked() },
-///     33+(1..=1000).sum::<u64>()+( (1..=100_000).sum::<u64>()*2 )+ 200 );
+///     33+(1..=1000).sum::<u64>()+( (1..=set_limit).sum::<u64>()*2 )+ 200 );
 /// ```
 /// This function simply runs in this  way.
 /// ```
 /// // when we print true, it gets imputted to stdout
 /// // this produces a vec<string> of the log for the function
 /// # use pointers_threads::lib_th_c::*;
-/// let _ = thread1c_arc_mutex_display( &["display", "move"], false);
+/// let _ = thread1c_arc_mutex_display( &["display", "move"], 10000, false);
 ///
 /// // success would if the function doesnt panic
 /// ```
+/// Note: we need to be careful as deadlocks can also happen when the threads pool
+/// for calling locks becomes exhaustive
 /// ```ignore
 /// # use pointers_threads::lib_th_c::*;
 /// // this loop function is a dangerous way to implement rayon for loop. 
 /// // this is something we should avoid in order to be careful
-/// let _ = thread1c_arc_mutex_display( &["loop"], false);
+/// let _ = thread1c_arc_mutex_display( &["loop -1"], 10, false);
 ///     // territory
 ///     // Thread A                  Thread B
 ///     // lock(y)                   lock(vec_c)
@@ -706,7 +753,20 @@ pub struct TestMutexArc<'a> {
 ///     //             ▼   ▼
 ///     //           DEADLOCK
 ///```
-pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<String> {
+/// We can also call this function in the following ways.
+///```ignore
+/// # use pointers_threads::lib_th_c::*;
+/// let _ = thread1c_arc_mutex_display( &["loop -1"], 100, false);
+/// let _ = thread1c_arc_mutex_display( &["loop -2"], 100, false);
+/// let _ = thread1c_arc_mutex_display( &["loop -3"], 100, false);
+/// let _ = thread1c_arc_mutex_display( &["loop"], 100, false);
+/// let _ = thread1c_arc_mutex_display( &["display, move, loop -1"], 100, false);
+///```
+/// # Warning
+/// Keep in mind that increating the number of threads could cause the max pool limit to reach
+/// and this cause issues. This is the reason, we have to take precaution when passing 
+/// mutexes and locking them in threads when calling lock iteratively
+pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable: bool) -> Vec<String> {
     // NOTE: deliverately are using &mut vec<string> as arguement,
     // I would be easier to use toprint function be just add the vector elements,
     // however it fun to push the limits of this implementation, and try to pass
@@ -720,6 +780,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
     };
 
     let mut vec_string: Vec<String> = vec![];
+    if inc_limit == u64::MIN { inc_limit += 1};
 
     fn lock_display( print: fn(&str), vec_string: &mut Vec<String> ) {
         vec_string.push("\n-------------------------Lock display------------------------------".to_string() );
@@ -787,7 +848,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
     } // a is dropped here, even if use clone
 
 
-    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String>, arg: &str ) {
+    fn arc_looping( print: fn(&str), vec_string: &mut Vec<String>, arg: &str, limit: u64 ) {
         use rayon::prelude::*;
 
         // I dont need to define a new vec_string
@@ -833,7 +894,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
             // if let Ok(ref mut guard) = y.lock() { // also works
             if let Ok(mut guard) = y.lock() {
                 // for x in 1..=1_000_000_000 {
-                for x in 1..=1_000_000 {
+                for x in 1..=limit {
                     *guard += x;
                 }
                 vec_clone.push( format!("Fun2: mutex mutated in \
@@ -848,14 +909,15 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
 
         // WARNING: this is very unsafe, and we should not implement this. It has a high 
         // potential to get into deadlock territory
-        let func_rayon_bad = || {
+        let func_rayon_dangerous1 = || {
             let vec_clone_arc: std::sync::Arc<std::sync::Mutex<Vec<String>>> = 
                 std::sync::Arc::new(std::sync::Mutex::new(vec![]));
-            (1..=1_000_000).into_par_iter().for_each( |x| {
+            (1..=limit).into_par_iter().for_each( |x| {
                 let y = y.clone();
                 let vec_c = vec_clone_arc.clone();
                 if let Ok(mut guard) = y.lock() {
                     *guard += x;
+                    // this is terrible and  will create million lines for string
                     let message = format!("Fun2 Rayon: mutex mutated in \
                         spawned thread for new y is {}", *guard);
                     // NOTE: for rayon, there is a change still in this implementation that we 
@@ -863,7 +925,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
                     // to drop the lock as soon as possible.
                     drop(guard); 
 
-                    if x == 1_000_000 {
+                    if x == limit {
                         let mut vec_guard = vec_c.lock().unwrap();
                         vec_guard.push(message);
                         print( unsafe { (vec_guard).last().unwrap_unchecked() });
@@ -884,11 +946,11 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
         };
 
         // WARNING: This is some what better, but still dangerous
-        let func_rayon_better = || {
+        let func_rayon_dangerous2 = || {
             let vec_clone_arc =
                 std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
 
-            (1..=1_000_000).into_par_iter().for_each( |x| {
+            (1..=limit).into_par_iter().for_each( |x| {
                 let y = y.clone();
                 let vec_c = vec_clone_arc.clone();
 
@@ -898,7 +960,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
                     *guard
                 };
 
-                if x == 1_000_000 {
+                if x == limit {
                     let mut vec_guard = vec_c.lock().unwrap();
                     vec_guard.push( format!(
                         "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
@@ -920,38 +982,28 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
         };
 
 
-        let func_rayon_correct = || {
-            let vec_clone_arc =
-                std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
+        // WARNING: This is some what better, but still dangerous
+        let func_rayon_dangerous3 = {
+            let y = y.clone();
+            move || {
+                (1..=limit).into_par_iter().filter_map( |x| {
+                    let value = {
+                        let mut guard = y.lock().unwrap();
+                        *guard += x;
+                        *guard
+                    };
 
-            (1..=1_000_000).into_par_iter().map( |x| {
-                let y = y.clone();
-                let vec_c = vec_clone_arc.clone();
+                    let string_val_opt = if x == limit {
+                        let st_val = format!(
+                            "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
+                            value
+                        );
 
-                let value = {
-                    let mut guard = y.lock().unwrap();
-                    *guard += x;
-                    *guard
-                };
-
-                if x == 1_000_000 {
-                    let mut vec_guard = vec_c.lock().unwrap();
-                    vec_guard.push( format!(
-                        "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
-                        value
-                    ));
-
-                    if let Some(last) = vec_guard.last() {
-                        print( last );
-                    }
-                }
-
-            });
-            match vec_clone_arc.lock() {
-                Ok(val) => val.to_vec(),
-                // we use into inner here to get the value even if its poisoned
-                // I dont need to worry about clearing poison here.
-                Err(poisoned) => poisoned.into_inner().to_vec(),
+                        print( &st_val );
+                        Some(st_val)
+                    } else { None };
+                    string_val_opt
+                }).collect::<Vec<String>>()
             }
         };
 
@@ -973,7 +1025,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
                     }
                     vec_clone.push( "Fun3: lock received for z".to_string() );
                     print( unsafe { vec_clone.last().unwrap_unchecked() });
-                    println!("vec is {:?}", vec);
+                    print( &format!("vec mutation is: {:?}", vec) );
                     break;
                 } else {
                     vec_clone.push("Fun3: lock not received".to_string());
@@ -996,11 +1048,13 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
             let vec3 = s.spawn(func3);
 
             let vec4 = if arg == "rayon_bad" {
-                s.spawn(func_rayon_bad)
-            } else if arg == "rayon_good" {
-                s.spawn(func_rayon_bad)
+                s.spawn(func_rayon_dangerous1)
+            } else if arg == "rayon_better" {
+                s.spawn(func_rayon_dangerous2)
+            } else if arg == "rayon_correct" {
+                s.spawn(func_rayon_dangerous3)
             } else {
-                s.spawn(func_rayon_bad) // could add another type here
+                s.spawn(func2)
             };
 
             for x in 1..=10 {
@@ -1054,26 +1108,26 @@ pub fn thread1c_arc_mutex_display( input: &[&str], printable: bool) -> Vec<Strin
         print( &format!("{}, {}, {}. total should be {}, and what we got {}", 
             33, 
             (1..=1000).sum::<u64>(), 
-            (1..=1_000_000).sum::<u64>(),
-            33+(1..=1000).sum::<u64>()+( (1..=1_000_000).sum::<u64>()*2 ),
+            (1..=limit).sum::<u64>(),
+            33+(1..=1000).sum::<u64>()+( (1..=limit).sum::<u64>()*2 ),
             unsafe { x.lock().unwrap_unchecked() }
         ));
 
         assert_eq!( unsafe { *x.lock().unwrap_unchecked() },
-            33+(1..=1000).sum::<u64>()+( (1..=1_000_000).sum::<u64>()*2 ) );
+            33+(1..=1000).sum::<u64>()+( (1..=limit).sum::<u64>()*2 ) );
 
     }
 
     for val in input.iter() {
         let split_input = val.split_once(" -").unwrap_or( (val, "") );
 
-        println!("split {:?}", split_input);
         match split_input {
             ( "display", _ ) => { lock_display( toprint, &mut vec_string ) },
             ( "move", _ ) => { arc_move( toprint, &mut vec_string ) },
-            ( "loop", b ) if b == "rayon_bad" => { arc_looping( toprint, &mut vec_string, split_input.1 ) },
-            ( "loop", b ) if b == "rayon_better" => { arc_looping( toprint, &mut vec_string, split_input.1 ) },
-            ( "loop", _ ) => { arc_looping( toprint, &mut vec_string, "" ) },
+            ( "loop", b ) if b == "1" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", b ) if b == "2" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", b ) if b == "3" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", _ ) => { arc_looping( toprint, &mut vec_string, "", inc_limit ) },
             _ =>  {}
         }
     }
