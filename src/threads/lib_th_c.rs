@@ -3,7 +3,7 @@
 //! hang forever, as our threads could end up waiting for a `lock` to release
 //! that might never happen. See [`std::sync::Mutex::lock`]. Consider the 
 //! following example
-//! ```
+//! ```text,rust
 //! let x = std::sync::Mutex::new(10);
 //! {
 //!     let y = x.lock().unwrap();

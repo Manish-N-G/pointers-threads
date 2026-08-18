@@ -46,7 +46,8 @@
 // dependence to be able to see it in the code.
 // #![doc(html_playground_url = "https://play.rust-lang.org/")]
 
-#![doc(test(
+#![doc(test( 
+    //attribute that prevents the automatic injection of extern crate statements into doctests
     no_crate_inject,
     //attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
 ))]

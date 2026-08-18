@@ -3,6 +3,8 @@
 name = "pointers-threads"
 version = "0.1.0"
 edition = "2024"
+build = "build.rs" # Optional, as Cargo looks for build.rs by default anyways
+
 
 [lib]
 name = "pointers_threads"
