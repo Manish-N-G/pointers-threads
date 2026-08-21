@@ -38,36 +38,25 @@
 //!     2+2
 //! }
 //! ~~~
-//!
-// #![doc(html_logo_url = "https://github.com/Manish-N-G/pointers-threads/blob/master/assets/logo.png")]
+#![doc(html_logo_url = 
+    "https://github.com/Manish-N-G/pointers-threads/blob/master/assets/logo_transparent.png?raw=true"
+)]
 
-#![doc(html_logo_url = "../../../assets/logo_transparent.png")]
+// Note: raw address will not work, as we will end up changing html files based on 
+// the different modules we create
+// #![doc(html_logo_url = "../../../assets/logo_transparent.png")]
 //<img src='../../../assets/logo.png' alt='logo' width='100'>
 //
-// const MY_DOC: &str = "hello";
-// #![doc(html_logo_url = "MY_DOC" )]
-//
-// #[doc(html_logo_url = String::from(hello).as_str() )]
+// Cant directly add concat here, as rust code does not for comments.
 // #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/",env!("GENNAME")) ) )]
-// #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/generate_logo_path.rs") ) )]
-// include!(concat!(env!("OUT_DIR"),"/", env!("GEN_LOGO_FILE") ) );
-// const VALD = include!(concat!(env!("OUT_DIR"),"/", env!("GEN_LOGO_FILE") ) );
-
-// this works for
-// <img src='../../../assets/logo.png' alt='logo' width='100'>
-//
-// #![doc(html_logo_url = "assets/logo.png")]
-// #![doc(html_favicon_url = "https://example.com/favicon.ico")]
-// #![doc(html_logo_url = 
-//    "https://upload.wikimedia.org/wikipedia/fr/9/90/Rust_Logo.png?utm_source=fr.wikipedia.org&utm_campaign=index&utm_content=original
-// ")]
+// basically, #![ doc( html_logo_url = ... )] distructures to //!
+// < class=html_logo_url src= ..... >
 
 // Note, this will activate all run files for the code. This
 // currently is not needed as we will end up duplicating code 
 // but we could push this lib in crates.io and add it as a 
 // dependence to be able to see it in the code.
 // #![doc(html_playground_url = "https://play.rust-lang.org/")]
-
 #![doc(test( 
     //attribute that prevents the automatic injection of extern crate statements into doctests
     no_crate_inject,
