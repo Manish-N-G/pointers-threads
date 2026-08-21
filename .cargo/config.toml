@@ -1,3 +1,8 @@
 [env]
-LOGO_PATH="assets/logo.png"
-GEN_LOGO_FILE="generate_logo_path.rs"
+# LOGO_PATH="assets/logo.png"
+LOGO_PATH="assets/logo_transparent.png"
+
+# remember to update this if it changes.
+# we are passing raw value here for the moment inside lib.rs. So we have to manually
+# test if link exists
+LOGO_URL="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/logo_transparent.png?raw=true"
