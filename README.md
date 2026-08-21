@@ -1,4 +1,4 @@
-# This Rust library of exposing mock functions to understand Pointers, threads and Async Operations
+# This Rust library exposes mock functions to understand Pointers, threads and Async Operations
 
 The purpose of this library is meant to expose you to how the differnt types in rust work with regards to Pointers, threads and Async
 
