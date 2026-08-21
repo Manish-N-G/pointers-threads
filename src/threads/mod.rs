@@ -4,6 +4,7 @@ use std::thread;
 pub mod lib_th_a;
 pub mod lib_th_b;
 pub mod lib_th_c;
+pub mod lib_th_d;
 
 pub use lib_th_a::*;
 pub use lib_th_b::*;
@@ -20,10 +21,7 @@ pub use lib_th_c::*;
 ///
 /// let th1 = thread::spawn(|| {
 ///     println!("th1 inside");
-///     "th1"
-/// });
-/// let th2 = thread::spawn(|| {
-///     println!("th2 inside");
+///     "th1" }); let th2 = thread::spawn(|| { println!("th2 inside");
 ///     "th2"
 /// });
 /// assert_eq!("th1", th1.join().unwrap());

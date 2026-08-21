@@ -67,6 +67,11 @@ fn main() {
     // }
     //
 
+    let x = 4;
+    match x {
+        1..10 => println!("true"),
+        _ => print!("false"),
+    };
 
 }
 
@@ -115,18 +120,18 @@ fn mod1_b() {
 
 
 fn mod1_c() {
-    th1::th1c::testing1c();
+    th1::th1c_done::testing1c();
 }
 
 fn mod1_d() {
-    th1::th1d::thread1d_mutex_lock_attempt();
-    th1::th1d::thread1d_park_mutex();
-    th1::th1d::thread1d_arc_mutex();
+    th1::th1d_done::thread1d_mutex_lock_attempt();
+    th1::th1d_done::thread1d_park_mutex();
+    th1::th1d_done::thread1d_arc_mutex();
 }
 
 fn mod1_e() {
-    th1::th1e::thread1e_arc_rwlock();
-    th1::th1e::thread1e_rwlock_is_finished();
+    th1::th1e_added::thread1e_arc_rwlock();
+    th1::th1e_added::thread1e_rwlock_is_finished();
 }
 
 fn mod1_f() {
