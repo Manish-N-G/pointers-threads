@@ -4,5 +4,8 @@
  - [ ] Finished Porting th3 to pointers, threads
  - [ ] Create Async module
  - [ ] Create helper tools module
+     - [ ] Add Criterion
+     - [ ] Add log crate
+     - [ ] Add Simpler Profiling tools
  - [ ] Grammer Correction
  - [ ] Change names of modules to the appropriate names
