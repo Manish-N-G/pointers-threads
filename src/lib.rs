@@ -39,6 +39,28 @@
 //! }
 //! ~~~
 //!
+// #![doc(html_logo_url = "https://github.com/Manish-N-G/pointers-threads/blob/master/assets/logo.png")]
+
+#![doc(html_logo_url = "../../../assets/logo_transparent.png")]
+//<img src='../../../assets/logo.png' alt='logo' width='100'>
+//
+// const MY_DOC: &str = "hello";
+// #![doc(html_logo_url = "MY_DOC" )]
+//
+// #[doc(html_logo_url = String::from(hello).as_str() )]
+// #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/",env!("GENNAME")) ) )]
+// #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/generate_logo_path.rs") ) )]
+// include!(concat!(env!("OUT_DIR"),"/", env!("GEN_LOGO_FILE") ) );
+// const VALD = include!(concat!(env!("OUT_DIR"),"/", env!("GEN_LOGO_FILE") ) );
+
+// this works for
+// <img src='../../../assets/logo.png' alt='logo' width='100'>
+//
+// #![doc(html_logo_url = "assets/logo.png")]
+// #![doc(html_favicon_url = "https://example.com/favicon.ico")]
+// #![doc(html_logo_url = 
+//    "https://upload.wikimedia.org/wikipedia/fr/9/90/Rust_Logo.png?utm_source=fr.wikipedia.org&utm_campaign=index&utm_content=original
+// ")]
 
 // Note, this will activate all run files for the code. This
 // currently is not needed as we will end up duplicating code 

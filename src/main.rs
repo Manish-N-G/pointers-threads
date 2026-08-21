@@ -61,12 +61,14 @@ fn main() {
     // crate::th3::th3d::normal_music_impl();
     // crate::th3::th3d::erasure_music_impl();
 
-    println!( "vec is :");
-    for vec in thread1c_arc_mutex_display( &["display", "move", "loop -1"], 100_000, false) {
-        println!( "{}", vec );
-    }
-}
+    // println!( "vec is :");
+    // for vec in thread1c_arc_mutex_display( &["display", "move", "loop -1"], 100_000, false) {
+    //     println!( "{}", vec );
+    // }
+    //
 
+
+}
 
 fn mod1_a() {
     // I dont need to do anymore: use pointers_threads::lib_th1a::*;

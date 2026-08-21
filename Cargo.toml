@@ -21,6 +21,13 @@ rayon = "=1.12.0"
 # using trpl as a simple wrapper create for tokio for testing in our lib
 trpl = "=0.3.0"
 
+#NOTE: env lives in $CARGO_HOME/config.toml and
+# CARGO_HOME defaults to .cargo
+# We have our env there
+
+[build-dependencies] 
+# file-exists-macro = "0.1.0"   
+
 
 #NOTE: "=1.1.0" gives the exact version while "1.1.0" is interpreted as "^1.1.0"
 # and it means it could be updated from >1.1.0 to <2.0.0
