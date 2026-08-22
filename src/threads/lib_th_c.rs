@@ -993,7 +993,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                         *guard
                     };
 
-                    let string_val_opt = if x == limit {
+                    if x == limit {
                         let st_val = format!(
                             "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
                             value
@@ -1001,8 +1001,9 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
 
                         print( &st_val );
                         Some(st_val)
-                    } else { None };
-                    string_val_opt
+                    } else {
+                        None
+                    }
                 }).collect::<Vec<String>>()
             }
         };
@@ -1124,9 +1125,9 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         match split_input {
             ( "display", _ ) => { lock_display( toprint, &mut vec_string ) },
             ( "move", _ ) => { arc_move( toprint, &mut vec_string ) },
-            ( "loop", b ) if b == "1" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
-            ( "loop", b ) if b == "2" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
-            ( "loop", b ) if b == "3" => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", "1" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", "2" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", "3" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
             ( "loop", _ ) => { arc_looping( toprint, &mut vec_string, "", inc_limit ) },
             _ =>  {}
         }

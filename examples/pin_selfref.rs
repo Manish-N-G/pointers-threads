@@ -1,3 +1,4 @@
+//! testing examples
 use pointers_threads::lib_ptr_a::*;
 
 fn main() {
@@ -133,7 +134,7 @@ fn test_self_ref() {
     // after the value. This way, we lock the value.
     // u.val = 8;
     
-    //todomanish: We will create unit test in lib for this
+    // TODO: We will create unit test in lib for this
     // pin_u.val = 1; // todomanish, this will only works inside of lib crates
     //                // as the fields are only pub to the crate
     // println!("val pin_u get {:}", pin_u.get_val());

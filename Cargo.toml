@@ -4,6 +4,24 @@ name = "pointers-threads"
 version = "0.1.0"
 edition = "2024"
 build = "build.rs" # Optional, as Cargo looks for build.rs by default anyways
+authors = ["Manish Gondhkar"]
+description = "A Rust library that dives into Pointers, Asyncs and threads"
+license = "MIT"
+repository = "https://github.com/Manish-N-G/pointers-threads"
+
+# not sure I need documentation for the moment
+# documentation = "https:://docs.rs/project-name"
+readme = "README.md"
+keywords = ["rust", "threads", "pointers", "async", "futures", "concurrency", "multithreading",
+            "tasks", "tokio", "parallelism"]
+categories = ["asynchronous", "multithreading", "futures", "concurrency", "programming"]
+
+[package.metadata]
+[package.metadata.tools]
+
+# automatically added
+# [[examples]]
+# name = "pin_selfref.rs"
 
 
 [lib]
@@ -25,6 +43,15 @@ trpl = "=0.3.0"
 # CARGO_HOME defaults to .cargo
 # We have our env there
 
+[features]
+default = ["full"]
+pointers = []
+async = []
+threads = []
+# tokio = ["dep:tokio"]
+full = ["pointers", "async", "threads"]
+
+
 [build-dependencies] 
 # file-exists-macro = "0.1.0"   
 
@@ -34,3 +61,5 @@ trpl = "=0.3.0"
 
 # [package.metadata.docs.rs]
 # playground = { url = "https://play.rust-lang.org/" }   # This enables the Run button
+
+

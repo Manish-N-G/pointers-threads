@@ -7,7 +7,11 @@
      - [ ] Add Criterion
      - [ ] Add log crate
      - [ ] Add Simpler Profiling tools
+     - [ ] Add tests
+     - [ ] Add benches
  - [ ] Grammer Correction
  - [ ] Create a log mod
+ - [ ] Create a test mod
+ - [ ] Create a bench mod
  - [ ] Create ci for spell checking via aspell
  - [ ] Change names of modules to the appropriate names
