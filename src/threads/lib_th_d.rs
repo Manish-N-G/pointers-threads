@@ -1,16 +1,21 @@
-// just added for th1e
+// ReadWrite logs for threads
+//! Module exposing readwrite logs
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
+#[derive(Debug)]
+#[allow(unused)]
+pub struct RwTest<'a> {
+    a: RwLock<u8>,
+    b: RwLock<u16>,
+    c: RwLock<&'a str>,
+}
+
+
+
 pub fn thread1e_arc_rwlock() {
-    #[derive(Debug)]
-    struct RwTest<'a> {
-        a: RwLock<u8>,
-        b: RwLock<u16>,
-        c: RwLock<&'a str>,
-    }
-    // RwTest directly takes ownership and didnt need to move it in struct
+    // RwTest directly takes ownership and we didnt need to pass variables to it.
     let st = RwTest {
         a: RwLock::new(11),
         b: RwLock::new(22),

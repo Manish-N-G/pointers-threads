@@ -15,3 +15,4 @@
  - [ ] Create a bench mod
  - [ ] Create ci for spell checking via aspell
  - [ ] Change names of modules to the appropriate names
+ - [ ] Update home page to proper types and names to show all features and inlude styling

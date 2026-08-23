@@ -18,8 +18,14 @@ keywords = ["rust", "threads", "pointers", "async", "futures", "concurrency", "m
             "tasks", "tokio", "parallelism"]
 categories = ["asynchronous", "multithreading", "futures", "concurrency", "programming"]
 
+# Not related to any dev dependencies, but mainly used for some
+# tools, scripts, plugins and things of that nature, that has no
+# direct impact on the lib
 [package.metadata]
 [package.metadata.tools]
+
+[package.metadata.spellcheck]
+config = ".config/spellcheck.toml"
 
 # automatically added
 # [[examples]]

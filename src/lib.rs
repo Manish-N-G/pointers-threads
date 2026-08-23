@@ -1,5 +1,13 @@
 //! This lib has a collection of pointers and thread type functions availalbe
 //!
+//!
+/*
+//! Need to add in the future
+//! [github]: https://todo.
+//! [crates-io]: https://todo.
+//! [docs-rs]: https://todo.
+*/
+//!
 //! This covers a lot of types. One is that we try to implement our own type
 //! of pointers and test it with what the std uses. Its not exactly the one
 //! in the std lib, but it gives a feel for how they operate. They wont work
@@ -67,6 +75,7 @@
 // meaning if we make it pub, we an see this in our docs.
 mod threads;
 mod pointers;
+mod tools;
 
 /*
 // NOTE: This is not good practice to add doc comment here like this. Its better
@@ -85,3 +94,4 @@ mod pointers;
 */
 pub use threads::*;
 pub use pointers::*;
+pub use tools::*;

@@ -1,0 +1,191 @@
+# Project settings where a Cargo.toml exists and is passed
+# ${CARGO_MANIFEST_DIR}/.config/spellcheck.toml
+
+# Also take into account developer comments
+dev_comments = true
+
+skip_readme = false
+
+[Hunspell]
+# looks like only US is supported at the moment
+lang = "en_GB"
+
+# Additional search paths, which take presedence over the default
+# os specific search dirs, searched in order, defaults last
+# This uses relative path from spellcheck.toml
+search_dirs = ["."]
+
+# Adds additional dictionaries, can be specified as
+# absolute paths or relative in the search dirs (in this order).
+
+# extra_dictionaries = []
+
+# If set to `true`, the OS specific default search paths
+# are skipped and only explicitly specified ones are used.
+# skip_os_lookups = false
+
+# Use the builtin dictionaries if none were found in
+# in the configured lookup paths.
+# Usually combined with `skip_os_lookups=true`
+# to enforce the `builtin` usage for consistent
+# results across distributions and CI runs.
+# Setting this will still use the dictionaries
+# specified in `extra_dictionaries = [..]`
+# for topic specific lingo.
+# use_builtin = true
+
+[Hunspell.quirks]
+# Accepts `alphabeta` variants if the checker provides a replacement suggestion
+# of `alpha-beta`.
+allow_concatenation = false
+
+# And the counterpart, which accepts words with dashes, when the suggestion has
+# recommendations without the dashes. This is less common.
+allow_dashed = false
+
+# Transforms words that are provided by the tokenizer
+# into word fragments based on the capture groups which are to
+# be checked.
+# If no capture groups are present, the matched word is whitelisted.
+transform_regex = [
+
+    # Keep the built-in style examples.
+    "^'([^\\s])'$",
+    "^[0-9]+x$",
+
+    # Ignore PascalCase Rust identifiers:
+    # TokioTimer
+    # MySelfReferencePinned
+    # ThreadWaker
+    "^[A-Z][a-z]+(?:[A-Z][a-z]+)+$",
+
+    # Ignore camelCase identifiers:
+    # getCurrentValue
+    # updateSomeField
+    "^[a-z]+(?:[A-Z][a-z]+)+$",
+
+    # Ignore _ and looks at the words individually
+    "^(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
+    "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
+
+    #primitives
+    "^(u|i)(8|16|32|64|128|size)$",
+    "^f(32|64)$",
+    "^(bool|char|str)$",
+
+    #keyworks
+    "^(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while|abstract|become|box|do|final|macro|override|priv|typeof|unsized|virtual|yield|try)$",
+    
+    #reserved
+    "^(gen|raw)$",
+
+    # Primitive marker types
+    "^(Option|Result|Some|None|Ok|Err)$",
+
+    # Collection
+    "^(Vec|VecDeque|LinkedList|HashMap|HashSet|BTreeMap|BTreeSet|BinaryHeap)$",
+
+    # Locks and threads and poitners and async
+    "^(Box|Rc|Arc|Cell|RefCell|OnceCell|LazyCell|OnceLock|LazyLock)$",
+    "^(Mutex|RwLock|Condvar|Barrier|Once|Semaphore)$",
+    "^(Thread|JoinHandle|Builder|Scope)$",
+    "^(Future|Pin|Poll|Context|Waker|RawWaker|RawWakerVTable|Wake)$",
+
+    # Iterators
+    "^(Iterator|IntoIterator|DoubleEndedIterator|ExactSizeIterator|FusedIterator|Extend|FromIterator)$",
+
+    # Conversions
+    "^(From|Into|TryFrom|TryInto|AsRef|AsMut|Borrow|BorrowMut|ToOwned)$",
+
+    # Operators
+    "^(Add|Sub|Mul|Div|Rem|Neg|Not|BitAnd|BitOr|BitXor|Shl|Shr)$",
+    "^(AddAssign|SubAssign|MulAssign|DivAssign|RemAssign|BitAndAssign|BitOrAssign|BitXorAssign|ShlAssign|ShrAssign)$",
+
+    # Comp
+    "^(PartialEq|Eq|PartialOrd|Ord|Ordering)$",
+
+    # Debug and Formatting
+    "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|LowerExp|UpperExp|Pointer)$",
+    "^(Formatter|Write|Result)$",
+
+    # Core Traits
+    "^(Sized|Send|Sync|Copy|Clone|Default|Drop|Fn|FnMut|FnOnce)$",
+
+    # Memory Ownership
+    "^(ManuallyDrop|MaybeUninit|PhantomData|PhantomPinned|NonNull|UnsafeCell)$",
+
+    # Coerce
+    "^(Deref|DerefMut|CoerceUnsized|Unsize)$",
+
+    # String and Paths and Io
+    "^(String|OsString|CString|CStr|OsStr)$",
+    "^(Path|PathBuf|Component|Components|Metadata|Permissions)$",
+    "^(Read|Write|Seek|BufRead|BufReader|BufWriter|Cursor)$",
+
+    # Error
+    "^(Error|ErrorKind|Infallible)$",
+
+    # Range
+    "^(Range|RangeFrom|RangeFull|RangeInclusive|RangeTo|RangeToInclusive)$",
+
+    # Macros
+    "^(assert|assert_eq|assert_ne|debug_assert|debug_assert_eq|debug_assert_ne|panic|unreachable|todo|unimplemented|unreachable)$",
+
+    # Attributes
+    "^(cfg|derive|doc|allow|warn|deny|forbid|inline|must_use|non_exhaustive|repr|test|bench|no_std|no_main)$",
+
+    # Debugging
+    "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|Pointer)$",
+
+    # Self Defined types
+    # "^ptr$",
+    "ptr",
+    "eq",
+    "vec",
+    "Of",
+    "err",
+    "unpark",
+    "dbg",
+    "var",
+    "deref",
+    "struct",
+    "fn",
+    "^&+$",
+    "mut",
+    "impl",
+    "val",
+    "cfg",
+    "rs",
+    "std",
+    "^[[:punct:]]+$", # all punctualtions
+    "^[^[:alnum:][:space:]]+$", # all punctualtions
+    # "^[<>=-$%{}()*+]+$",
+
+
+]
+
+# Check the expressions in the footnote references. By default this is turned on
+# to remain backwards compatible but disabling it could be particularly useful
+# when one uses abbreviations instead of numbers as footnote references.  For
+# instance by default the fragment `hello[^xyz]` would be spellchecked as
+# `helloxyz` which is obviously a misspelled word, but by turning this check
+# off, it will skip validating the reference altogether and will only check the
+# word `hello`.
+check_footnote_references = false
+
+[NlpRules]
+# Allows the user to override the default included
+# exports of LanguageTool, with other custom
+# languages
+
+# override_rules = "/path/to/rules_binencoded.bin"
+# override_tokenizer = "/path/to/tokenizer_binencoded.bin"
+
+[Reflow]
+# Reflows doc comments to adhere to adhere to a given maximum line width limit.
+max_line_length = 100 

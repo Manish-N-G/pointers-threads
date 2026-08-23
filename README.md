@@ -1,6 +1,6 @@
 # This Rust library exposes mock functions to understand Pointers, threads and Async Operations
 
-The purpose of this library is meant to expose you to how the differnt types in rust work with regards to Pointers, threads and Async
+The purpose of this library is meant to expose you to how the different types in rust work with regards to Pointers, threads and Async
 
 ## For Pointers:
 
@@ -27,5 +27,5 @@ There are more to come in the future of this library.
 
 ## For Threads
 
-For Threads, we cant truely isolate it by itself, without knowing how some pointers work. 
+For Threads, we cant truly isolate it by itself, without knowing how some pointers work. 
 
