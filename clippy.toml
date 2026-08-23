@@ -1,0 +1,3 @@
+# mimimum supported version
+# I prefer it here than #![clippy::msrv = "1.89.0"]
+msrv = "1.89.0"

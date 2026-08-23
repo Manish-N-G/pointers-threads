@@ -1,3 +1,4 @@
+// DYN type
 // this module is mean to understand how to dyn dispatch works.
 // This is similar to the "Type Erasure" concept in other languages.
 // And we will see how this is handles in rust.

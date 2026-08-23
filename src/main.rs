@@ -66,12 +66,8 @@ fn main() {
     //     println!( "{}", vec );
     // }
     //
-
-    let x = 4;
-    match x {
-        1..10 => println!("true"),
-        _ => print!("false"),
-    };
+    
+    th3::th3b3::async_select();
 
 }
 
