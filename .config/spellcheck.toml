@@ -73,74 +73,75 @@ transform_regex = [
     "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
     "^(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)_(.+?)$",
 
+    
     #primitives
-    "^(u|i)(8|16|32|64|128|size)$",
-    "^f(32|64)$",
-    "^(bool|char|str)$",
+    # "^(u|i)(8|16|32|64|128|size)$",
+    # "^f(32|64)$",
+    # "^(bool|char|str)$",
 
     #keyworks
-    "^(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while|abstract|become|box|do|final|macro|override|priv|typeof|unsized|virtual|yield|try)$",
+    # "^(as|async|await|break|const|continue|crate|dyn|else|enum|extern|false|fn|for|if|impl|in|let|loop|match|mod|move|mut|pub|ref|return|self|Self|static|struct|super|trait|true|type|unsafe|use|where|while|abstract|become|box|do|final|macro|override|priv|typeof|unsized|virtual|yield|try)$",
     
     #reserved
-    "^(gen|raw)$",
+    # "^(gen|raw)$",
 
     # Primitive marker types
-    "^(Option|Result|Some|None|Ok|Err)$",
+    # "^(Option|Result|Some|None|Ok|Err)$",
 
     # Collection
-    "^(Vec|VecDeque|LinkedList|HashMap|HashSet|BTreeMap|BTreeSet|BinaryHeap)$",
+    # "^(Vec|VecDeque|LinkedList|HashMap|HashSet|BTreeMap|BTreeSet|BinaryHeap)$",
 
     # Locks and threads and poitners and async
-    "^(Box|Rc|Arc|Cell|RefCell|OnceCell|LazyCell|OnceLock|LazyLock)$",
-    "^(Mutex|RwLock|Condvar|Barrier|Once|Semaphore)$",
-    "^(Thread|JoinHandle|Builder|Scope)$",
-    "^(Future|Pin|Poll|Context|Waker|RawWaker|RawWakerVTable|Wake)$",
+    # "^(Box|Rc|Arc|Cell|RefCell|OnceCell|LazyCell|OnceLock|LazyLock)$",
+    # "^(Mutex|RwLock|Condvar|Barrier|Once|Semaphore)$",
+    # "^(Thread|JoinHandle|Builder|Scope)$",
+    # "^(Future|Pin|Poll|Context|Waker|RawWaker|RawWakerVTable|Wake)$",
 
     # Iterators
-    "^(Iterator|IntoIterator|DoubleEndedIterator|ExactSizeIterator|FusedIterator|Extend|FromIterator)$",
+    # "^(Iterator|IntoIterator|DoubleEndedIterator|ExactSizeIterator|FusedIterator|Extend|FromIterator)$",
 
     # Conversions
-    "^(From|Into|TryFrom|TryInto|AsRef|AsMut|Borrow|BorrowMut|ToOwned)$",
-
+    # "^(From|Into|TryFrom|TryInto|AsRef|AsMut|Borrow|BorrowMut|ToOwned)$",
+    #
     # Operators
-    "^(Add|Sub|Mul|Div|Rem|Neg|Not|BitAnd|BitOr|BitXor|Shl|Shr)$",
-    "^(AddAssign|SubAssign|MulAssign|DivAssign|RemAssign|BitAndAssign|BitOrAssign|BitXorAssign|ShlAssign|ShrAssign)$",
+    # "^(Add|Sub|Mul|Div|Rem|Neg|Not|BitAnd|BitOr|BitXor|Shl|Shr)$",
+    # "^(AddAssign|SubAssign|MulAssign|DivAssign|RemAssign|BitAndAssign|BitOrAssign|BitXorAssign|ShlAssign|ShrAssign)$",
 
     # Comp
-    "^(PartialEq|Eq|PartialOrd|Ord|Ordering)$",
+    # "^(PartialEq|Eq|PartialOrd|Ord|Ordering)$",
 
     # Debug and Formatting
-    "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|LowerExp|UpperExp|Pointer)$",
-    "^(Formatter|Write|Result)$",
+    # "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|LowerExp|UpperExp|Pointer)$",
+    # "^(Formatter|Write|Result)$",
 
     # Core Traits
-    "^(Sized|Send|Sync|Copy|Clone|Default|Drop|Fn|FnMut|FnOnce)$",
+    # "^(Sized|Send|Sync|Copy|Clone|Default|Drop|Fn|FnMut|FnOnce)$",
 
     # Memory Ownership
-    "^(ManuallyDrop|MaybeUninit|PhantomData|PhantomPinned|NonNull|UnsafeCell)$",
+    # "^(ManuallyDrop|MaybeUninit|PhantomData|PhantomPinned|NonNull|UnsafeCell)$",
 
     # Coerce
-    "^(Deref|DerefMut|CoerceUnsized|Unsize)$",
+    # "^(Deref|DerefMut|CoerceUnsized|Unsize)$",
 
     # String and Paths and Io
-    "^(String|OsString|CString|CStr|OsStr)$",
-    "^(Path|PathBuf|Component|Components|Metadata|Permissions)$",
-    "^(Read|Write|Seek|BufRead|BufReader|BufWriter|Cursor)$",
+    # "^(String|OsString|CString|CStr|OsStr)$",
+    # "^(Path|PathBuf|Component|Components|Metadata|Permissions)$",
+    # "^(Read|Write|Seek|BufRead|BufReader|BufWriter|Cursor)$",
 
     # Error
-    "^(Error|ErrorKind|Infallible)$",
+    # "^(Error|ErrorKind|Infallible)$",
 
     # Range
-    "^(Range|RangeFrom|RangeFull|RangeInclusive|RangeTo|RangeToInclusive)$",
+    # "^(Range|RangeFrom|RangeFull|RangeInclusive|RangeTo|RangeToInclusive)$",
 
     # Macros
-    "^(assert|assert_eq|assert_ne|debug_assert|debug_assert_eq|debug_assert_ne|panic|unreachable|todo|unimplemented|unreachable)$",
+    # "^(assert|assert_eq|assert_ne|debug_assert|debug_assert_eq|debug_assert_ne|panic|unreachable|todo|unimplemented|unreachable)$",
 
     # Attributes
-    "^(cfg|derive|doc|allow|warn|deny|forbid|inline|must_use|non_exhaustive|repr|test|bench|no_std|no_main)$",
+    # "^(cfg|derive|doc|allow|warn|deny|forbid|inline|must_use|non_exhaustive|repr|test|bench|no_std|no_main)$",
 
     # Debugging
-    "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|Pointer)$",
+    # "^(Debug|Display|Binary|Octal|LowerHex|UpperHex|Pointer)$",
 
     # Self Defined types
     # "^ptr$",
