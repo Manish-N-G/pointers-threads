@@ -1,7 +1,7 @@
 # List of things to do
- - [ ] Finished Porting th1 to pointers, threads
- - [ ] Finished Porting th2 to pointers, threads
- - [ ] Finished Porting th3 to pointers, threads
+ - [ ] Finished Porting `th1` to pointers, threads
+ - [ ] Finished Porting `th2` to pointers, threads
+ - [ ] Finished Porting `th3` to pointers, threads
  - [ ] Create Async module
  - [ ] Create helper tools module
      - [ ] Add Criterion
@@ -9,10 +9,10 @@
      - [ ] Add Simpler Profiling tools
      - [ ] Add tests
      - [ ] Add benches
- - [ ] Grammer Correction
+ - [ ] Grammar Correction
  - [ ] Create a log mod
  - [ ] Create a test mod
  - [ ] Create a bench mod
- - [ ] Create ci for spell checking via aspell
+ - [ ] Create CI for spell checking via Aspell
  - [ ] Change names of modules to the appropriate names
- - [ ] Update home page to proper types and names to show all features and inlude styling
+ - [ ] Update home page to proper types and names to show all features and include styling

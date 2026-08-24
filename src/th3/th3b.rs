@@ -38,9 +38,9 @@ pub fn thread3b_async_runner() {
     let rt = tokio::runtime::Runtime::new().expect("runtime didnt work");
     let y = rt.block_on(x.get("random"));
     println!("y1 is {:?}", y);
-    let y = rt.block_on(x.get("said")); // this thread is awiated here
+    let y = rt.block_on(x.get("said")); // this thread is awaited here
     println!("y2 is {:?}", y);
-    let y = rt.block_on(x.get("hahhhahahah")); // this thread is awiated here
+    let y = rt.block_on(x.get("hahhhahahah")); // this thread is awaited here
     println!("y3 is {:?}", y);
 
     let x = std::sync::Arc::new(x);

@@ -2,8 +2,8 @@
 use pointers_threads::lib_ptr_a::*;
 
 fn main() {
-    // for cargo run --example pin_selfref one
-    // args will be only one
+    // for cargo run --example pin_`selfref` one
+    // `args` will be only one
     let mut v = std::env::args().skip(1).take(1);
     match v.next() {
         Some(val) if &val == "one" => test_self_ref(),
@@ -21,7 +21,7 @@ fn test_self_ref() {
     println!("Normal ======================");
     let mut u = MySelfReference::new(4u8);
 
-    // This assert_val functing will compile
+    // This assert_val functioning will compile
     // fn assert_val<T: Unpin>() {}
     // assert_val::<MySelfReference>();
 
@@ -34,9 +34,9 @@ fn test_self_ref() {
     let mut v = u;
     v.print_addr( &format!("Value of ptrs after moved to new variable {}", v.get_val()) );
     
-    v.update_val(7u8); // this updates the value. I dont tsee any add change when updates
+    v.update_val(7u8); // this updates the value. I don't see any add change when updates
     v.print_addr( &format!("Value updates: But does it reflect the ptr val {}", v.get_val()) );
-    // NOTE: Notice here, when we call update value, it doesnt give us the
+    // NOTE: Notice here, when we call update value, it doesn't give us the
     // correct info, as the address points to the old one.
     
     v.put_ptr();
@@ -45,7 +45,7 @@ fn test_self_ref() {
     let mut w = v;
     w.update_val_ptr(9u8);
     w.print_addr( &format!("Update via val ptr: {}", w.get_val()) );
-    // NOTE: Notice here, when we call update value, it doesnt give us the
+    // NOTE: Notice here, when we call update value, it doesn't give us the
     // correct info, as the address points to the old one. This is same
     // as the Update_val function
 
@@ -63,7 +63,7 @@ fn test_self_ref() {
                               // again as box pin pins the value
                               // to the address. Box pin makes
                               // a heap allocation
-    // let val = *pu; // since this is pinned via box pin,
+    // let val = *`pu`; // since this is pinned via box pin,
                    // this will not compile. The reason is
                    // this ensures that the value inside the 
                    // box is never moved. Only the pointer 
@@ -85,11 +85,11 @@ fn test_self_ref() {
     *pu = MySelfReference::new(34u8); 
     // From my understanding, we can deref only Unpin types
     // here. This should not work for !Unpin types?
-    // Perhaps assignement is not the same as moving out
+    // Perhaps assignment is not the same as moving out
     // the value. Hence we should be able to do this if we
     // are creating a new type in the same address location.
     //
-    // let v: Vec<std::pin::Pin<Box<dyn Unpin>>> = vec![pu]; // this works
+    // let v: `Vec`<std::pin::Pin<Box<dyn Unpin>>> = vec![pu]; // this works
 
     pu.put_ptr();
     pu.print_addr( &format!("reuploaded the put ptr: {}", pu.get_val()) );
@@ -105,7 +105,7 @@ fn test_self_ref() {
 
     println!("update via val ptr");
     pu.update_val_ptr(48); // works
-    // NOTE: looks like update_val_ptr doesnt make a difference
+    // NOTE: looks like update_val_ptr doesn't make a difference
     println!("updated val {}", pu.get_val());
     pu.print_addr("");
 
@@ -118,31 +118,31 @@ fn test_self_ref() {
     let mut u = MySelfReference::new(23u8);
     u.put_ptr();
     u.print_addr("Add for Put Ptr for pin new");
-    // we do put ptr 1st cause later, after pin_u, we cant
-    // as we hand the mut ref to pin_u
+    // we do put ptr 1st cause later, after pin_`u`u, we cant
+    // as we hand the mut ref to pin_`u`u
     let mut pin_u = std::pin::Pin::new(&mut u);
-    // let mut pin_u = std::pin::Pin::new(&u); // will give borrow error
+    // let mut pin_`u`u = std::pin::Pin::new(`&u`); // will give borrow error
     pin_u.update_val(10u8);
     pin_u.print_addr( &format!("before put_ptr after pin new: {}", pin_u.get_val()) );
-    //NOTE: Notice that it still works for update_val if we were to chage
+    //NOTE: Notice that it still works for update_val if we were to change
     //the value.
-    pin_u.put_ptr(); // This is not needed to be called anymore
-    // u.print_addr("Add After pin new"); // wont works
-    // but we could still do pin_u.put_ptr();
+    pin_u.put_ptr(); // This is not needed to be called any more
+    // `u`u.print_`addr`("Add After pin new"); // wont works
+    // but we could still do pin_`u`u.put_ptr();
     
-    // cant modify directly with u if we are using pin_u
+    // cant modify directly with `u`u if we are using pin_`u`u
     // after the value. This way, we lock the value.
-    // u.val = 8;
+    // `u`u.val = 8;
     
-    // TODO: We will create unit test in lib for this
-    // pin_u.val = 1; // todomanish, this will only works inside of lib crates
+    // `TODO`: We will create unit test in lib for this
+    // pin_`u`u.val = 1; // `todomanish`, this will only works inside of lib crates
     //                // as the fields are only pub to the crate
-    // println!("val pin_u get {:}", pin_u.get_val());
+    // `println`!("val pin_`u`u get {:}", pin_`u`u.get_val());
     
     // we have the option to choose here depending on the
-    // lifetime of the pin_u or u.
+    // lifetime of the pin_`u`u or `u`u.
     pin_u.print_addr( &format!("after pinned value via pin new and val is: {}", pin_u.get_val()) );
-    //pin_u.print_addr();
+    //pin_`u`u.print_`addr`();
 
     // ============================== PIN::PIN! ============================
     println!("PIN::PIN! ======================");
@@ -155,15 +155,15 @@ fn test_self_ref() {
     let mut pin_u = std::pin::pin!(&mut u);
     pin_u.update_val(51u8);
     pin_u.print_addr( &format!("before put_ptr after pin new: {}", pin_u.get_val()) );
-    //NOTE: Notice that it still works for update_val if we were to chage
-    //the value. Workd for Pin!
+    //NOTE: Notice that it still works for update_val if we were to change
+    //the value. Works for Pin!
 
-    pin_u.put_ptr(); // This is not needed to be called anymore
-    // u.print_addr("Add After pin new"); // wont works
-    // but we could still do pin_u.put_ptr();
+    pin_u.put_ptr(); // This is not needed to be called any more
+    // `u`u.print_`addr`("Add After pin new"); // wont works
+    // but we could still do pin_`u`u.put_ptr();
 
     // we have the option to choose here depending on the
-    // lifetime of the pin_u or u.
+    // lifetime of the pin_`u`u or `u`u.
     pin_u.print_addr( &format!("after pinned value via pin new and val is: {}", pin_u.get_val()) );
     // NOTE: also notice that calling put pointer also works here
     // when we print the value
@@ -174,7 +174,7 @@ fn test_self_ref_pin() {
     println!(" --------------------------- Test Self Ref Pinned----------------------------");
     println!("Normal ======================");
     let mut u = MySelfReferencePinned::new(34u8);
-    u.put_ptr(); // dont forget or will panic
+    u.put_ptr(); // don't forget or will panic
     u.print_addr( &format!("put val {}", u.get_val()) );
     u.update_val(40); // works before pinning
     u.print_addr( &format!("update val :{}", u.get_val()) );
@@ -189,9 +189,9 @@ fn test_self_ref_pin() {
     v.update_val_ptr(84); // works before pinning
     v.print_addr( &format!("the value with updata val ptr moved {}", v.get_val()) );
 
-    //NOTE: now this doesnt work. Cause the value is moved and points
+    //NOTE: now this doesn't work. Cause the value is moved and points
     //to the wrong location. We need to update the pointer location
-    v.put_ptr(); // dont forget or will panic
+    v.put_ptr(); // don't forget or will panic
     v.print_addr( &format!("put ptr now {}", v.get_val()) );
 
     
@@ -205,26 +205,26 @@ fn test_self_ref_pin() {
     // Now we cant unpin this data.
     // what this means is that we wont be able to run some values
     let pu = Box::pin(_u);
-    // pu.print_addr( "box pin for pinned" ); // this will panic. Call ptr on None type
-    // pu.put_ptr(); // this will not works
+    // `pu`.print_`addr`( "box pin for pinned" ); // this will panic. Call ptr on None type
+    // `pu`.put_ptr(); // this will not works
     unsafe { pu.put_ptr_cast(); } // this will works 
     pu.print_addr( &format!("Put ptr with cast as val is {}", pu.get_val()) );
-    //pu.update_val(44); // cannot borrow data as mutable // doesnt work
+    //`pu`.update_val(44); // cannot borrow data as mutable // doesn't work
 
-    pu.update_val_ptr_cast(94); // cannot borrow data as mutable // doesnt work
+    pu.update_val_ptr_cast(94); // cannot borrow data as mutable // doesn't work
     pu.print_addr( &format!("Update ptr cast val {}", pu.get_val()) );
-    // NOTE: Notice here, when we call update value, it doesnt give us the
+    // NOTE: Notice here, when we call update value, it doesn't give us the
     // correct info, as the address points to the old one. This is same
     // as the Update_val function
     //
-    // pu.update_val_ptr(48); // cannot borrow data as mutable // doesnt work
-    // NOTE: In principly, for pinned marker, making the trait for this
-    // type !Unpin, rust doest let us to pu.getval = something or 
-    // the same for (*pu).get_val
-    // This is because Pin intentially hides the value for
+    // `pu`.update_val_ptr(48); // cannot borrow data as mutable // doesn't work
+    // NOTE: In principle, for pinned marker, making the trait for this
+    // type !Unpin, rust doest let us to `pu`.getval = something or 
+    // the same for (*`pu`).get_val
+    // This is because Pin intentionally hides the value for
     // MySelfReferencePinned or type !Unpin.
-    // The reason is beause we should not be able to do something
-    // like std::mem::replace or *r = another.
+    // The reason is because we should not be able to do something
+    // like std::`mem`::replace or *r = another.
     // Hence Our solution need to be modified.
     pu.print_addr("");
 
@@ -236,12 +236,12 @@ fn test_self_ref_pin() {
     // ============================== PIN::NEW ============================
     println!("PIN::NEW ======================");
     println!("Doesnt work for Pinned types !Unpin\n");
-    // let mut _u = MySelfReferencePinned::new(8u8);
-    // let pu = std::pin::Pin::new(_u);
+    // let mut `_`_u = MySelfReferencePinned::new(8u8);
+    // let `pu` = std::pin::Pin::new(`_`_u);
     // Pin new will not work for this
     //
     // NOTE: This wont work
-    // let mut pin_u = std::pin::Pin::new(&mut u);
+    // let mut pin_`u`u = std::pin::Pin::new(&mut `u`u);
     // note: we cannot use pin::new() here
     // PhantomPinned cannot be unpinned
 
@@ -256,21 +256,21 @@ fn test_self_ref_pin() {
     unsafe { pin_u.put_ptr_cast(); }
     pin_u.print_addr( &format!("Put ptr with cast as val is {}", pin_u.get_val()) );
                                     //
-    // pin_u.update_val(5u8); // cannot use this
-    pin_u.update_val_ptr_cast(93); // cannot borrow data as mutable // doesnt work
+    // pin_`u`u.update_val(5u8); // cannot use this
+    pin_u.update_val_ptr_cast(93); // cannot borrow data as mutable // doesn't work
     pin_u.print_addr( &format!("before put_ptr after pin pin!: {}", pin_u.get_val()) );
 
-    // pin_u.put_ptr(); // This will not work.
+    // pin_`u`u.put_ptr(); // This will not work.
     unsafe { pin_u.put_ptr_cast(); }// This not needed. But harmless to have
 
     // we have the option to choose here depending on the
-    // lifetime of the pin_u or u.
+    // lifetime of the pin_`u`u or `u`u.
     pin_u.print_addr( &format!("after pinned value via pin new and val is: {}", pin_u.get_val()) );
-    // NOTE: This is very strange. But behind the hood, it makes more sence.
-    // Notice that here, put_ptr_cast actually causes a problem and this produecs
+    // NOTE: This is very strange. But behind the hood, it makes more sense.
+    // Notice that here, put_ptr_cast actually causes a problem and this produces
     // and error. This implmentation is not the same seem in Pin::new and
     // Box::pin. Behind the hood, pin! create a temp value which then reassigns
-    // the result, preventing &mut self to work. However, when we do ptr manuplation
+    // the result, preventing &mut self to work. However, when we do ptr manipulation
     // directly, this causes error. Its for this reason, I have created this file.
     // I will help describe and process all the different methods we have
     // when we use pinned type for !Unpin and the pin!, new, and Box pin methods

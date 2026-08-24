@@ -1,4 +1,4 @@
-//! This lib has a collection of pointers and thread type functions availalbe
+//! This lib has a collection of pointers and thread type functions available
 //!
 //!
 /*
@@ -14,7 +14,7 @@
 //! exactly the same as well.
 //!
 //! Along with pointers, we also see that we have concurrently type functions
-//! that allow us to know how this works. This creates differet threads and
+//! that allow us to know how this works. This creates different threads and
 //! uses different libs to test and see what works and how it works.
 //!
 //! We also cover async that shows how futures and async operate, sometimes with
@@ -23,14 +23,14 @@
 //! These module covers how different type of threads and pointers are used
 //!
 //! In order to understand threads, we will also have to worry about
-//! pointers and what pointer is best to use. Hence all this is accessable
+//! pointers and what pointer is best to use. Hence all this is accessible
 //! in these module.
 //!
 //! We will also be looking into Async and how they work and understand how
 //! operates under the hood. In a way, Our goal is to know to we can have
 //! concurrent and Async operations and how to use them.
 //!
-//! We can also log and analyse our functions and this are achivable for some 
+//! We can also log and analyse our functions and this are achievable for some 
 //! other libs that are present in this library.
 //!
 //! Some notes to keep in mind. Rust docs doesn't generally run the code
@@ -52,26 +52,26 @@
 
 // Note: raw address will not work, as we will end up changing html files based on 
 // the different modules we create
-// #![doc(html_logo_url = "../../../assets/logo_transparent.png")]
+// #![doc(html_logo_`url` = "../../../assets/logo_transparent.`png`")]
 //<img src='../../../assets/logo.png' alt='logo' width='100'>
 //
-// Cant directly add concat here, as rust code does not for comments.
-// #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/",env!("GENNAME")) ) )]
-// basically, #![ doc( html_logo_url = ... )] distructures to //!
-// < class=html_logo_url src= ..... >
+// Cant directly add `concat` here, as rust code does not for comments.
+// #![doc(html_logo_`url` = include!(`concat`!(`env`!("OUT_`DIR`"),"/",`env`!("`GENNAME`")) ) )]
+// basically, #![ doc( html_logo_`url` = ... )] distructures to //!
+// < class=html_logo_`url` `src`= ..... >
 
 // Note, this will activate all run files for the code. This
 // currently is not needed as we will end up duplicating code 
-// but we could push this lib in crates.io and add it as a 
+// but we could push this lib in crates.`io` and add it as a 
 // dependence to be able to see it in the code.
-// #![doc(html_playground_url = "https://play.rust-lang.org/")]
+// #![doc(html_playground_`url` = "https://play.rust-lang.org/")]
 #![doc(test( 
-    //attribute that prevents the automatic injection of extern crate statements into doctests
+    //attribute that prevents the automatic injection of `extern` crate statements into doc tests
     no_crate_inject,
-    //attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
+    //`attr`(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
 ))]
 
-// not pub, dont need to create doc type here
+// not pub, don't need to create doc type here
 // meaning if we make it pub, we an see this in our docs.
 mod threads;
 mod pointers;

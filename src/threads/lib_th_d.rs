@@ -1,5 +1,5 @@
 // ReadWrite logs for threads
-//! Module exposing readwrite logs
+//! Module exposing read-write logs
 use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
@@ -15,7 +15,7 @@ pub struct RwTest<'a> {
 
 
 pub fn thread1e_arc_rwlock() {
-    // RwTest directly takes ownership and we didnt need to pass variables to it.
+    // RwTest directly takes ownership and we didn't need to pass variables to it.
     let st = RwTest {
         a: RwLock::new(11),
         b: RwLock::new(22),
@@ -33,19 +33,19 @@ pub fn thread1e_arc_rwlock() {
         println!("rw R2 read 2 is {:?}", r2);
 
         // these following two causes problems
-        // Since write will not panic if it doesnt get the lock, it will
+        // Since write will not panic if it doesn't get the lock, it will
         // wait/block till all readers release their lock
         // But since the lock is still held in this scope, this thread is made to
         // sleep indefinitely cause the thread is waiting to be released at the end of
         // the scope.
-        // let r3 = rwl.write().unwrap();
-        // println!("rw r3 is {:?}", r3);
+        // let `r3` = `rwl`.write().unwrap();
+        // `println`!("`rw` `r3` is {:?}", `r3`);
 
         // However if we drop the reader locks before calling the write lock, we
         // should be able to get the reader
         drop(r1);
         drop(r2);
-        // if we dont drop the r1 and r2 before hand, this will cause the thread to hang
+        // if we don't drop the `r1` and `r2` before hand, this will cause the thread to hang
         let mut r3 = rwl.write().unwrap();
         *r3 += 1;
         println!("rw R3 for manual drop is {:?}", r3);
@@ -68,21 +68,21 @@ pub fn thread1e_arc_rwlock() {
         // across threads. So this should be file.
         // So the purpose to having sleep in this case would be that the threads will start,
         // will be able to call read immediately.
-        // However write will have to wait till all thre readers release the lock
+        // However write will have to wait till all the readers release the lock
         // Suppose, in this cause, x will start 1st as we have scopethreadhandle. join. cause
         // this is called before the 2 other get spawned.
         // When depending on the order, if read is received 1st, the write will have to wait
         // till that reader thread releases the reader lock. Assuming that will be 5 seconds for x
         // then 10 seconds for the reader thread read 2, we will have to wait that long will the
-        // write get the change to get the thread. Once RWReadLock is droppen, it will notify that
+        // write get the change to get the thread. Once `RWReadLock` is dropped, it will notify that
         // its dropped. This is how the Write can get the thread of no other thread is accessing
-        // that RWLock value
+        // that `RWLock` value
         let x = s.spawn(|| {
             let g = t.read().unwrap();
             println!("t rwlock read 1: {g}");
             thread::sleep(Duration::from_millis(2000));
         });
-        // this will exe 1st and then the other 2 will run in random order.
+        // this will `exe` 1st and then the other 2 will run in random order.
         x.join().unwrap();
         s.spawn(|| {
             let mut g = t.write().unwrap();
@@ -125,7 +125,7 @@ pub fn thread1e_arc_rwlock() {
 
     let rw = Arc::new(RwLock::new(66));
     let crw = Arc::clone(&rw);
-    // since we dont call unwrap on this, the compiler/clippy warns us that we
+    // since we don't call unwrap on this, the compiler/`clippy` warns us that we
     // need to assign is something. If we call unwrap on this, this is not bug
     // us. I left this as a titbit for information
     let _ = thread::spawn(move || {
@@ -133,24 +133,24 @@ pub fn thread1e_arc_rwlock() {
         panic!("manually panicing this spawned");
     })
     .join();
-    // even if thread panicked, we can still continus as its not the main thread
+    // even if thread panicked, we can still continue as its not the main thread
     // NOTE: calling panic on the main thread will stop the program unlike a thread
     // This below will cause this
-    // panic!("haha panic main"); // nothing below will run
+    // panic!("ha-ha panic main"); // nothing below will run
     println!("---------------------- After manual panic ---------------------------");
     assert!(rw.is_poisoned()); // will panic main if false
     println!("rw is poisonned and is rw is {:?}", rw);
 
-    // Because rw is poisoned, we get the err version.
-    // Here err is still poisoned version of RWWriteGuard, so we can still
-    // use this to reassign/manuplate the value of the RwLock value
+    // Because `rw` is poisoned, we get the err version.
+    // Here err is still poisoned version of `RWWriteGuard`, so we can still
+    // use this to reassign/manipulate the value of the RwLock value
     let guard = rw.write().unwrap_or_else(|mut e| {
-        // Err of Poisoned value of RWLock.
+        // Err of Poisoned value of `RWLock`.
         **e.get_mut() = 1;
-        // here is important to clear poison. The value will still be poisoned if we dont
-        // revove this. Cause the struct will say poisoned = true,
+        // here is important to clear poison. The value will still be poisoned if we don't
+        // remove this. Cause the struct will say poisoned = true,
         rw.clear_poison(); // poisoned = false
-        e.into_inner() // This will give us new RWLock
+        e.into_inner() // This will give us new `RWLock`
     });
     assert!(!rw.is_poisoned());
     assert_eq!(*guard, 1);
@@ -170,15 +170,15 @@ pub fn thread1e_rwlock_is_finished() {
             // when the thread read/write guard is not available, the thread is put to sleep
             // internally for the read/write. This is how read write runs. This sleep is woken by
             // roughly by how locks are taken for read/write. If the lock is not available, the
-            // thread is put into a wait queue(Os parks the thread). And when another thread makes
+            // thread is put into a wait queue(OS parks the thread). And when another thread makes
             // the lock guard free and available, the next thread is selected from the list of
             // waiting threads. Eventually we wait till the list in the queue is all accounted for.
             // if a%3!=0 {
-            //     if let Ok(val) = z.read() {
-            //         println!("Val is now {} for loop {a}", val);
+            //     if let `Ok`(val) = z.read() {
+            //         `println`!("Val is now {} for loop {a}", val);
             //     }
             // } else {
-            //     if let Ok(mut val) = z.write() {
+            //     if let `Ok`(mut val) = z.write() {
             //         for _ in 0..1000000000 {
             //             *val += 1;
             //         }
@@ -200,7 +200,7 @@ pub fn thread1e_rwlock_is_finished() {
                         break;
                     }
                 }
-                // these 2 can be always dangerous. so dont do this
+                // these 2 can be always dangerous. so don't do this
                 // let o = z.write().unwrap();
                 // let p = z.write().unwrap();
             }
@@ -216,7 +216,7 @@ pub fn thread1e_rwlock_is_finished() {
         }
     });
     // for x in h {
-    //     println!("thread no {:?}", std::env::current_dir().unwrap());
+    //     `println`!("thread no {:?}", std::`env`::current_`dir`().unwrap());
     //     x.join().unwrap();
     // }
     println!(

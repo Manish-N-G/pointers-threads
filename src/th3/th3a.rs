@@ -1,5 +1,5 @@
 // we will try some async stuff in this to get a good idea how they work.
-// This will be interestting,to find all the different querks that exists in
+// This will be interesting,to find all the different quirks that exists in
 // the code.
 
 pub async fn thread3a_normal_async() {

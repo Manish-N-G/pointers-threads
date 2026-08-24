@@ -3,9 +3,9 @@
 //! a thread.
 //!
 //! These selected few functions will do this with box leak, 
-//! and refcell interior mutability. However, what is important to 
+//! and `refcell` interior mutability. However, what is important to 
 //! know is that box leak will still give us the address of the leaked
-//! memory while the refcell forget function wont be able to provide 
+//! memory while the `refcell` forget function wont be able to provide 
 //! a reference. Its worth studying and understanding how this works.
 //!
 //! The general implementation to something like this is the following
@@ -31,20 +31,20 @@ use std::fmt::Debug;
 use std::rc::Rc;
 use std::thread;
 
-// NOTE: dont create MyNums<'a> as files will not hold 'a, 
-// rather, we need to do for<'a> Self for reference of types
+// NOTE: don't create MyNums<'a> as files will not hold 'a, 
+// rather, we need to do `for`<'a> Self for reference of types
 // holding 'a
 /// The MyNums traits its just our traits that we have implemented
-/// to represent all signed and unsigned integers from 1byte to 16bytes.
+/// to represent all signed and unsigned integers from `1byte` to `16bytes`.
 ///
 /// We have so make sure that certain conditions are present for this
-/// trait type to unsure atleast as basic amount of operations and
+/// trait type to unsure `atleast` as basic amount of operations and
 /// trait bounds so that it can be accepted as numbers would.
 /// We use this trait to create a generic type, that we will be using
 /// for our lib.
 /// There are also already other lib creates available like this that
 /// allow us to use numbers like 
-/// * num
+/// * `num`
 /// * num-traits
 /// 
 /// However, is better it implement our own to understand and challenge
@@ -53,8 +53,8 @@ use std::thread;
 /// We have made this pub for the moment
 pub trait MyNums
 where Self: std::fmt::Debug + std::fmt::Display,
-      Self: Copy, // this also cause a trait to be not dyn compitable
-      // Cause Copy: Clone, and Clone(&self) -> Self. So rust cant know
+      Self: Copy, // this also cause a trait to be not `dyn` `compitable`
+      // Cause Copy: Clone, and Clone(`&self`) -> Self. So rust cant know
       // what time is Self will be
       Self: Default, // default also does -> Self, which implies that 
       // we cannot have Self return type of this trait
@@ -66,10 +66,10 @@ where Self: std::fmt::Debug + std::fmt::Display,
       Self: 'static,
       Self: std::convert::TryInto<isize>,
       Self: std::convert::TryInto<usize>,
-      Self: Sized, // this is one of the reasons this trait is not dyn compitable
+      Self: Sized, // this is one of the reasons this trait is not `dyn` compatible
       for<'a> Self: std::iter::Sum<&'a Self>,
       for<'a> Self: std::iter::Product<&'a Self>,
-      // Even Arithmatic operators use Self which makes this dyn incompitable.
+      // Even Arithmetic operators use Self which makes this `dyn` incompatible.
 {
     fn as_usize(self) -> usize {
         // Safety: We can use unwrap here, knowing we will get 0
@@ -136,25 +136,25 @@ pub fn thread1b_box_leak_avg<I, T>(val: I) -> usize
 where I: Iterator<Item = T>,
       T: MyNums,
 {
-    // let thbox = Box::new((1..=10).collect::<[i32]>()); // doesnt work
-    let thbox = Vec::from_iter(val).into_boxed_slice(); //eg Box<[u16]>
+    // let `thbox` = Box::new((1..=10).collect::<[`i32`]>()); // doesn't work
+    let thbox = Vec::from_iter(val).into_boxed_slice(); //`eg` Box<[`u16`]>
 
-    // doesnt work
-    // let numbis mainly used for thread creationers = &mut thbox[..];
-    // thread::spawn(move|| { // error on lifetimes
+    // doesn't work
+    // let `numbis` mainly used for thread creationers = &mut `thbox`[..];
+    // thread::spawn(`move||` { // error on lifetimes
     //     for x in numbers {
-    //         println!("val is {}",x);
+    //         `println`!("val is {}",x);
     //     }
     // });
 
     // I write the type directly and not rely on the compiler. It give me an idea of how
-    // they work too. Static type only accpeted as reference in standalone spawn.
+    // they work too. Static type only accepted as reference in stand-alone spawn.
     let numbers: &'static mut [T] = Box::leak(thbox);
     let th = thread::spawn(|| {
         // even if we pub this in the lib, which is not required,
         // we can debug the value here in doc tests
-        // for x in numbers.iter() {
-        //     println!("val is {}", x)
+        // for x in numbers.`iter`() {
+        //     `println`!("val is {}", x)
         // }
         
         let len = numbers.len();
@@ -203,7 +203,7 @@ where I: Iterator<Item = T>,
 /// *x.1.borrow_mut() = Some(Rc::clone(&x));
 /// ```
 ///
-/// For our purposes, we dont need to do much testing. I can 
+/// For our purposes, we don't need to do much testing. I can 
 /// just expose this function, and we can look and try to
 /// see hows its implemented
 pub fn thread1b_forget_leak() {
@@ -213,7 +213,7 @@ pub fn thread1b_forget_leak() {
         let x = Rc::new(Foo(val, RefCell::new(None)));
         *x.1.borrow_mut() = Some(Rc::clone(&x));
         println!("be careful for forget. x.0 works {:?}", x.0);
-        // println!("be careful for forget. x.1 doesnt works. will overflow {:?}", x.1);
+        // `println`!("be careful for forget. x.1 `doesnt` works. will overflow {:?}", x.1);
         // this will create a cyclic reference and value is lost. does the same as leak for box
     }
 

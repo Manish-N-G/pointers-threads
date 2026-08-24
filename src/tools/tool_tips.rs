@@ -1,7 +1,7 @@
 //! List of tools that helps to integrate this lib better
 //!
-//! This doesnt necessaily mean that these tools are only for pointers, threads and async functions,
-//! but It should encompose generaly testing, benching, performance options. Not to meantion other
+//! This doesn't necessarily mean that these tools are only for pointers, threads and async functions,
+//! but It should encompass general testing, benching, performance options. Not to mention other
 //! specific traits that will help to.
 //!
 //! ### Spelling checking
