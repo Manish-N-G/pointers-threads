@@ -41,12 +41,16 @@
 //! bacon
 //! bacon --help
 //! ```
+//! <img src="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/bacon_help.png?raw=true"></img>
+//!
 //! - Cargo Seek: Its a pritty TUI that is use to search, add and info
 //! among others. Its a nice tool that helps us manage it all in one place.
 //! To use it, do the following
 //! ```text
-//! bacon
-//! bacon --help
+//! cargo seek
+//! cargo seek --help
 //! ```
+//! <img src="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/seek.png?raw=true"></img>
+//!
 //!
 #![allow(clippy::doc_lazy_continuation)]  // just to allow nextline when we use -
