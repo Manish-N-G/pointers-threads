@@ -24,7 +24,7 @@ pub fn thread1d_mutex_lock_attempt() {
                 received at the same time");
         });
 
-        //NOTE: what if we use rayon here. //`todomanish`:
+        //NOTE: what if we use rayon here. //todomanish:
         for _ in 0..100 {
             thread::sleep(std::time::Duration::from_millis(100));
             println!("trying to unpark/wakeup");
@@ -52,10 +52,10 @@ pub fn thread1d_mutex_lock_attempt() {
             s.spawn(|| {
                 let mut guard = mx.lock().unwrap();
                 // but this is dangerous... 2 locks at the same time without dropping 1st one.
-                // let mut guard = `mx`.lock().unwrap();
+                // let mut guard = mx.lock().unwrap();
                 *guard += 1;
-                v.push(*guard); // this works but can with unsafe as ordering will cause issues
-                // if not accounted for. `eg`, we may push 23 or 24 depending on
+                v.push(*guard); // this works but can be unsafe as ordering will cause issues
+                // if not accounted for. eg, we may push 23 or 24 fepending on
                 // which thread runs 1st
                 let mut guard2 = mxv.lock().unwrap();
                 guard2.push(*guard);
@@ -79,7 +79,7 @@ pub fn thread1d_mutex_lock_attempt() {
         let th1 = thread::spawn(move || {
             let mut guard = m1.lock().unwrap();
             // but this is dangerous... 2 locks at the same time without dropping 1st one.
-            // let mut guard = `mx`.lock().unwrap();
+            // let mut guard = mx.lock().unwrap();
             *guard += 1;
         });
         let m1 = m.clone();
@@ -99,14 +99,14 @@ pub fn thread1d_park_mutex() {
     // be released. Here, the lock is never released before the other lock() is called, and hence
     // this will be hung forever and called be passed on.
     // {
-    //     let x = std::sync::`Mutex`::new(3);
-    //     `println`!("Before calling double lock");
+    //     let x = std::sync::Mutex::new(3);
+    //     println!("Before calling double lock");
     //     {
     //         let y = x.lock().unwrap();
-    //         `println`!("first lock received");
+    //         println!("first lock received");
     //         let z = x.lock().unwrap();
     //     }
-    //     `println`!("I doesn't panic, it just get stuck falls asleep if we don't/blocked if two locks are
+    //     println!("I doesn't panic, it just get stuck, falls asleep if we don't block if two locks are
     //         received at the same time");
     // }
 
@@ -117,8 +117,8 @@ pub fn thread1d_park_mutex() {
         let t1 = s.spawn(|| {
             loop {
                 // Works , but this will be infinite loop. So I will break it up so that
-                // we accommodate for break in the loop. This was originally for VecDeque `u8`. Not
-                // VecDeque option `u8`
+                // we accommodate for break in the loop. This was originally for VecDeque u8. Not
+                // VecDeque option u8
                 // let guard = queue.lock().unwrap().pop_back();
                 // // the guard lock is not used after this. I imagine the compiler is able to hand
                 // // over the lock to a different thread if needed from this point onwards
@@ -133,7 +133,7 @@ pub fn thread1d_park_mutex() {
                 // NOTE: If I use queue.lock().unwrap().pop_back() with match directly like that,
                 // I will get an issue. The lock will not be released till the match scope ends.
                 // The mutex will be bound to the life of the match scope. and hence will not
-                // get to drop earlier. `eg` match queue.lock().unwrap().pop_back() { ... }
+                // get to drop earlier. eg match queue.lock().unwrap().pop_back() { ... }
                 // This is not what we want. We want the thread to be available immediately after we
                 // call the pop_back() value. And we do this be splitting the guard from the match
                 // statement. So the below statement is not recommended
@@ -167,7 +167,7 @@ pub fn thread1d_park_mutex() {
             }
         }
         // this wont work as it only drops the thread handle if we need to stop the thread
-        // drop(`t1`);
+        // drop(t1);
         println!(" we have final for queue {:?}", queue.lock().unwrap());
     });
 }
@@ -228,11 +228,11 @@ pub fn thread1d_arc_mutex() {
         // reference lifetimes. This is only a requireemnt
         // on thread spawn. If we however call thread spawn
         // inside of a thread scope object, it is able o use
-        // this reference as it seen in `func` and `func2`
-        // if let `Ok`(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
+        // this reference as it seen in func and func2
+        // if let Ok(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
         if let Ok(mut guard) = y.lock() {
             // for x in 1..=1_000_000_000 {
-            // `todomanish`: see if we can use rayon here
+            // todomanish: see if we can use rayon here
             for x in 1..=1_000 {
                 *guard += x;
             }
@@ -243,9 +243,9 @@ pub fn thread1d_arc_mutex() {
     };
 
     let func2 = || {
-        // since y was taken as reference before for `func`,
+        // since y was taken as reference before for func,
         // y can be taken as ref again as y was dropped before I imagine
-        // if let `Ok`(ref mut guard) = y.lock() { // also works
+        // if let Ok(ref mut guard) = y.lock() { // also works
         if let Ok(mut guard) = y.lock() {
             // for x in 1..=1_000_000_000 {
             for x in 1..=1_000 {
@@ -259,12 +259,12 @@ pub fn thread1d_arc_mutex() {
 
     // this will not work. as spawn needs static lifetime.
     // we will have to use a scope thread that has spawn inside it.
-    // thread::spawn(`func`);
+    // thread::spawn(func);
 
     let func3 = || {
         loop {
             // can be same a lock, except that this will not hand for try_lock if lock not received
-            // if let `Ok`(ref mut vec) = z.try_lock() {  // works
+            // if let Ok(ref mut vec) = z.try_lock() {  // works
             if let Ok(mut vec) = z.try_lock() {
                 println!("lock received for z");
                 if let Some(val) = vec.get_mut(4) {
@@ -279,20 +279,20 @@ pub fn thread1d_arc_mutex() {
         }
     };
 
-    // even for vecs, this will work for `func4`
-    // let `func4` = || {
+    // even for vecs, this will work for func4
+    // let func4 = || {
     //     loop {
     //         // can be same a lock, except that this will not hand when lock is not received
-    //         if let `Ok`(ref mut vec) = z.try_lock() {
-    //             `println`!("lock received for z");
+    //         if let Ok(ref mut vec) = z.try_lock() {
+    //             println!("lock received for z");
     //             if let Some(val) = vec.get_mut(4) {
     //                 *val+=10;
     //             }
-    //             `println`!("vec is {:?}", vec);
+    //             println!("vec is {:?}", vec);
     //             break;
     //         } else {
-    //             `println`!("lock not received");
-    //             thread::sleep(std::time::Duration::from_`millis`(200));
+    //             println!("lock not received");
+    //             thread::sleep(std::time::Duration::from_millis(200));
     //         }
     //     }
     // };
@@ -307,7 +307,7 @@ pub fn thread1d_arc_mutex() {
             // 10 threads are spawned here. So its all okay to testing
             let n = std::sync::Arc::clone(&n);
             // since x would have been taken as reference for print statement, we have to use
-            // move cause we cant be sure that it will life long `enougth`
+            // move cause we cant be sure that it will life long enough
             // The compiler cant verify even it this is possible.
             // And because we will have to end up using move, we have to pass our data in Arc clone
             s.spawn(move || {

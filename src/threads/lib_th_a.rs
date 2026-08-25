@@ -244,7 +244,6 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 /// and create threads
 /// ```
 /// use pointers_threads::lib_th_a::*;
-/// use std::thread;
 ///
 /// assert_eq!(
 ///     thread1a_scope_vec((1..10), ('a'..'z'), 'z', false),
@@ -256,7 +255,6 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 /// better we need to implement the print type.
 /// ```
 /// use pointers_threads::lib_th_a::*;
-/// use std::thread;
 ///
 /// // We can print the output when we run it as true.
 /// // And these threads show how we can intermingle values.

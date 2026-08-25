@@ -5,18 +5,18 @@ The purpose of this library is meant to expose you to how the different types in
 ## For Pointers:
 
 We start from simple implementation of how simple pointers work to actually creating our own pointers and getting into some deep topics in order to understand how they work under the hood. In this part, we cover
-- `Rc`
+- Rc
 - RefCell
 - Arc
-- `Mutex`
+- Mutex
 - Cow
-- `RWLock`
+- RWLock
 - Locks
 
 Even through the symbols exposed in this library can range from basic operations to fuzzy logical outcomes, we try to understand by looking the the source code, how they operate. Some of the move complicated topics we will cover here are
 
 - Parking 
-- `Unparking`
+- Unparking
 - PhantomData
 - PhantomPinned
 - Pinning

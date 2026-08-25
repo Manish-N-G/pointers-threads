@@ -10,7 +10,7 @@ pub use lib_th_a::*;
 pub use lib_th_b::*;
 pub use lib_th_c::*;
 
-/// Simple function that creates threads and get current `treadID`
+/// Simple function that creates threads and get current treadID
 ///
 /// Here the threads are run concurrently but we make sure that we
 /// are joining then at the end to ensure that they fill

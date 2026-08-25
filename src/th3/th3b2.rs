@@ -68,14 +68,14 @@ fn one_a() {
             }
         }); // this creates a task, and goes to the next for loop block.
         // This task is running in the background and will run till the end
-        // of the `trpl`::run. It doesn't need be be till the end of main block
+        // of the trpl::run. It doesn't need be be till the end of main block
         for x in 1..5 {
             println!("[Second-one_a]:{}", x);
             trpl::sleep(std::time::Duration::from_millis(500)).await;
         }    
-        // As you see,we don't use `tsk` await here, and this process will continue
-        // up to this point. This will not leak into the main process as `tsk` get dropped
-        // at this point. When dropped, this task gets concealed, and is not carried on
+        // As you see,we don't use tsk await here, and this process will continue
+        // up to this point. This will not leak into the main process as tsk get dropped
+        // at this point. When dropped, this task gets cancelled, and is not carried on
         // to the main task/process. This implementation is different form the thread
         // spawn, where, thread will linger in the back ground and the thread only gets 
         // dropped when the main process is completed.
@@ -99,7 +99,7 @@ fn two(val1: u64, val2: u64) {
         };
         // here we use thread join. From my understanding, we will not
         // be producing two spawned tasks, however, this is run inside the
-        // main task. Here join works concurrently with `fut1` and `fut2`, not
+        // main task. Here join works concurrently with fut1 and fut2, not
         // necessarily parallelly. This means that join, internally, process a
         // single future, while consuming the other futures. and inside this
         // future, code is concurrently run. From my understanding, this code
@@ -154,9 +154,9 @@ fn three_a() {
             }    
         });
         
-        // calling await here means that the task `tsk` will continue to run
+        // calling await here means that the task tsk will continue to run
         // till this await point along with fut. Here we will see that the
-        // concurrency element between fut on main task and new task with `tsk`
+        // concurrency element between fut on main task and new task with tsk
         // running.
         fut.await;
     });
@@ -215,7 +215,7 @@ fn five() {
     // As because we don't await the async block at the top level, this means
     // the bottom level of await wont count, and the top level async blocks
     // are still lazy. This would mean that we can pass them into the run
-    // block for `trpl`.
+    // block for trpl.
     trpl::run(
         trpl::join(tx_fut, rx_fut)
     );

@@ -1,23 +1,23 @@
-// When using State as a trait object, the trait `doesn`’t know what the concrete self will be
-// exactly, so the return type `isn`’t known at compile time. (This is one of the `dyn`
+// When using State as a trait object, the trait doesn’t know what the concrete self will be
+// exactly, so the return type isn’t known at compile time. (This is one of the dyn
 // compatibility rules)
 mod state1_oop_box_dyn {
-    // This trait is meant to use `OOP` concepts to represent how we can add functionality to the
+    // This trait is meant to use OOP concepts to represent how we can add functionality to the
     // different types as structs in Rust. There as many ways generally for rust to go about a task
-    // but this on focuses on `OOP` and could has been implemented in a different way that the one
+    // but this on focuses on OOP and could has been implemented in a different way that the one
     // that is used here.
     trait State {
         // Here, we try to use the State trait to control how this is implemented
         // This trait modifies the states for our type ( in this case the Post struct)
         // and removed that implementation from that type. This trait will allow us to
-        // process it this way, as we are using Box `dyn` of that state. As We cant directly
-        // get the type of the `dyn` state without using other libraries, we implement it
-        // this way ,and we stay true to using the `OOP` style operation.
+        // process it this way, as we are using Box dyn of that state. As We cant directly
+        // get the type of the dyn state without using other libraries, we implement it
+        // this way ,and we stay true to using the OOP style operation.
         // NOTE: Remember, self cant be a return type
         fn review_state(self: Box<Self>) -> Box<dyn State>;
         fn approve_state(self: Box<Self>) -> Box<dyn State>;
         fn add_state(self: Box<Self>) -> Box<dyn State>;
-        // this content could have been `&post` rather than `&str`
+        // this content could have been &post rather than &str
         // I through it was best to do it this way when possible
         fn content<'a>(&'a self, _content: &'a str) -> &'a str {
             ""
@@ -125,11 +125,11 @@ mod state1_oop_box_dyn {
 
         pub fn get(&self) -> &str {
             // The lifetime will become an issue if we are not careful here.
-            // we convert `&Option`<Box<State>> to Option<`&Box`<State>> with as_ref()
-            // This is quite important as unwrap takes self gives problems for `&Option` types
-            // and we Option in order to get the `&T` value inside Option. Otherwise,
+            // we convert &Option<Box<State>> to Option<&Box<State>> with as_ref()
+            // This is quite important as unwrap takes self gives problems for &Option types
+            // and we Option in order to get the &T value inside Option. Otherwise,
             // if this important step is not considered, we will will have a block at
-            // the unwrap step and could face issues in the `&self`.content step down the line.
+            // the unwrap step and could face issues in the &self.content step down the line.
             self.state.as_ref().unwrap().content(&self.content)
         }
     }
@@ -138,10 +138,10 @@ mod state1_oop_box_dyn {
 mod state1_oop_dyn_any {
     use std::any::Any;
     // we can use the any type that allows us the get the concrete type in order to compare
-    // when we don't get the value via just `dyn` traits. This is important to to how to
+    // when we don't get the value via just dyn traits. This is important to to how to
     // implement, cause we can use more that one way to get the solution when we want
-    // to compare value for `dyn` trait objects and use them in like these semi `oop` principles
-    // Here Any is used to emulate dynamic typing and this hopefully should be enough
+    // to compare value for dyn trait objects and use them in like these semi oop principles
+    // Here Any is used to enulate dynamic typing and this hopefully should be enougth
     // This works with Down-casting which we will use to get the value we need for the comparison
     trait State: Any {
         fn review_state(self: Box<Self>) -> Box<dyn Any>;
@@ -149,10 +149,10 @@ mod state1_oop_dyn_any {
         fn add_state(self: Box<Self>) -> Box<dyn Any>;
     }
 
-    // can have a helper function here that I can use to get the value `forkkjj` a type
+    // can have a helper function here that I can use to get the value for a type
     // that can get the trait
-    // impl `dyn` State {
-    //     fn get_struct(`&self`) -> Option<`&str`> {
+    // impl dyn State {
+    //     fn get_struct(&self) -> Option<&str> {
     //
     //     }
     // }
@@ -282,7 +282,7 @@ mod state1_oop_dyn_any {
         pub fn get(&self) -> &str {
             let concrete = (**self.state.as_ref().unwrap()).type_id();
             // this was quite painful to get. But I was able to get it only with (** ... of
-            // `&Box`<dyn Trait>). cause direct * or &* or &** was causing me a lot of problems
+            // &Box<dyn Trait>). cause direct * or &* or &** was causing me a lot of problems
             if concrete == std::any::TypeId::of::<Approved>() {
                 return &self.content;
             }

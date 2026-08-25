@@ -12,7 +12,7 @@ pub fn thread1f_cow() {
 
     let x = [1, 2, 3, 4, 5];
     let c1 = std::borrow::Cow::Borrowed(&x[..]); // this needs to be handled for make_owned
-    let y: Vec<u8> = make_owned(c1); // rust makes this to `u8` by setting x as `u8`
+    let y: Vec<u8> = make_owned(c1); // rust makes this to u8 by setting x as u8
     println!("make owned for u8{:?}", y);
 
     let x = 5;
@@ -58,8 +58,8 @@ pub fn thread1f_cow() {
         get_type(&c1),
         cow_type(&c1)
     );
-    // [6,7,8].`iter`().for_each(|&val| {
-    //     `c1`.to_mut().push(val)
+    // [6,7,8].iter().for_each(|&val| {
+    //     c1.to_mut().push(val)
     // }); does the same
     for x in [6, 7, 8] {
         c1.to_mut().push(x)

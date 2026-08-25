@@ -4,14 +4,14 @@ use std::rc::Rc;
 use std::thread;
 
 pub fn thread1b_box() {
-    // let `thbox` = Box::new((1..=10).collect::<[`i32`]>()); // `doesnt` work
-    let thbox = Vec::from_iter(1u16..=10).into_boxed_slice(); // Box<[`u16`]>
+    // let thbox = Box::new((1..=10).collect::<[i32]>()); // doesn't work
+    let thbox = Vec::from_iter(1u16..=10).into_boxed_slice(); // Box<[u16]>
 
     // doesn't work
-    // let numbers = &mut `thbox`[..];
-    // thread::spawn(`move||` { // error on lifetimes
+    // let numbers = &mut thbox[..];
+    // thread::spawn(move|| { // error on lifetimes
     //     for x in numbers {
-    //         `println`!("val is {}",x);
+    //         println!("val is {}",x);
     //     }
     // });
 
@@ -37,7 +37,7 @@ pub fn thread1b_forget() {
         let x = Rc::new(Foo(val, RefCell::new(None)));
         *x.1.borrow_mut() = Some(Rc::clone(&x));
         println!("be careful for forget. x.0 works {:?}", x.0);
-        // `println`!("be careful for forget. x.1 doesn't works. will overflow {:?}", x.1);
+        // println!("be careful for forget. x.1 doesn't works. will overflow {:?}", x.1);
         // this will create a cyclic reference and value is lost. does the same as leak for box
     }
 

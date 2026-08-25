@@ -14,7 +14,7 @@
 //! - [`std::boxed::Box::pin`]
 //! - [`std::marker::PhantomPinned`].
 //!
-//! This state machine will be using other internal `Structs` in order 
+//! This state machine will be using other internal Structs in order 
 //! to make this more robust.
 //!
 //! Also to make our type a bit more interesting, We will make our 
@@ -52,7 +52,7 @@ pub struct MySelfRefState<T: MyNums> {
 
 /// The purpose for this is mainly to expose the type to the user,
 /// to ensure only certain methods that allows control of how a
-/// `seft` ref type is used
+/// self ref type is used
 /// The two methods used are as follows
 /// ```
 /// # use pointers_threads::lib_ptr_a2::*; 
@@ -92,10 +92,10 @@ impl<T: MyNums> MySelfRefState<T> {
     // However. "cargo test --doc MySelfRefState::put_ptr" and other will not
     // work cause of the way cargo test for docs is run.
     // This will run thought:
-    // cargo test --doc 'pointers::lib_ptr_`a2`::MySelfRefState' -- --nocapture
+    // cargo test --doc 'pointers::lib_ptr_a2::MySelfRefState' -- --nocapture
     // and cargo test --doc 'MySelfRefState' -- --nocapture
     // The fix: put them in quotes, with the <T> generic
-    // cargo test --doc 'pointers::lib_ptr_`a2`::MySelfRefState<T>::put_ptr' -- --nocapture
+    // cargo test --doc 'pointers::lib_ptr_a2::MySelfRefState<T>::put_ptr' -- --nocapture
     // cargo test --doc 'MySelfRefState<T>::put_ptr' -- --nocapture
     // 
     /// This function changes the state pattern to the 
@@ -130,13 +130,13 @@ impl<T: MyNums> MySelfRefState<T> {
         // we don't have changes to making errors in the addresses
         let my_pin = Box::pin( _my_ref );
         // notice this doesn't work
-        // let pointer_val = `&my`_pin.val;
-        // let mut `_`_pointer_ptr = my_pin.ptr;
-        // `_`_pointer_ptr = pointer_val;
+        // let pointer_val = &my_pin.val;
+        // let mut _pointer_ptr = my_pin.ptr;
+        // _pointer_ptr = pointer_val;
 
         // this is also wrong as we have PhantomPinned making our
         // type !Unpin. Push Box Pin will have to be mut
-        // let pointer_val = `&raw` `const` my_pin.val;
+        // let pointer_val = &raw const my_pin.val;
         // my_pin.as_mut().get_mut().ptr = pointer_val;
 
         let pointer_val = &raw const my_pin.val;
@@ -149,7 +149,7 @@ impl<T: MyNums> MySelfRefState<T> {
 
 /// This is a continuations from the [`crate::MySelfRefState`] struct
 /// where, we get the MySelfRefStatePin types. We cannot manually 
-/// create this type without going through the `MySelfRefState` struct
+/// create this type without going through the "MySelfRefState" struct
 /// and this way, we are able to maintain the state and expose
 /// only those methods that would be able to update the value safely
 /// as well as be able to work with futures and threads without
@@ -163,7 +163,7 @@ impl<T: MyNums> MySelfRefState<T> {
 /// We could also use [`std::ptr::NonNull`] for our implementation, 
 /// but for the moment, we stick to raw pointers. Out implementation 
 /// will change if we use `NonNull` a bit.
-/// # `Todo`:
+/// # Todo:
 /// `Coming Soon`: Async with MySelfRefStatePin types
 pub struct MySelfRefStatePin<T: MyNums> {
     val: T,
@@ -179,7 +179,7 @@ pub struct MySelfRefStatePin<T: MyNums> {
 /// We use the methods here the way we want to in order to
 /// understand control how to update the value inside the 
 /// pinned type.
-/// NOTE: This has to be to type `&self` not &mut self. 
+/// NOTE: This havs to be to type &self not &mut self. 
 /// Or else PhantomPinned marker will complain and not
 /// allow you to do this. This is done specifically for
 /// safety. Our implementation is unsafe and this should 
@@ -207,7 +207,7 @@ pub struct MySelfRefStatePin<T: MyNums> {
 impl<T: MyNums> MySelfRefStatePin<T> {
 
     /// We get the value via ptr from the type.
-    /// This will not compile, as we didn't use `put_ptr`
+    /// This will not compile, as we didn't use put_ptr
     /// ```ignore
     /// # use pointers_threads::lib_ptr_a2::*;
     ///
@@ -263,7 +263,7 @@ impl<T: MyNums> MySelfRefStatePin<T> {
     /// ```
     pub fn update_val_by_ptr(self: &mut std::pin::Pin<Box<Self>>, val: T) {
     // pub fn update_val_by_ptr(&mut self, val: T) {
-        // worked when we had `&self`, cause Pin<Box<Self<T>>>
+        // worked when we had &self, cause Pin<Box<Self<T>>>
         // doesn't implement derefmut
         
         let ptr_val = &raw const self.val as *mut T;
@@ -355,4 +355,4 @@ impl<T: MyNums> MySelfRefStatePin<T> {
 /// value unsafely, which is our main goal.
 unsafe impl<T: MyNums> Sync for MySelfRefStatePin<T> {}
 
-//`todomanish`: Have to set up examples function for this as well.
+//todomanish: Have to set up examples function for this as well.

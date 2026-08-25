@@ -178,9 +178,9 @@ pub fn thread1c_mutex_hangs_forever(val: u8, printable: bool) -> u8 {
 
 /// A simple function to illustrate how we have to use thread locking. This function just
 /// give us back an increment of plus 200 of the value we passed if it doesn't overflow. Otherwise,
-/// It will give us the max `u16` value.
+/// It will give us the max u16 value.
 /// 
-/// We call the 'Lock' method on the '`Mutex`' to get the `lockguard` for the threads called
+/// We call the 'Lock' method on the 'Mutex' to get the lockguard for the threads called
 /// inside this function. Here, we can run this as printable to understand the workflow of
 /// how the threads try to get the lock. Its quite possible that the lock is already been
 /// acquired by another threads, and hence the thread seeking the lock will have to wait 
@@ -211,14 +211,14 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
         s.spawn(|| for _ in 1..=20 {
             let mut guard = mx.lock().unwrap();
             // but this is dangerous... 2 locks at the same time without dropping 1st one.
-            // Also lifetime for `mx` and guard needs to be observed as it doesn't necessarily 
+            // Also lifetime for mx and guard needs to be observed as it doesn't necessarily 
             // mean that it will end at the last call. I could end at the end of the scope.
-            // let mut guard = `mx`.lock().unwrap();
+            // let mut guard = mx.lock().unwrap();
 
             *guard = guard.saturating_add(1);
             v.push(*guard); 
-            // this works but can `un` unsafe as ordering will cause issues
-            // if not accounted for. `eg`, we may push 23 or 24 depending on
+            // this works but can be unsafe as ordering will cause issues
+            // if not accounted for. eg, we may push 23 or 24 depending on
             // which thread runs 1st, if val is 22.
             let mut guard2 = mxv.lock().unwrap();
             guard2.push(*guard);
@@ -230,7 +230,7 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
             // via captured variables it doesn't work, but through the mutex pointer
             // it does. The reason it doesn't work is because we already have borrowed
             // the value in the 1st thread, and we cant borrow it again. This is the 
-            // reason when we prefer to use it via `Mutexes`.
+            // reason when we prefer to use it via Mutexes.
             // v.push(*guard); // this doesn't work
 
             let mut guard2 = mxv.lock().unwrap();
@@ -255,7 +255,7 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
         let mut guard = m1.lock().unwrap();
         // but this is also dangerous... 2 locks at the same time without dropping
         // the 1st one, can lead to thread blocking permanently.
-        // let mut guard = `mx`.lock().unwrap();
+        // let mut guard = mx.lock().unwrap();
 
         *guard = guard.saturating_add(1);
     });
@@ -293,7 +293,7 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 /// to not use rayon for such operations.
 /// 
 /// We also have the option to run it normally without rayon, which make our function 
-/// run as expected. This function `allus` us to also print some details when we execute this
+/// run as expected. This function allows us to also print some details when we execute this
 /// function. This function en-composes mutexes, locks, parking, unparking and rayon, but
 /// its good to get a hang of how this works. 
 ///
@@ -376,7 +376,7 @@ pub fn thread1c_mutex_lock_attempt_inc_drop(
         let th1 = s.spawn(||loop {
             toprint("Before calling double lock");
             {
-                // Note: `Mutex` Guard aren't using a lifetime here in the sense that
+                // Note: Mutex Guard aren't using a lifetime here in the sense that
                 // the check, doesn't drop it when we don't use y. This mean that we
                 // will manually have to drop it, before another lock is called for 
                 // that variable, of it would hang that thread.
@@ -396,7 +396,7 @@ pub fn thread1c_mutex_lock_attempt_inc_drop(
             }
             toprint("Notice: It doesn't panic, lock can block thread if a second lock \
                 is called at the same time, for that variable.\n");
-            std::thread::park(); // we manually park this thread `casee` we loop it.
+            std::thread::park(); // we manually park this thread casee we loop it.
             toprint( "th1 got unparked");
             // Note: this could panic potentially panic in production, but for simplicity
             // we use unwrap for showing how to work with locks.
@@ -409,7 +409,7 @@ pub fn thread1c_mutex_lock_attempt_inc_drop(
         //could result in errors. A common error is how we park and unpark will
         //be used during parallel calls. The unpark call happens in parallel, 
         //causing the main thread to complete, without without any account taken
-        //if the `th1` thread is still parked or not.
+        //if the th1 thread is still parked or not.
         //In this situation, we can see that it causes issues and not what we
         //wanted.
         let cal = |i: u8| {
@@ -438,7 +438,7 @@ pub fn thread1c_mutex_lock_attempt_inc_drop(
 
         toprint( "Loop finished, if you dont see any print statements after this, thread failed");
         //NOTE: Since we could use Rayon, there is a very high change that the
-        //main thread doesn't unpark the `th1` thread. So we manually call 
+        //main thread doesn't unpark the th1 thread. So we manually call 
         //unpark here.
         th1.thread().unpark();
         *finish.lock().unwrap() = true;
@@ -507,8 +507,8 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
         let t1 = s.spawn(|| {
             loop {
                 // Works, but this will be infinite loop. So I will break it up so that
-                // we accommodate for break in the loop. This was originally for VecDeque `u8`. Not
-                // VecDeque option `u8`
+                // we accommodate for break in the loop. This was originally for VecDeque u8. Not
+                // VecDeque option u8
                 // let guard = queue.lock().unwrap().pop_back();
                 // 
                 // // the guard lock is not used after this. I imagine the compiler is able to hand
@@ -524,13 +524,13 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
                 // NOTE: If I use queue.lock().unwrap().pop_back() with match directly like that,
                 // I will get an issue. The lock will not be released till the match scope ends.
                 // The mutex will be bound to the life of the match scope. and hence will not
-                // get to drop earlier. `eg` match queue.lock().unwrap().pop_back() { ... }
+                // get to drop earlier. eg match queue.lock().unwrap().pop_back() { ... }
                 // This is not what we want. We want the thread to be available immediately after we
                 // call the pop_back() value. And we do this be splitting the guard from the match
                 // statement. So the below statement is not recommended
                 // match queue.lock().unwrap().pop_back() {
                 // Hence: it is better to break it up like the way we have it below
-                // In `Polonius`, this will change, and should be able to handle the lifetime check
+                // In Polonius, this will change, and should be able to handle the lifetime check
                 // without getting any problems.
                 let value = queue.lock().unwrap().pop_back();
                 // mutexguard already discarded after this cause no variable directly holds it
@@ -546,7 +546,7 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
         });
 
         for x in 1..=val {
-            // `Mutexguard` is released immediately as its not held in a variable
+            // Mutexguard is released immediately as its not held in a variable
             // If we added this in a variable, even with lifetimes, this would 
             // cause problems
             queue.lock().unwrap().push_front(Some(x));
@@ -554,7 +554,7 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
             // so that is will print all the items it needed
             t1.thread().unpark();
             // having sleep or not should not affect the thread in this scenario
-            // We sleep hoping the park has waken up the `t1` thread
+            // We sleep hoping the park has waken up the t1 thread
             thread::sleep(Duration::from_millis( milli_sec ));
 
             // We arrive at the end of our call
@@ -567,19 +567,19 @@ pub fn thread1c_park_mutex_create_vec_size(val: u8, printable: bool, milli_sec: 
         }
 
         // this wont work as it only drops the thread handle if we need to stop the thread
-        // drop(`t1`);
+        // drop(t1);
         toprint( &format!(" we have final for queue {:?}", queue.lock().unwrap()) );
     });
 
     // this runs in O(1), as there is no reallocation from vec to vecdeque. 
-    // but we will have to `accocate` for vec in this case.
+    // but we will have to accocate for vec in this case.
     // Again, we don't need to do this, its quite useless, but it a good way
     // to get familiar with this.
     // std::collections::VecDeque::from(vec![1,2,3,4,5]);
-    // let x: `Vec`<i32> = std::collections::VecDeque::from([1,2,3,4,5]).into();
+    // let x: Vec<i32> = std::collections::VecDeque::from([1,2,3,4,5]).into();
     
     // We also should not be getting and None elements
-    // Some( v.`iter`().map(|val| val.unwrap_or(0)).collect::<`Vec`<u8>>() )
+    // Some( v.iter().map(|val| val.unwrap_or(0)).collect::<Vec<u8>>() )
     // Safety:
     // We always pass only Some(val) type in the creation of v, so we should
     // never get None.
@@ -600,7 +600,7 @@ pub struct TestMutexArc<'a> {
 /// 
 /// This will allows to have a peak of how this works and what we are to 
 /// expect when certain values are locked or now. Simple approach to understand 
-/// when we are working with `Mutexes`
+/// when we are working with Mutexes
 ///
 /// This function has come inner functions, and we can call them separately to see
 /// how they work.
@@ -801,7 +801,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         let _x = tmutx.a.lock();
         vec_string.push( format!("Struct TestMutexArc after: {:#?}\n", tmutx) );
         print( unsafe { vec_string.last().unwrap_unchecked() });
-    } // drop(`_``_`_x); called automatically
+    } // drop(_x); called automatically
 
 
     fn arc_move( print: fn(&str), vec_mut: &mut Vec<String> ) {
@@ -852,7 +852,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         use rayon::prelude::*;
 
         // I don't need to define a new vec_string
-        // let mut vec_string: `Vec`<String> = vec![];
+        // let mut vec_string: Vec<String> = vec![];
         vec_string.push("\n-------------------------Arc Looping------------------------------".to_string() );
         print( unsafe { vec_string.last().unwrap_unchecked() });
 
@@ -867,8 +867,8 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
             // reference lifetimes. This is only a requireemnt
             // on thread spawn. If we however call thread spawn
             // inside of a thread scope object, it is able to use
-            // this reference as it seen in `func` and `func2`
-            // if let `Ok`(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
+            // this reference as it seen in func and func2
+            // if let Ok(ref mut guard) = y.lock() { // this works too and we take **guard+=x;
             if let Ok(mut guard) = y.lock() {
                 // for x in 1..=1_000_000_000 {
                 // NOTE: it not okay to use rayon like this. This is because we will
@@ -889,9 +889,9 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
 
         let func2 = || {
             let mut vec_clone: Vec<String> = vec![];
-            // since y was taken as reference before for `func`,
+            // since y was taken as reference before for func,
             // y can be taken as ref again as y was dropped before I imagine
-            // if let `Ok`(ref mut guard) = y.lock() { // also works
+            // if let Ok(ref mut guard) = y.lock() { // also works
             if let Ok(mut guard) = y.lock() {
                 // for x in 1..=1_000_000_000 {
                 for x in 1..=limit {
@@ -1010,14 +1010,14 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
 
         // this will not work directly, as spawn needs static lifetime.
         // we will have to use a scope thread that has spawn inside it.
-        // thread::spawn(`func`);
+        // thread::spawn(func);
 
         let func3 = || {
             let mut vec_clone: Vec<String> = vec![];
             loop {
                 // can be same a lock, except that this will not hang for try_lock if 
                 // lock not received 
-                // if let `Ok`(ref mut vec) = z.try_lock() {  // works
+                // if let Ok(ref mut vec) = z.try_lock() {  // works
                 if let Ok(mut vec) = z.try_lock() {
                     vec_clone.push( "Fun3: lock received for z".to_string() );
                     print( unsafe { vec_clone.last().unwrap_unchecked() });

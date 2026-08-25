@@ -32,14 +32,14 @@ pub fn thread1e_arc_rwlock() {
         // But since the lock is still held in this scope, this thread is made to
         // sleep indefinitely cause the thread is waiting to be released at the end of
         // the scope.
-        // let `r3` = `rwl`.write().unwrap();
-        // `println`!("`rw` `r3` is {:?}", `r3`);
+        // let r3 = rwl.write().unwrap();
+        // println!("rw r3 is {:?}", r3);
 
         // However if we drop the reader locks before calling the write lock, we
         // should be able to get the reader
         drop(r1);
         drop(r2);
-        // if we don't drop the `r1` and `r2` before hand, this will cause the thread to hang
+        // if we don't drop the r1 and r2 before hand, this will cause the thread to hang
         let mut r3 = rwl.write().unwrap();
         *r3 += 1;
         println!("rw R3 for manual drop is {:?}", r3);
@@ -70,13 +70,13 @@ pub fn thread1e_arc_rwlock() {
         // then 10 seconds for the reader thread read 2, we will have to wait that long will the
         // write get the change to get the thread. Once RWLock is dropped, it will notify that
         // its dropped. This is how the Write can get the thread of no other thread is accessing
-        // that `RWLock` value
+        // that RWLock value
         let x = s.spawn(|| {
             let g = t.read().unwrap();
             println!("t rwlock read 1: {g}");
             thread::sleep(Duration::from_millis(2000));
         });
-        // this will `exe` 1st and then the other 2 will run in random order.
+        // this will exe 1st and then the other 2 will run in random order.
         x.join().unwrap();
         s.spawn(|| {
             let mut g = t.write().unwrap();
@@ -119,7 +119,7 @@ pub fn thread1e_arc_rwlock() {
 
     let rw = Arc::new(RwLock::new(66));
     let crw = Arc::clone(&rw);
-    // since we don't call unwrap on this, the compiler/`clippy` warns us that we
+    // since we don't call unwrap on this, the compiler/clippy warns us that we
     // need to assign is something. If we call unwrap on this, this is not bug
     // us. I left this as a titbit for information
     let _ = thread::spawn(move || {
@@ -135,16 +135,16 @@ pub fn thread1e_arc_rwlock() {
     assert!(rw.is_poisoned()); // will panic main if false
     println!("rw is poisonned and is rw is {:?}", rw);
 
-    // Because `rw` is poisoned, we get the err version.
+    // Because rw is poisoned, we get the err version.
     // Here err is still poisoned version of RWLock Guard, so we can still
     // use this to reassign/manipulate the value of the RwLock value
     let guard = rw.write().unwrap_or_else(|mut e| {
-        // Err of Poisoned value of `RWLock`.
+        // Err of Poisoned value of RWLock.
         **e.get_mut() = 1;
         // here is important to clear poison. The value will still be poisoned if we don't
         // remove this. Cause the struct will say poisoned = true,
         rw.clear_poison(); // poisoned = false
-        e.into_inner() // This will give us new `RWLock`
+        e.into_inner() // This will give us new RWLock
     });
     assert!(!rw.is_poisoned());
     assert_eq!(*guard, 1);
@@ -168,11 +168,11 @@ pub fn thread1e_rwlock_is_finished() {
             // the lock guard free and available, the next thread is selected from the list of
             // waiting threads. Eventually we wait till the list in the queue is all accounted for.
             // if a%3!=0 {
-            //     if let `Ok`(val) = z.read() {
-            //         `println`!("Val is now {} for loop {a}", val);
+            //     if let Ok(val) = z.read() {
+            //         println!("Val is now {} for loop {a}", val);
             //     }
             // } else {
-            //     if let `Ok`(mut val) = z.write() {
+            //     if let Ok(mut val) = z.write() {
             //         for _ in 0..1000000000 {
             //             *val += 1;
             //         }
@@ -210,7 +210,7 @@ pub fn thread1e_rwlock_is_finished() {
         }
     });
     // for x in h {
-    //     `println`!("thread no {:?}", std::`env`::current_`dir`().unwrap());
+    //     println!("thread no {:?}", std::env::current_dir().unwrap());
     //     x.join().unwrap();
     // }
     println!(

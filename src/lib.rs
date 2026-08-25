@@ -52,23 +52,23 @@
 
 // Note: raw address will not work, as we will end up changing html files based on 
 // the different modules we create
-// #![doc(html_logo_`url` = "../../../assets/logo_transparent.`png`")]
+// #![doc(html_logo_url = "../../../assets/logo_transparent.png")]
 //<img src='../../../assets/logo.png' alt='logo' width='100'>
 //
-// Cant directly add `concat` here, as rust code does not for comments.
-// #![doc(html_logo_`url` = include!(`concat`!(`env`!("OUT_`DIR`"),"/",`env`!("`GENNAME`")) ) )]
-// basically, #![ doc( html_logo_`url` = ... )] distructures to //!
-// < class=html_logo_`url` `src`= ..... >
+// Cant directly add concat here, as rust code does not for comments.
+// #![doc(html_logo_url = include!(concat!(env!("OUT_DIR"),"/",env!("GENNAME")) ) )]
+// basically, #![ doc( html_logo_url = ... )] distructures to //!
+// < class=html_logo_url src= ..... >
 
 // Note, this will activate all run files for the code. This
 // currently is not needed as we will end up duplicating code 
-// but we could push this lib in crates.`io` and add it as a 
+// but we could push this lib in crates.io and add it as a 
 // dependence to be able to see it in the code.
-// #![doc(html_playground_`url` = "https://play.rust-lang.org/")]
+// #![doc(html_playground_url = "https://play.rust-lang.org/")]
 #![doc(test( 
-    //attribute that prevents the automatic injection of `extern` crate statements into doc tests
+    //attribute that prevents the automatic injection of extern crate statements into doc-tests
     no_crate_inject,
-    //`attr`(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
+    //attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
 ))]
 
 // not pub, don't need to create doc type here
