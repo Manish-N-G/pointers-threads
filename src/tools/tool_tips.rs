@@ -11,6 +11,7 @@
 //! cargo spellcheck check
 //! cargo spellcheck --fix
 //! cargo spellcheck fix
+//! cargo spellcheck fix "file_path"
 //! ```
 //! We can add them to our `cargo.toml` file
 //! ```text

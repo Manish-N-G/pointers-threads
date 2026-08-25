@@ -1083,13 +1083,13 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                                 }
                             }
                             break;
-                        } else {
-                            vec_c.lock().unwrap().push( format!("Main: didnt get lock for {x}, trying \
-                                after some milli seconds") );
-                            let v = vec_c.lock().unwrap();
-                            print( unsafe { v.last().unwrap_unchecked() });
-                            thread::sleep(std::time::Duration::from_millis(50));
                         }
+                        
+                        vec_c.lock().unwrap().push( format!("Main: didnt get lock for {x}, trying \
+                            after some milli seconds") );
+                        let v = vec_c.lock().unwrap();
+                        print( unsafe { v.last().unwrap_unchecked() });
+                        thread::sleep(std::time::Duration::from_millis(50));
                     }
                 });
             }
