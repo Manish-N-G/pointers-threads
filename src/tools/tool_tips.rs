@@ -27,3 +27,26 @@
 //! // see full list in the git repo
 //! ```
 //!
+//! ### Some Cargo based tools
+//! - Cargo info and search: A tool to find out about a cargo package
+//! To simply use it as follows. cargo info however, can give use what 
+//! features are available to the package.
+//! ```text
+//! cargo info bacon
+//! cargo search bacon
+//! ```
+//! - Cargo bacon: A tool to run all the different cargo tools.
+//! We can use test, runs, clippy, pedantic warnings and others.
+//! ```text
+//! bacon
+//! bacon --help
+//! ```
+//! - Cargo Seek: Its a pritty TUI that is use to search, add and info
+//! among others. Its a nice tool that helps us manage it all in one place.
+//! To use it, do the following
+//! ```text
+//! bacon
+//! bacon --help
+//! ```
+//!
+#![allow(clippy::doc_lazy_continuation)]  // just to allow nextline when we use -
