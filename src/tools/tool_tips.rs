@@ -52,5 +52,14 @@
 //! ```
 //! <img src="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/seek.png?raw=true"></img>
 //!
+//! - Cargo Clippy: Clippy is quite powerful to linting and ignoring files that we want to 
+//! ingore for linking errors. To make it work, we could provide some files to be ignored
+//! or linting. This is achieved via the `Cargo.toml` file and 'Clippy.toml' file. However
+//! they serve different purposes by default. See the online documentation to know more.
+//! - [`Clippy`](https://doc.rust-lang.org/nightly/clippy/index.html) documentation link.
+//! ```text
+//! cargo clippy
+//! ```
+//!
 //!
 #![allow(clippy::doc_lazy_continuation)]  // just to allow nextline when we use -

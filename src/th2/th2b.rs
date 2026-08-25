@@ -47,14 +47,14 @@ pub fn thread2b_RcWeak() {
     if let RcWeak::NRc(yweak) = &yb[0] {
         let y2 = std::rc::Rc::downgrade(yweak);
         yb[0] = RcWeak::NWeak(y2);
-    };
+    }
     drop(yb);
 
     let mut xb = y.b.borrow_mut();
     if let RcWeak::NRc(xweak) = &xb[0] {
         let x2 = std::rc::Rc::downgrade(xweak);
         xb[0] = RcWeak::NWeak(x2);
-    };
+    }
     drop(xb);
 
     println!(

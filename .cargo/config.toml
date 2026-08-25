@@ -6,3 +6,8 @@ LOGO_PATH="assets/logo_transparent.png"
 # we are passing raw value here for the moment inside lib.rs. So we have to manually
 # test if link exists
 LOGO_URL="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/logo_transparent.png?raw=true"
+
+BACON_PATH="assets/bacon_help.png"
+BACON_URL="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/bacon_help.png?raw=true"
+SEEK_PATH="assets/seek.png"
+SEEK_URL="https://github.com/Manish-N-G/pointers-threads/blob/master/assets/seek.png?raw=true"

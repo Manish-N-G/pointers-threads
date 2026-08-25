@@ -62,7 +62,7 @@ pub fn thread1f_cow() {
     //     c1.to_mut().push(val)
     // }); does the same
     for x in [6, 7, 8] {
-        c1.to_mut().push(x)
+        c1.to_mut().push(x);
     }
     println!(
         "cow owned after update u8 {:?} for type {} is type {}",

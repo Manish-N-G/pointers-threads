@@ -8,7 +8,7 @@ pub fn testing1c() {
     // let c = &b as *const u16;
     // let d = &mut b as *mut u16;
 
-    let mut b: u32 = 2151686160; //10000000 01000000 00100000 00010000
+    let mut b: u32 = 2_151_686_160; //10000000 01000000 00100000 00010000
     #[allow(unused)]
     let c = &b as *const u32 as *const u16; // 00100000 00010000
     let d = &mut b as *mut u32 as *mut u16;

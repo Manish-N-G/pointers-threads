@@ -390,7 +390,8 @@ pub mod modrefcell {
     // way, we know or lets say have an idea how this can be implemented
     // at runtime. The reason this is done is by looking at the borrow
     // and borrow_mut calls during the program.
-    impl<'refc, T> Drop for Ref<'refc, T> {
+    // impl<'refc, T> Drop for Ref<'refc, T> { // 'refc not needed
+    impl<T> Drop for Ref<'_, T> {
         // calling drop on Ref affects the fields of the MyRefCell through interior mutability
         fn drop(&mut self) {
             match self.refcell.references.get() {
@@ -403,7 +404,8 @@ pub mod modrefcell {
         }
     }
 
-    impl<'refc, T> Deref for Ref<'refc, T> {
+    // impl<'refc, T> Deref for Ref<'refc, T> {
+    impl<T> Deref for Ref<'_, T> {
         type Target = T; // not a trait here
         // Self as Deref looks as the Trait fields for this type
         // We have an associated type that tells us that the
@@ -437,7 +439,8 @@ pub mod modrefcell {
     }
 
     // both deref and derefmut are possible for RefMut
-    impl<'refc, T> Deref for RefMut<'refc, T> {
+    // impl<'refc, T> Deref for RefMut<'refc, T> {
+    impl<T> Deref for RefMut<'_, T> {
         type Target = T; // not a trait here
         // Calling deref mut allows us to use the Target for out type
         // As Self is of Trait Deref, we seems we can call directly Self::Target
@@ -449,7 +452,8 @@ pub mod modrefcell {
     // this if just for derefmut that gets the target from
     // implementing deref. We have to implement defer or else we will
     // not be able to implement defermut for our type
-    impl<'refc, T> DerefMut for RefMut<'refc, T> {
+    // impl<'refc, T> DerefMut for RefMut<'refc, T> {
+    impl<T> DerefMut for RefMut<'_, T> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             // get() give us *mut T, so we convert it to &mut T
             unsafe { &mut *self.refcell.value.get() }

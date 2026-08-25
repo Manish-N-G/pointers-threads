@@ -782,7 +782,8 @@ impl MySelfReferencePinned {
     /// assert_eq!( 10, my_self_ref.get_val());
     /// ```
     pub unsafe fn update_val_cast(&self, val: u8) {
-        let mut _x = &self.val as *const u8 as *mut u8;
+        let mut _x = &self.val as *const u8 as *mut u8; // works
+        // let mut _x = &raw mut self.val; // if self is mut
         unsafe { *_x = val; }
     }
     
@@ -835,7 +836,8 @@ impl MySelfReferencePinned {
     /// assert_eq!( 10, my_self_ref_pin.get_val());
     /// ```
     pub fn update_val_ptr_cast(&self, val: u8) {
-        let mut _x = self.ptr.unwrap() as *mut u8;
+        // let mut _x = self.ptr.unwrap() as *mut u8; //works
+        let mut _x = self.ptr.unwrap().cast_mut();
         unsafe { *_x = val; }
     }
 

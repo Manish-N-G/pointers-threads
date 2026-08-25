@@ -70,4 +70,21 @@ full = ["pointers", "async", "threads"]
 # [package.metadata.docs.rs]
 # playground = { url = "https://play.rust-lang.org/" }   # This enables the Run button
 
-
+# This can be used in clippy.toml. See clippy.toml to know more
+[lints.clippy]
+# pedantic = {level = "deny", priority = -1} # UM, ACTUALLY
+# nursery = {level = "deny", priority = -1} # BETA LINTS
+# # DENY PANIC
+# unwrap_used = "deny"
+# expect_used = "deny"
+# indexing_slicing = "deny"
+# arithmetic_side_effects = "deny"
+# unreachable = "deny"
+# unimplemented = "deny"
+# unchecked_time_subtraction = "deny"
+todo = "deny"
+# string_slice = "deny"
+# panic_in_result_fn = "deny"
+# panic = "deny"
+# exit = "deny"
+# as_conversion = "deny"

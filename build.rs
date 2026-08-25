@@ -8,57 +8,76 @@ use std::path::PathBuf;
 
 use std::process::Command;
 
+fn command_warning_image(url: &str) {
+    let output = Command::new("curl")
+        .arg("-s") // silent
+        .arg("-I") // HEAD request. Fetches only headers
+        .arg("-o") // rediret output
+        .arg("/dev/null")  // output location
+        .arg("-w") // write out
+        .arg("%{http_code}")  // what curl should print. I need this or else it will fail
+        .arg(url)
+        .output();
+    // eg: "curl -s -I -o /dev/null -w "%{http_code}" https://www.google.com"
+
+    let result:(bool, String) = match output {
+        Ok(out) => {
+            // Check if the command succeeded and the status code is 200
+            // Converts slice of byte to string for from_utf8 lossy
+            let output_status = String::from_utf8_lossy(&out.stdout); 
+            ( out.status.success() , output_status.into() )
+        }
+        _ => ( false, "Err".into() )
+    };
+
+    if result.0 {
+        println!("Image link is successful {}", result.1);
+    } 
+    else {
+        println!("cargo:warning=Link address: {url}"); // cargo warning message
+        println!("cargo:warning=curl exit status: {:?}", result.1);
+        panic!("cargo:error=Link is not active: {}", result.1);
+    }
+}
+
+fn assert_path_and_url(var_file_path:&str, img_url_link: &str, image_type: &str) -> String {
+    let var_link_value:String = env::var(var_file_path).unwrap();
+    // performs compile time check. We get value like /assets/logo_transparent
+    let img_exists_in_file = PathBuf::from(&var_link_value).exists();
+    assert!(img_exists_in_file);
+
+    let img_url:String = env::var(img_url_link).unwrap();
+    println!("cargo:warning=img_url for {} = {:?}",image_type, img_url); // not cargo warn message
+    img_url  
+}
+
 fn main() {
     // let _logo_file = include_bytes!("assets/logo.png");
     let logo_var = "LOGO_PATH";
     let logo_link = "LOGO_URL";
+    #[allow(unused)]
+    let logo_url = assert_path_and_url(logo_var, logo_link, "logo");
+
+    let bacon_var = "LOGO_PATH";
+    let bacon_link = "LOGO_URL";
+    #[allow(unused)]
+    let bacon_url = assert_path_and_url(bacon_var, bacon_link, "bacon");
+
+    let seek_var = "LOGO_PATH";
+    let seek_link = "LOGO_URL";
+    #[allow(unused)]
+    let seek_url = assert_path_and_url(seek_var, seek_link, "seek");
 
     // cant pass logo_var into env!. I would have to use "LOGO_PATH" directly
     // env! takes string literals not variables
     // let logo_path:&str = env!(logo_var);  // wont work
     // let logo_path:&str = env!("LOGO_PATH");  // works
 
-    let logo_path:String = env::var(logo_var).unwrap();
-    // performs compile time check. We get value like /assets/logo_transparent
-    let logo_exists = PathBuf::from(&logo_path).exists();
-    assert!(logo_exists);
-
-    let logo_url:String = env::var(logo_link).unwrap();
-    println!("cargo:warning=logo_url = {:?}", logo_url); // not cargo warn message
-
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
     if target_os == "linux" {
-        let output = Command::new("curl")
-            .arg("-s") // silent
-            .arg("-I") // HEAD request. Fetches only headers
-            .arg("-o") // rediret output
-            .arg("/dev/null")  // output location
-            .arg("-w") // write out
-            .arg("%{http_code}")  // what curl should print. I need this or else it will fail
-            .arg(&logo_url)
-            .output();
-
-        // eg: "curl -s -I -o /dev/null -w "%{http_code}" https://www.google.com"
-
-
-        let result:(bool, String) = match output {
-            Ok(out) => {
-                // Check if the command succeeded and the status code is 200
-                // Converts slice of byte to string for from_utf8 lossy
-                let output_status = String::from_utf8_lossy(&out.stdout); 
-                ( out.status.success() , output_status.into() )
-            }
-            _ => ( false, "Err".into() )
-        };
-
-        if result.0 {
-            println!("Image link is successful {}", result.1);
-        } 
-        else {
-            println!("cargo:warning=Link address: {logo_url}"); // cargo warning message
-            println!("cargo:warning=curl exit status: {:?}", result.1);
-            panic!("cargo:error=Link is not active: {}", result.1);
-        }
+        command_warning_image(&logo_url);
+        command_warning_image(&bacon_url);
+        command_warning_image(&seek_url);
         // Linux-specific build steps
         println!("cargo:rustc-cfg=build_target_linux");
     } else if target_os == "windows"{
@@ -95,7 +114,6 @@ fn main() {
     // println!("cargo:rustc-env={}={}", logo_var, logo_path );
     println!("cargo:rerun-if-env-changed={}", logo_var);
     println!("cargo:rerun-if-env-changed={}", logo_link);
-    println!("cargo:rerun-if-env-changed={}", logo_path);
     println!("cargo:rerun-if-env-changed={}", logo_url);
     println!("cargo::rerun-if-changed=build.rs");
     println!("cargo::rerun-if-changed=cargo.toml");

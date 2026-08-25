@@ -1,3 +1,36 @@
 # mimimum supported version
 # I prefer it here than #![clippy::msrv = "1.89.0"]
 msrv = "1.89.0"
+
+
+# Clippy.toml is strictly for configuring specific lint parameters (like thresholds) or 
+# file ignores, not for setting lint levels like deny or warn. 
+
+# In order to do this, e must use Cargo.toml instead. The clippy.toml file is unstable and
+# deprecated for general lint configuration, as noted in the official Clippy documentation. 
+
+# NOTE: This is not possible now in rust clippy.toml
+# [lints]
+# pedantic = {level = "deny", priority = -1} # UM, ACTUALLY
+# nursery = {level = "deny", priority = -1} # BETA LINTS
+# # DENY PANIC
+# unwrap_used = "deny"
+# expect_used = "deny"
+# indexing_slicing = "deny"
+# arithmetic_side_effects = "deny"
+# unreachable = "deny"
+# unimplemented = "deny"
+# unchecked_time_subtraction = "deny"
+# todo = "deny"
+# string_slice = "deny"
+# panic_in_result_fn = "deny"
+# panic = "deny"
+# exit = "deny"
+# as_conversion = "deny"
+
+# Could do this however.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true
+
