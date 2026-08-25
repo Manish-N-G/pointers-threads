@@ -125,7 +125,8 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
     //10000000 01000000 00100000 00010000
     #[allow(unused)]
     // we convert this to &u16 from u32
-    let const_u16 = &element as *const u32 as *const u16;
+    // let const_u16 = &element as *const u32 as *const u16; // works
+    let const_u16 = (&element as *const u32).cast::<u16>();
     // 00100000 00010000
 
     let mut_u16 = &mut element as *mut u32 as *mut u16;

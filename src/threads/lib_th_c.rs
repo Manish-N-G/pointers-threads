@@ -358,6 +358,9 @@ pub fn thread1c_mutex_lock_attempt(printable: bool, val: u16) -> u16 {
 ///
 /// assert_eq!(105u8, *val.lock().unwrap() );
 /// ```
+#[must_use = "We must use is_dropable arguement as true. Otherwise, has high potential \
+              to fail. This is a complex implementation meant it see what could happen if \
+              we dont handle the drops properly."]
 pub fn thread1c_mutex_lock_attempt_inc_drop(
     val: Mutex<u8>, is_dropable: bool, is_rayon: bool,
     printable: bool, time_ms: u64
@@ -780,7 +783,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
     };
 
     let mut vec_string: Vec<String> = vec![];
-    if inc_limit == u64::MIN { inc_limit += 1};
+    if inc_limit == u64::MIN { inc_limit += 1}
 
     fn lock_display( print: fn(&str), vec_string: &mut Vec<String> ) {
         vec_string.push("\n-------------------------Lock display------------------------------".to_string() );
@@ -1028,11 +1031,10 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                     print( unsafe { vec_clone.last().unwrap_unchecked() });
                     print( &format!("vec mutation is: {:?}", vec) );
                     break;
-                } else {
-                    vec_clone.push("Fun3: lock not received".to_string());
-                    print( unsafe { vec_clone.last().unwrap_unchecked() });
-                    thread::sleep(std::time::Duration::from_millis(200));
                 }
+                vec_clone.push("Fun3: lock not received".to_string());
+                print( unsafe { vec_clone.last().unwrap_unchecked() });
+                thread::sleep(std::time::Duration::from_millis(200));
             }
             vec_clone
         };
@@ -1125,9 +1127,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         match split_input {
             ( "display", _ ) => { lock_display( toprint, &mut vec_string ) },
             ( "move", _ ) => { arc_move( toprint, &mut vec_string ) },
-            ( "loop", "1" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
-            ( "loop", "2" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
-            ( "loop", "3" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
+            ( "loop", "1"|"2"|"3" ) => { arc_looping( toprint, &mut vec_string, split_input.1, inc_limit ) },
             ( "loop", _ ) => { arc_looping( toprint, &mut vec_string, "", inc_limit ) },
             _ =>  {}
         }

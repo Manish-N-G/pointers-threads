@@ -194,7 +194,7 @@ pub fn thread1e_rwlock_is_finished() {
             } else {
                 loop {
                     if let Ok(mut val) = z.try_write() {
-                        for _ in 0..1000000000 {
+                        for _ in 0..1_000_000_000 {
                             *val += 1;
                         }
                         break;

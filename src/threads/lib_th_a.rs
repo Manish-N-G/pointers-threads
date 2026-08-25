@@ -37,11 +37,11 @@ use std::thread;
 /// # // add this crate as a dependency. This way, we can make sure that
 /// # // we dont have issues with the crate
 /// # // use pointers_threads::lib_th_a::*;
-/// # pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
+/// # pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::Any + Send>> {
 /// #     thread::spawn(|| {
 /// #         v.push(42);
 /// #         v
-/// #     }).join().unwrap()
+/// #     }).join()
 /// # }
 /// use std::thread;
 ///
@@ -49,11 +49,11 @@ use std::thread;
 /// let a1 = thread1a_add_42(v);
 ///
 /// // we cant do print statement event with --show-output/ --nocapture
-/// assert_eq!(&a1, &[1,2,3,4,5,42])
+/// assert_eq!(&a1.expect("thread panicked"), &[1,2,3,4,5,42])
 /// ```
 // /// [Rust Playground](https://play.rust-lang.org/?...)
 // #[doc(html_playground_`url` = "https://play.rust-lang.org/")]
-pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
+pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::Any + Send> > {
     // `println`!("Testing `th1a` `thread1a`");
     // v is something like v = vec![1,2,3,4,5]; // this works
     // Here rust uses "move closure inference". This means 
@@ -64,7 +64,9 @@ pub fn thread1a_add_42(mut v: Vec<i32>) -> Vec<i32> {
     thread::spawn(|| { // move is made automatically
         v.push(42);
         v
-    }).join().unwrap()
+    // instead of unwrap, which can be unsafe.
+    // we change implementations
+    }).join()
     // if we were to use v again, we will have borrow issues
     // `println`!("v outside is `{v`:?}"); // this will cause problems
 }

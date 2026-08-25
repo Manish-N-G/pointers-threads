@@ -52,7 +52,7 @@ fn main() {
         };
 
         if result.0 {
-            println!("Image link is successful {}", result.1) 
+            println!("Image link is successful {}", result.1);
         } 
         else {
             println!("cargo:warning=Link address: {logo_url}"); // cargo warning message

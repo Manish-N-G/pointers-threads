@@ -82,7 +82,7 @@ fn mod1_a() {
     let a1 = thread1a_add_42(vec![1, 2, 3, 4, 5]);
     println!("a1 is :{:?}", a1);
 
-    let a2 = thread1a_add_val(a1, 9);
+    let a2 = thread1a_add_val(a1.expect("threads panicked"), 9);
     println!("a2 is :{:?}", a2);
 
     println!("move issue is three {}", thread1a_move_issue());

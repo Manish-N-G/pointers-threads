@@ -34,5 +34,5 @@ pub fn async_select() {
         };
 
         println!("v is {v}");
-    })
+    });
 }

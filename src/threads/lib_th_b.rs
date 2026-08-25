@@ -34,7 +34,7 @@ use std::thread;
 // NOTE: don't create MyNums<'a> as files will not hold 'a, 
 // rather, we need to do for<'a> Self for reference of types
 // holding 'a
-/// The MyNums traits its just our traits that we have implemented
+/// The `MyNums` traits its just our traits that we have implemented
 /// to represent all signed and unsigned integers from 1byte to 16bytes.
 ///
 /// We have so make sure that certain conditions are present for this
