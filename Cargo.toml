@@ -58,10 +58,34 @@ async = []
 threads = []
 # tokio = ["dep:tokio"]
 full = ["pointers", "async", "threads"]
+nightly-bench = [] # Only for cargo nightly version
+# can do something like cargo +nightly bench --feature nightly-bench
+# notice we can also use nightly-bench or nightly_bench
 
 
 [build-dependencies] 
 # file-exists-macro = "0.1.0"   
+
+[dev-dependencies]
+# formatting giving me issues then it goes to new line
+# have to be done carefully
+criterion = { version = "=0.8.2", features = [
+   "rayon",
+   "plotters",
+   "cargo_bench_support",
+   "async_tokio"
+] }
+
+# for criterion bench
+# harness is a wrapper/runner that automatically provides to run test or benchmarks.
+[[bench]]
+name = "crit_benches"
+harness = false
+
+# for normal bench
+[[bench]]
+name = "norm_benches"
+harness = true
 
 
 #NOTE: "=1.1.0" gives the exact version while "1.1.0" is interpreted as "^1.1.0"
