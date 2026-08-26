@@ -106,6 +106,11 @@
 /// // 2 values. We need to ensure safety, but I leave it as it is.
 /// assert_eq!( unsafe {unsafe_raw_vector_element_mutability(a) }, ( 8208, 8209 ));
 /// ```
+/// # Warning
+///
+/// Calling this function with vecsize of less then 3 will result in
+/// *[undefined behavior](https://doc.rust-lang.org/reference/behavior-considered-undefined.html)*
+///
 /// # Safety
 ///
 /// Just a note, this doesn't provide any safety and this function will panic if

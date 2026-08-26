@@ -130,9 +130,6 @@
 //!     33+(1..=1000).sum::<u64>()+ 200
 //! );
 //! ```
-//!
-//!
-//!
 
 use std::collections::vec_deque::VecDeque;
 use std::sync::{Arc, Mutex};
