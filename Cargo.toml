@@ -70,7 +70,12 @@ nightly-bench = [] # Only for cargo nightly version
 # formatting giving me issues then it goes to new line
 # have to be done carefully
 criterion = { version = "=0.8.2", features = [
-   "rayon",
+   "rayon", 
+
+   # to get html display results and charts however, 
+   # this might be active by default for this version
+   # "html-reports",
+
    "plotters",
    "cargo_bench_support",
    "async_tokio"

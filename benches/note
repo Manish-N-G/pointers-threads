@@ -1,0 +1,15 @@
+For this benches directly, we can use it to compare normal 
+implementation for benches provided in use test::Bencher against
+the one we have for criterion. 
+This will allows us to compare the two.
+
+However, criterion privides many other tools that not only 
+gives us speedy bench tests, but also plot charts and information
+against other types. This is a great tool and we can explore this
+more later.
+
+Look at the documentation to know more.
+
+If we want to see the html representation of our criterion function
+output, the report dir, located inside target/criterion should have
+the entry page to all the generated output.
