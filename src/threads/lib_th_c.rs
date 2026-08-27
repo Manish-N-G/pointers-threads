@@ -1047,11 +1047,11 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
             let vec2 = s.spawn(func2);
             let vec3 = s.spawn(func3);
 
-            let vec4 = if arg == "rayon_bad" {
+            let vec4 = if arg == "1" {
                 s.spawn(func_rayon_dangerous1)
-            } else if arg == "rayon_better" {
+            } else if arg == "2" {
                 s.spawn(func_rayon_dangerous2)
-            } else if arg == "rayon_correct" {
+            } else if arg == "3" {
                 s.spawn(func_rayon_dangerous3)
             } else {
                 s.spawn(func2)
