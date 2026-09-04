@@ -66,9 +66,12 @@ fn main() {
     //     println!( "{}", vec );
     // }
     //
-    for _ in 0..2u8 {
-        thread1c_arc_mutex_display( &["loop"], 100, true);
-    }
+    /*
+    thread1c_arc_mutex_display( &["loop"], 100, true);
+    thread1c_arc_mutex_display( &["loop -1"], 100, true);
+    thread1c_arc_mutex_display( &["loop -2"], 100, true);
+    thread1c_arc_mutex_display( &["loop -3"], 100, true);
+    */
     
     // th3::th3b3::async_select();
 
