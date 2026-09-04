@@ -848,6 +848,11 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
     } // a is dropped here, even if use clone
 
 
+    // note: this function is poorly optimized, as we are using mutex locks for
+    // each iteration to get the added values. This is quite interesting. but the
+    // reason we do this is just to understand how this works. we can later find
+    // ways to use tasks instead of locks for this situation, and better ways to
+    // get parallel processing done
     fn arc_looping( print: fn(&str), vec_string: &mut Vec<String>, arg: &str, limit: u64 ) {
         use rayon::prelude::*;
 
@@ -874,8 +879,8 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                 // NOTE: it not okay to use rayon like this. This is because we will
                 // have to pass arc and not MutexGuard, as rayon will complain that we can
                 // use Send for MutexGuard.
-                for x in 1..=1000 {
-                    *guard += x;
+                for _x in 1..=1000 {
+                    *guard += _x;
                 }
                 vec_clone.push( format!("Fun1: Mutex mutated in \
                     spawned thread for y is {}", guard) );
@@ -894,8 +899,8 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
             // if let Ok(ref mut guard) = y.lock() { // also works
             if let Ok(mut guard) = y.lock() {
                 // for x in 1..=1_000_000_000 {
-                for x in 1..=limit {
-                    *guard += x;
+                for _x in 1..=limit {
+                    *guard += _x;
                 }
                 vec_clone.push( format!("Fun2: mutex mutated in \
                     spawned thread for new y is {}", *guard) );
@@ -912,11 +917,11 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         let func_rayon_dangerous1 = || {
             let vec_clone_arc: std::sync::Arc<std::sync::Mutex<Vec<String>>> = 
                 std::sync::Arc::new(std::sync::Mutex::new(vec![]));
-            (1..=limit).into_par_iter().for_each( |x| {
+            (1..=limit).into_par_iter().for_each( |_x| {
                 let y = y.clone();
                 let vec_c = vec_clone_arc.clone();
                 if let Ok(mut guard) = y.lock() {
-                    *guard += x;
+                    *guard += _x;
                     // this is terrible and  will create million lines for string
                     let message = format!("Fun2 Rayon: mutex mutated in \
                         spawned thread for new y is {}", *guard);
@@ -925,7 +930,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                     // to drop the lock as soon as possible.
                     drop(guard); 
 
-                    if x == limit {
+                    if _x == limit {
                         let mut vec_guard = vec_c.lock().unwrap();
                         vec_guard.push(message);
                         print( unsafe { (vec_guard).last().unwrap_unchecked() });
@@ -933,7 +938,7 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
                 } else {
                     let mut vec_guard = vec_c.lock().unwrap();
                     vec_guard.push(format!("Fun2 Rayon else: didnt get the lock for y \
-                        new 1_000_000 for {} loop", x) );
+                        new limit {limit} for {} loop", _x) );
                     print( unsafe { (vec_guard).last().unwrap_unchecked() });
                 }
             });
@@ -950,17 +955,17 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
             let vec_clone_arc =
                 std::sync::Arc::new(std::sync::Mutex::new(Vec::<String>::new()));
 
-            (1..=limit).into_par_iter().for_each( |x| {
+            (1..=limit).into_par_iter().for_each( |_x| {
                 let y = y.clone();
                 let vec_c = vec_clone_arc.clone();
 
                 let value = {
                     let mut guard = y.lock().unwrap();
-                    *guard += x;
+                    *guard += _x;
                     *guard
                 };
 
-                if x == limit {
+                if _x == limit {
                     let mut vec_guard = vec_c.lock().unwrap();
                     vec_guard.push( format!(
                         "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
@@ -986,14 +991,14 @@ pub fn thread1c_arc_mutex_display( input: &[&str], mut inc_limit: u64, printable
         let func_rayon_dangerous3 = {
             let y = y.clone();
             move || {
-                (1..=limit).into_par_iter().filter_map( |x| {
+                (1..=limit).into_par_iter().filter_map( |_x| {
                     let value = {
                         let mut guard = y.lock().unwrap();
-                        *guard += x;
+                        *guard += _x;
                         *guard
                     };
 
-                    if x == limit {
+                    if _x == limit {
                         let st_val = format!(
                             "Fun2 Rayon: mutex mutated in spawned thread. y is {}",
                             value
