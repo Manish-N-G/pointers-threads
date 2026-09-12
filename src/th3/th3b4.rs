@@ -6,29 +6,29 @@ where
     A: Future<Output = ()>,
     B: Future<Output = ()>,
 {
-    let val = trpl::block_on(
+    trpl::block_on(
         nested_async( trpl_join::<A,B> )
     );
 }
 
 // both work
-// async fn sleep_with_time_print(t: u32, stmt: &str) {
-fn sleep_with_time_print(t: u32, stmt: &str) -> impl Future<Output = ()> {
-    async move {
-        println!("working with fut: fut{}", stmt);
-        trpl::sleep( std::time::Duration::from_millis(t as u64) ).await;
-    }
+async fn sleep_with_time_print(t: u32, stmt: &str) {
+// fn sleep_with_time_print(t: u32, stmt: &str) -> impl Future<Output = ()> {
+    // async move {
+    println!("working with fut: fut{}", stmt);
+    trpl::sleep( std::time::Duration::from_millis(t as u64) ).await;
+    // }
 }
 
-// async fn trpl_join<A,B>( fut1: A, fut2: B) 
-fn trpl_join<A,B>( fut1: A, fut2: B) -> impl Future<Output = ()>
+async fn trpl_join<A,B>( fut1: A, fut2: B) 
+// fn trpl_join<A,B>( fut1: A, fut2: B) -> impl Future<Output = ()>
 where 
     A: Future<Output = ()>,
     B: Future<Output = ()>,
 {
-    async move {
-        trpl::join!(fut1, fut2);
-    }
+    // async move {
+    trpl::join!(fut1, fut2);
+    // }
 }
 
 async fn tokio_select<A,B>( fut1: A, fut2: B) 
