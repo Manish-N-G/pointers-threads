@@ -74,6 +74,7 @@ fn main() {
     */
     
     // th3::th3b3::async_select();
+    mod3_d4();
 
 }
 
@@ -191,6 +192,9 @@ fn mod3_c() {
     th3::th3c::some_async();
 }
 
+fn mod3_d4() {
+    crate::th3::th3b4::multi_async();
+}
 
 
 // For testing, I have these following
