@@ -9,6 +9,17 @@ pub enum FutType {
     TokioJoin,
 }
 
+//NOTE: Here, at each await point, when a future is bring awaited, it checkes whether
+//the futuer is ready or pending. If its ready, this means that we continue the statements
+//without yielding. However, when we get a pending state, this would mean that the runtime
+//with respect with tokio yeilds that future as sees that other futures could run. 
+//When we combine this with join and select, considering we are talking about fut1 and fut2,
+//fut1 processes till it get a pending state, and then will calls poll on fut2 to and processes
+//fut2 till it finishes or get to another pending state. If we encounter another pending
+//state, considering we are only talking about these 2 for the moment, it join or select
+//will yield as a whole as all futures were polled and were at pending or complete. The
+//runtime could revisit these join select types again if needed.
+
 // here we will try to run select and trpl to see how we can use async to do something
 pub fn multi_async() {
     let mut get_time = Instant::now();
@@ -33,8 +44,9 @@ pub fn multi_async() {
 async fn sleep_with_time_print(t: u32, stmt: &str) {
 // fn sleep_with_time_print(t: u32, stmt: &str) -> impl Future<Output = ()> {
     // async move {
-    println!("working with fut: fut{}, with time: {:?}", stmt, t);
+    println!("working with fut: Start fut{}, with time: {:?}", stmt, t);
     trpl::sleep( std::time::Duration::from_millis(t as u64) ).await;
+    println!("working with fut: End fut{}, with time: {:?}", stmt, t);
     // }
 }
 
@@ -67,7 +79,7 @@ async fn nested_async( ftype: FutType ) {
             let fut1_2_1 = sleep_with_time_print(120, "1_2_1");
             let fut1_2_2 = sleep_with_time_print(30, "1_2_2");
 
-            process_fut(ftype, fut1_2_1, fut1_2_2);
+            process_fut(ftype, fut1_2_1, fut1_2_2).await;
 
         };
 
@@ -101,7 +113,7 @@ async fn nested_async( ftype: FutType ) {
         }.await;
 
         let fut3_3 = async {
-            sleep_with_time_print(20, "3_2").await;
+            sleep_with_time_print(20, "3_3").await;
         };
 
         process_fut(ftype, fut3_1, fut3_3).await;
