@@ -74,7 +74,8 @@ fn main() {
     */
     
     // th3::th3b3::async_select();
-    mod3_d4();
+    th3::th3c2::ordering_types();
+    // mod3_d4();
 
 }
 
