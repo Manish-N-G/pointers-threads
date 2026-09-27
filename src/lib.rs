@@ -73,7 +73,7 @@
 ))]
 
 // not pub, don't need to create doc type here
-// meaning if we make it pub, we an see this in our docs.
+// meaning if we make it pub, we can see this in our docs.
 mod threads;
 mod pointers;
 mod tools;

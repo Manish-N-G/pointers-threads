@@ -77,7 +77,9 @@ fn main() {
     th3::th3c2::ordering_types();
     // mod3_d4();
 
+
 }
+
 
 fn mod1_a() {
     // I don't need to do any more: use pointers_threads::lib_th1a::*;
