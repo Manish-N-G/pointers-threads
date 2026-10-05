@@ -12,8 +12,6 @@ pub struct RwTest<'a> {
     c: RwLock<&'a str>,
 }
 
-
-
 pub fn thread1e_arc_rwlock() {
     // RwTest directly takes ownership and we didn't need to pass variables to it.
     let st = RwTest {

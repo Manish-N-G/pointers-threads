@@ -1,5 +1,5 @@
 // This is another addition of doc comments on top of what is 
-// already mentioned before. //! is for lib_`th`_a again. And its
+// already mentioned before. //! is for lib_th_a again. And its
 // the root of this crate. /// Will need to be appended only to
 // another module under this or we will have to use it on functions
 // which will show up the description in the doc file.
@@ -18,7 +18,7 @@
 //!
 use std::thread;
 
-// Remember, rust docs are not compiled inside lib_`th`_a
+// Remember, rust docs are not compiled inside lib_th_a
 // but turns it into a separate crate.
 
 /// Creates a spawned thread and Joins handle the returns a vec with 42.
@@ -49,13 +49,17 @@ use std::thread;
 /// let a1 = thread1a_add_42(v);
 ///
 /// // we cant do print statement event with --show-output/ --nocapture
-/// assert_eq!(&a1.expect("thread panicked"), &[1,2,3,4,5,42])
+/// assert_eq!( &a1.expect("thread panicked"), &[1,2,3,4,5,42] )
 /// ```
 // /// [Rust Playground](https://play.rust-lang.org/?...)
-// #[doc(html_playground_`url` = "https://play.rust-lang.org/")]
+// #[doc(html_playground_url = "https://play.rust-lang.org/")]
 pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::Any + Send> > {
-    // `println`!("Testing `th1a` `thread1a`");
-    // v is something like v = vec![1,2,3,4,5]; // this works
+    // NOTE: I seems that the placeholder '_' is not allowed here for this 
+    // function signature. Hence we use the Any trait by wrapping our err in a BOX.
+    // This is because the error is of an opaque type by the looks of it.
+
+    // v is something like v = vec![1,2,3,4,5];
+
     // Here rust uses "move closure inference". This means 
     // that rust automatically decided to move without explicitly 
     // writing it.
@@ -64,14 +68,15 @@ pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::An
     thread::spawn(|| { // move is made automatically
         v.push(42);
         v
-    // instead of unwrap, which can be unsafe.
-    // we change implementations
     }).join()
+    // we instead of unwrapping, we pass the result type for join.
+
     // if we were to use v again, we will have borrow issues
-    // `println`!("v outside is `{v`:?}"); // this will cause problems
+    // println!("v outside is {v:?}"); // this will cause problems
 }
 
-/// Creates a spawned thread and Joins handle the returns a vec modified with a value.
+/// Creates a spawned thread and unwraps the `JoinHandle` to return vector with an appended value
+/// that is passed to the function.
 ///
 /// This is a simple test thread that takes a vector, and adds a given value
 /// to it at the end of the vec
@@ -87,11 +92,10 @@ pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::An
 /// assert_eq!(&a1, &[1,2,3,4,5,val])
 /// ```
 pub fn thread1a_add_val(mut v: Vec<i32>, val: i32) -> Vec<i32> {
-    // closure might outlive the borrowed val. So we will move it in the closure
-    // earlier, closure implicitely moved v in the closure, but with val in the
-    // mix, we have to move it all in the closure.
-    // this happens because we need static borrows only for spawned threads in 
-    // isolation.
+    // The Closure might outlive the borrowed val. So we will move it in the closure,
+    // where earlier with `thread1a_add_42`, the closure implicitely moved v in 
+    // the closure, but with val in the mix, we have to move it all in the closure.
+    // This happens because we need static borrows only for spawned threads in isolation.
     thread::spawn( move|| { 
         v.push(val);
         v
@@ -113,45 +117,49 @@ pub fn thread1a_add_val(mut v: Vec<i32>, val: i32) -> Vec<i32> {
 /// // we cant do print statement event with --show-output/ --nocapture
 /// assert_eq!(a1, 3);
 /// ```
+#[allow(clippy::let_and_return)]
 pub fn thread1a_move_issue() -> i32 {
     let v = vec![1,2,3];
-    // this will throw error as it needs to move, or static lifetime
+    // this below will throw error as it needs to move the value, for static lifetime
+
     // thread::spawn(|| {
-    //     `println`!("{:?}", v);   // only `&v` needed
-    // }); // ← ERROR! Needs `move` because v would be borrowed, but thread may outlive it
+    //     println!("{:?}", v);   // only &v needed
+    // }); // ← ERROR! Needs move because v would be borrowed, but thread may outlive it
 
-    thread::spawn( move || { // no implicit move. But this value is moved
+    let val = thread::spawn( move || { // not implicitly move anymore, but explicit
         _ = &v;
-        // drop(v); // adding this will compile without move, and makes move implicit
+        // drop(v); // However, adding this will compile without move, and makes move implicit
         3
-    }).join().unwrap()
+    }).join().unwrap();
 
-    // `println`!("v is {:?}", v);
-
+    // println!("v is {:?}", v); // implicit moved here. This will not work
+    val
 }
 
-/// Using thread builder with name to create a thread and send back a `Vec`.
+/// Using thread `builder` with name to create a thread and send back a `Vec`.
+/// This is a static wrapper function to show how its done
 ///
 /// When we use this thread builder, we created this thread builder type,
 /// And then this allows us to add some attributes like name and stack size
 /// than help define out thread a bit more. This is what we need as a default
 /// to unsure that we have more control, but this is not always required
-/// and adds some extra steps. To build a thread builder, we do the following
+/// and adds some extra steps. We have a simple wrapper for a thread builder
+/// that is shown below.
 /// ```
 /// use std::thread;
 /// use pointers_threads::lib_th_a::*;
 ///
-/// let val_from_builder = thread1a_builder( vec![1,2,3,4,5], false);
+/// let val_from_builder = thread1a_builder("Puchi" vec![1,2,3,4,5], false);
 /// assert_eq!(&val_from_builder, &[1,2,3,4,5]);
 ///
 /// ```
-pub fn thread1a_builder<T>(val: Vec<T>, print_val: bool) -> Vec<T> 
+pub fn thread1a_builder<T>(name: &'static str, val: Vec<T>, print_val: bool) -> Vec<T> 
 where T: Sized + Send + std::fmt::Debug + 'static{
     // this thread is created using a basic thread builder type
     // with an attribute name with it. Here this is basic but gives
     // us the idea that certain attributes can be added like name
     // stack size and others.
-    let builder = thread::Builder::new().name("puchi".into());
+    let builder = thread::Builder::new().name(name.into());
 
     let handler = builder.spawn( move || {
         if print_val {
@@ -168,7 +176,7 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 /// the function. It doesn't do anything but maybe send the thread out
 /// of the function
 ///
-/// This will just say that we have a `stat` thread here. Notice that
+/// This will just say that we have a stat thread here. Notice that
 /// we don't need to use move here, as we can use static reference
 /// for the closure, even if its defined in the function. This is 
 /// possible because the 'static lifetime exists for the life of 
@@ -186,7 +194,7 @@ pub fn thread1a_stat() -> &'static str{
         // Into the closure, I will just check length and use that to 
         // decide if we print the value of not
         if stat.len().is_multiple_of(2) {
-            // Here `stat` is not moved but referenced in this closure
+            // Here stat is not moved but referenced in this closure
             for x in stat.chars() {
                 // possible as its static lifetime and chars borrows self
                 print!("{} ", x);
@@ -196,7 +204,7 @@ pub fn thread1a_stat() -> &'static str{
 
     }) .join() .unwrap();
 
-    // this will allow me to use `stat` after calling it here
+    // this will allow me to use stat after calling it here
     if stat.len().is_multiple_of(2) {
         println!("stat val inside the function is: {stat}");
     }
@@ -204,10 +212,10 @@ pub fn thread1a_stat() -> &'static str{
 }
 
 /// This function shows that we need to use move even when we pass
-/// a 'static `str` as move only would only take reference varaible.
+/// a `'static str` as move only would only take reference varaible.
 ///
 /// This function doesn't do anything interesting, we pass a 'static
-/// `str` and we get the same static string as a result. This will only
+/// str and we get the same static string as a result. This will only
 /// print the value when calling the function
 /// ```
 /// use pointers_threads::lib_th_a::*;
@@ -222,9 +230,9 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
     // that is passed as an argument, we still would have to use move
     // when using the closure. The reason is despite the closure needing
     // 'static for lifetime arguments, here val is a variable name that
-    // is only valid for the lifetime of `thread1a`_`stat`_owned. We need to
+    // is only valid for the lifetime of thread1a_stat_owned. We need to
     // remember that val itself is a reference that is of the COPY type.
-    // Meaning, when we pass a value to `thread1a`_`stat`_owned, as its of
+    // Meaning, when we pass a value to thread1a_stat_owned, as its of
     // type &, this function copied the reference of the value. For this
     // reason, by using move, we only pass a reference variable into the
     // closure. As this would not be able to modify the type.
@@ -275,14 +283,14 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 // when I tried it, it didn't give me recursion problems.
 // #![recursion_limit = "256"]
 // I still prefer to use Iterator directly to avoid any hassle.
-// pub fn `thread1a`_scope_vec<`I1`, `I2`, `U1`, `U2`>(`iter1`: std::ops::Range<U1>, `iter2`: std::ops::Range<U2>, val2: `U2`,  printable: `bool`)
-//     -> `Vec`<U2>
-// where std::ops::Range<U1>: Iterator<Item = `U1`> + Send + Sync,
-//       std::ops::Range<U2>: Iterator<Item = `U2`> + Send + Sync,
-//       `Vec`<U1>: std::`fmt`::Debug,
-//       `Vec`<U2>: std::`fmt`::Debug,
-//       `U1`: std::`fmt`::Debug + std::`fmt`::Display + Send + Sync,
-//       `U2`: std::`fmt`::Debug + std::`fmt`::Display + Send + Sync,
+// pub fn thread1a_scope_vec<I1, I2, U1, U2>(iter1: std::ops::Range<U1>, iter2: std::ops::Range<U2>, val2: U2,  printable: bool)
+//     -> Vec<U2>
+// where std::ops::Range<U1>: Iterator<Item = U1> + Send + Sync,
+//       std::ops::Range<U2>: Iterator<Item = U2> + Send + Sync,
+//       Vec<U1>: std::fmt::Debug,
+//       Vec<U2>: std::fmt::Debug,
+//       U1: std::fmt::Debug + std::fmt::Display + Send + Sync,
+//       U2: std::fmt::Debug + std::fmt::Display + Send + Sync,
 pub fn thread1a_scope_vec<I1, I2>(iter1: I1, iter2: I2, val2: I2::Item,  printable: bool)
     -> Vec<I2::Item>
 where I1::Item: std::fmt::Display + Send + Sync, // sized is default
@@ -292,11 +300,11 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
       I2: std::iter::Iterator,
 {
     let v = iter1.collect::<Vec<I1::Item>>();
-    // let v = `iter1`.collect::<`Vec`<U1>>();
+    // let v = iter1.collect::<Vec<U1>>();
     #[allow(warnings)]
     let mut v2 = iter2.collect::<Vec<I2::Item>>();
-    // let mut `v2` = `iter2`.collect::<`Vec`<U2>>();
-    // let v = `rng`.collect::<`Vec`<T>>();
+    // let mut v2 = iter2.collect::<Vec<U2>>();
+    // let v = rng.collect::<Vec<T>>();
     // scope doesn't need to have reference of 'static lifetime.
     // But what is important to know is that we cant have more
     // than 1 mutable reference instance in the scope, but several shared references.
@@ -326,10 +334,10 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
         });
         // At this point, these both threads are running. Its just that when we call
         // join, we make sure that we don't proceed to the next command till join completes.
-        // Here we make sure that `s1` and `s2` are complete before moving to the other thread.
-        // However, `s1` and `s2` will be running at this position regardless if we called `s1` join
-        // over `s2` join.
-        // Not to forget, `s1` and `s2` both have its own reference so the values printed are
+        // Here we make sure that s1 and s2 are complete before moving to the other thread.
+        // However, s1 and s2 will be running at this position regardless if we called s1 join
+        // over s2 join.
+        // Not to forget, s1 and s2 both have its own reference so the values printed are
         // repeated, expect they threads print them simultaneously.
         // Note: adding a small thread sleep duration time can show better intermingling
         s1.join().unwrap();
@@ -353,7 +361,7 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
             }
         });
         // These two join will make sure that we have the same shared values and the print
-        // will give us unique values but time to time handled by `t1` or `t2`.
+        // will give us unique values but time to time handled by t1 or t2.
         t1.join().unwrap();
         t2.join().unwrap();
         // we will get the issue here, v cannot be borrowed as mutable, as it was already borrowed
@@ -366,9 +374,9 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
         //     v.push(3);
         // }); // this is not possible
 
-        // This this situation, rust borrows a mutable reference for `v2`, but its only used in the
-        // scope just `1se`, which doesn't cause conflicts as no other new threads have been asking 
-        // for shared/mutable reference of `v2`.
+        // This this situation, rust borrows a mutable reference for v2, but its only used in the
+        // scope just 1se, which doesn't cause conflicts as no other new threads have been asking 
+        // for shared/mutable reference of v2.
         s.spawn(|| {
             v2.push(val2); // automatic borrow ( as mut ) occurs here.
             if printable {
@@ -378,8 +386,8 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
 
         // creating this below, would then end up causing conflicts.
         // s.spawn(|| {
-        //     `v2`.push('z'); // automatic borrow ( as mut ) occurs here.
-        // }); // cannot be possible as we already called 1st mut ref of `v2`
+        //     v2.push('z'); // automatic borrow ( as mut ) occurs here.
+        // }); // cannot be possible as we already called 1st mut ref of v2
     }); // all the threads are joined here.
     v2
 }
