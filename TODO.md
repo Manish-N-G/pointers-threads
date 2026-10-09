@@ -16,3 +16,10 @@
  - [ ] Create CI for spell checking via Aspell/SpellChecker
  - [ ] Change names of modules to the appropriate names
  - [ ] Update home page to proper types and names to show all features and include styling
+ 
+ # NOTE from my crate
+ - th1a -> lib_th_a (done)
+ - th1b -> lib_th_b (done)
+ - th1c -> lib_ptr_a (done)
+ - th1d -> lib_th_c (done)
+ - th1e -> lib_th_d (todomanish starthere)

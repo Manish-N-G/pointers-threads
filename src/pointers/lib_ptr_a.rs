@@ -126,7 +126,7 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
     let mut element: u32 = unsafe { vec.get_unchecked(2) }.to_owned() as u32;
     println!("a is {}", element);
 
-    element = 2151686160;
+    element = 2_151_686_160;
     //10000000 01000000 00100000 00010000
     #[allow(unused)]
     // we convert this to &u16 from u32

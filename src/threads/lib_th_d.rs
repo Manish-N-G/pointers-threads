@@ -1,3 +1,4 @@
+// todomanish: //starthere
 // ReadWrite logs for threads
 //! Module exposing read-write logs
 use std::sync::{Arc, RwLock};
