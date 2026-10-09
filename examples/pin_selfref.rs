@@ -205,8 +205,8 @@ fn test_self_ref_pin() {
     // Now we cant unpin this data.
     // what this means is that we wont be able to run some values
     let pu = Box::pin(_u);
-    // `pu`.print_`addr`( "box pin for pinned" ); // this will panic. Call ptr on None type
-    // `pu`.put_ptr(); // this will not works
+    // pu.print_`addr`( "box pin for pinned" ); // this will panic. Call ptr on None type
+    // pu.put_ptr(); // this will not works
     unsafe { pu.put_ptr_cast(); } // this will works 
     pu.print_addr( &format!("Put ptr with cast as val is {}", pu.get_val()) );
     //pu.update_val(44); // cannot borrow data as mutable // doesn't work
@@ -219,8 +219,8 @@ fn test_self_ref_pin() {
     //
     // pu.update_val_ptr(48); // cannot borrow data as mutable // doesn't work
     // NOTE: In principle, for pinned marker, making the trait for this
-    // type !Unpin, rust doest let us to `pu`.getval = something or 
-    // the same for (*`pu`).get_val
+    // type !Unpin, rust doesnt let us to do pu.getval = something or 
+    // the same for (*pu).get_val
     // This is because Pin intentionally hides the value for
     // MySelfReferencePinned or type !Unpin.
     // The reason is because we should not be able to do something
