@@ -62,16 +62,16 @@ fn command_warning_image(url: &str) {
 // }
 
 use url::Url;
-fn check_url_link(url_string: &str) -> bool {
+fn check_url_link(url_string: &str){
     if !is_internet_available() {
         println!("cargo::warning=Internet url issue for has_url_link");
-        return false
+        return
     }
 
     // 1. Parse the URL string
     let url = match Url::parse(url_string) {
         Ok(u) => u,
-        Err(_) => return false,
+        Err(_) => panic!("url parse error"),
     };
 
     // 2. Resolve URL to socket addresses (e.g., IP:Port)
@@ -79,8 +79,7 @@ fn check_url_link(url_string: &str) -> bool {
     let addrs = match url.socket_addrs(|| None) {
         Ok(addrs) => addrs,
         Err(_) => {
-            println!("cargo::warning, addrs error for url socket {}", url);
-            return false;
+            panic!("cargo socker address error");
         }
     };
 
@@ -88,13 +87,8 @@ fn check_url_link(url_string: &str) -> bool {
     // If connection succeeds, internet is likely available
     if TcpStream::connect(addrs.first().unwrap()).is_ok() {
         println!("cargo::warning=link is successful here");
-        true
     } else {
-        println!(
-            "cargo::warning, Could not connect to tcpstream addrs for {}",
-            addrs.first().unwrap()
-        );
-        false
+        panic!( "Could not connect to tcpstream addrs for {}", addrs.first().unwrap());
     }
 }
 
@@ -131,22 +125,29 @@ fn assert_path_and_internet(
     }
 }
 
-fn main() -> Result<(), ()> {
+fn main() {
     // let _logo_file = include_bytes!("assets/logo.png");
     let logo_var = "LOGO_PATH"; // local path
     let logo_link = "LOGO_URL";
     #[allow(unused)]
-    let logo_url = assert_path_and_internet(logo_var, logo_link, "logo")?;
+    // let logo_url = assert_path_and_internet(logo_var, logo_link, "logo")?;
+    let Ok(logo_url) = assert_path_and_internet(logo_var, logo_link, "logo") else {
+        return
+    };
 
     let bacon_var = "BACON_PATH"; // local path
     let bacon_link = "BACON_URL";
     #[allow(unused)]
-    let bacon_url = assert_path_and_internet(bacon_var, bacon_link, "bacon")?;
+    let Ok(bacon_url) = assert_path_and_internet(bacon_var, bacon_link, "bacon") else {
+        return
+    };
 
     let seek_var = "SEEK_PATH"; // local path
     let seek_link = "SEEK_URL";
     #[allow(unused)]
-    let seek_url = assert_path_and_internet(seek_var, seek_link, "seek")?;
+    let Ok(seek_url) = assert_path_and_internet(seek_var, seek_link, "seek") else {
+        return
+    };
 
     // cant pass logo_var into env!. I would have to use "LOGO_PATH" directly
     // env! takes string literals not variables
@@ -163,6 +164,7 @@ fn main() -> Result<(), ()> {
         command_warning_image(&logo_url);
         command_warning_image(&bacon_url);
         command_warning_image(&seek_url);
+        check_url_link(&logo_url);
     } else if target_os.contains("windows") {
         println!("cargo::rustc-cfg=platform_windows");
         check_url_link(&logo_url);
@@ -208,5 +210,4 @@ fn main() -> Result<(), ()> {
     println!("cargo::rerun-if-env-changed={}", logo_url);
     println!("cargo::rerun-if-changed=build.rs");
     println!("cargo::rerun-if-changed=cargo.toml");
-    Ok(())
 }
