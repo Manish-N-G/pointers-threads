@@ -94,9 +94,10 @@ fn mod1_a() {
     let a2 = thread1a_add_val(a1.expect("threads panicked"), 9);
     println!("a2 is :{:?}", a2);
 
+    // NOTE: True will not compile here
     println!("move issue is three {}", thread1a_move_issue());
 
-    println!("builder: {:?}", thread1a_builder(vec![1, 2, 3, 4, 5], true));
+    println!("builder: {:?}", thread1a_builder("max", vec![1, 2, 3, 4, 5], true));
 
     println!(
         "thread stat owned for \"hello world\" is :{}",
