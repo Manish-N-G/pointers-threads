@@ -35,8 +35,33 @@ pub enum LogLevel {
     Error,
 }
 
-fn process_log_arg(logtype: LogLevel) {
+fn create_dir() -> Result<(), std::io::ErrorKind> {
+    let path = std::path::Path::new("/LogOutput");
+    // if !path.is_dir() { // can avoid this with looking at errorkind
 
+    // Filesystem is inherently fallable, which is why we have result type.
+    // could be related to permissions, diskspace or path etc
+    // we want a panic is we dont find it
+    let Err(e) = std::fs::create_dir(path) else{
+        return Ok(())
+    };
+    match e.kind() {
+        std::io::ErrorKind::AlreadyExists => Ok(()),
+        _ => Err(e.kind()),
+    }
+}
+
+fn process_log_arg(args: &str) -> Result<> {
+    // Note, we need to use clap here    
+    if args.contains("out_logs") {
+        match create_dir() {
+            
+        }
+    } else if args.contains("cli_logs") {
+
+    }
+
+    todo!()
 }
 
 
