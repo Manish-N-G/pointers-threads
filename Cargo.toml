@@ -37,6 +37,7 @@ name = "pointers_threads"
 # Note, lib names cannot contain - and need to be _ instead
 path = "src/lib.rs"
 
+# used for both lib and bin crates
 [dependencies]
 paste = "=1.0.15"
 # tokio = "1.52.3"  #works but didnt get all the features
@@ -47,10 +48,15 @@ rayon = "=1.12.0"
 # using trpl as a simple wrapper create for tokio for testing in our lib
 trpl = "=0.3.0"
 
+# parser for cli arguements
+clap = { version = "=4.6.7", features = ["derive"] }
+
 #NOTE: env lives in $CARGO_HOME/config.toml and
 # CARGO_HOME defaults to .cargo
 # We have our env there
 
+# features what will be available for this crate
+# todo
 [features]
 default = ["full"]
 pointers = []
@@ -62,11 +68,12 @@ nightly-bench = [] # Only for cargo nightly version
 # can do something like cargo +nightly bench --feature nightly-bench
 # notice we can also use nightly-bench or nightly_bench
 
-
+# used just to build scrips dependencies
 [build-dependencies] 
 url = "=2.5.8"
 # file-exists-macro = "0.1.0"   
 
+# used just to tests, examples, documentation crate types
 [dev-dependencies]
 # formatting giving me issues then it goes to new line
 # have to be done carefully
