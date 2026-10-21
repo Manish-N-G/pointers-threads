@@ -1,35 +1,15 @@
-// use paste::paste;
-//
-// #[allow(unused_macros)]
-// macro_rules! my_func {
-//     // 'm' is for literal matching.
-//     // ident can be used here more for alphabets. cant start with a number
-//     // but ident can have numbers present else where.
-//     ( 'm', $md:literal, $($va:ident),* ) => {{ $(
-//             paste! {
-//                 [<mod $md _ $va>]();
-//             }
-//         )*
-//     }};
-//     ( 't', $nb:literal, "", $va:literal ) => {{
-//         paste! {
-//             [<th$nb>]::[<thread $va>]();
-//         }
-//     }};
-//     ( 't', $nb:literal, $nest: literal, $va:literal ) => {{
-//         paste! {
-//             [<th $nb>]::[<th $nest>]::[<thread $va>](); }
-//     }};
+use std::fmt::{self, Write};
+use crate::clap_file::*;
+use clap::Parser;
+
+// pub struct Logger {
+//     message: Vec<String>,
 // }
 
-use std::fmt::{self, Write};
-
-pub struct Logger {
-    message: Vec<String>,
-}
-
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum LogLevel {
+    Info,
     Trace,
     Warn,
     Error,
@@ -51,18 +31,52 @@ fn create_dir() -> Result<(), std::io::ErrorKind> {
     }
 }
 
-fn process_log_arg(args: &str) -> Result<> {
-    // Note, we need to use clap here    
-    if args.contains("out_logs") {
-        match create_dir() {
-            
-        }
-    } else if args.contains("cli_logs") {
-
+pub fn get_level(val: &Option<String> ) -> LogLevel {
+    match val {
+        Some(value) if value.to_lowercase() == "info" => LogLevel::Info,
+        Some(value) if value.to_lowercase() == "trace" => LogLevel::Trace,
+        Some(value) if value.to_lowercase() == "warn" => LogLevel::Warn,
+        Some(value) if value.to_lowercase() == "error" => LogLevel::Error,
+        _ => LogLevel::Info
     }
-
-    todo!()
 }
 
+    // let args = clap_file::ArgsPointersThreads::parse();
+    //     match process_log_arg(&args) {
+    //         _ => todo!(),
+    //     }
+    //
 
+// This whole file needs to be done using makefile as well. //todomanish:
+pub fn process_log_arg(args: &ArgsPointersThreads) -> Result<(), String> {
+    if args.get_cli() {
+        // here we endup making what we need to make sure that we are able to 
+        // display all this in the command line
+        // I will end up using a formatter to make this happen
+        // todo!() // make cli logs
+        println!("===we have cli");
+    } 
+    if let Some(val) = args.get_out_file() {
+        // this is where we have to dynamically see what we need to do
+        // in order to get the output files.
+        // I want to have the datetime option. Otherwise we will use 
+        // one that is given in commandline arguement
+        match create_dir() {
+            // _ => todo!()
+            _ => println!("===we have create dir"),
+        }
+    }
 
+    Ok(())
+}
+
+// eg:
+// myapp // works
+// myapp --logs // works
+// myapp --logs --cli // works
+// myapp --cli // doesnt work
+// myapp --logs --out_files // works
+// myapp --logs --out_files="hello" // works
+// myapp --logs --out_files "hello" // works?
+// myapp --logs --out_files  hello  // works?
+// myapp --out_files // doesnt works

@@ -32,13 +32,17 @@ mod th1;
 mod th2;
 mod th3;
 
+mod process_args;
+
 //todomanish:
 use pointers_threads::*;
+use process_args::*;
 
 // I block on mod3_a directly to avoid changin main via tokio::main
 // #[tokio::main]
 fn main() {
-    // my_func!('m', 1, c);
+    args_parser();
+    my_func!('m', 1, a);
     // These two below are not really useful. But just having fun a bit
     // with how the macros are running.
     // Cause we can just call the function directly when we are testing
@@ -76,9 +80,7 @@ fn main() {
     // th3::th3b3::async_select();
     // th3::th3c2::ordering_types();
     // mod3_d4();
-
 }
-
 
 fn mod1_a() {
     // I don't need to do any more: use pointers_threads::lib_th1a::*;
