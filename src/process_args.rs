@@ -17,6 +17,6 @@ pub fn args_parser() {
     } else if args.get_module() {
 
     }
-
+    // need to see how to handle errors here
     // todo!()
 }
