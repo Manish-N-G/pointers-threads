@@ -22,4 +22,5 @@
  - th1b -> lib_th_b (done)
  - th1c -> lib_ptr_a (done)
  - th1d -> lib_th_c (done)
+ - update logging before setting up lib_th_d(todomanish starthere)
  - th1e -> lib_th_d (todomanish starthere)

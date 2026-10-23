@@ -210,4 +210,7 @@ fn main() {
     println!("cargo::rerun-if-env-changed={}", logo_url);
     println!("cargo::rerun-if-changed=build.rs");
     println!("cargo::rerun-if-changed=cargo.toml");
+
+    // this will not print as its not part of rusts build println type
+    // println!("hello yo");
 }

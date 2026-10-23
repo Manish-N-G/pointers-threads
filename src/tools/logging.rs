@@ -6,6 +6,31 @@ use clap::Parser;
 //     message: Vec<String>,
 // }
 
+// this function used to have println statements in stdout
+// a simple way to use futures to end println args to cli
+// fn (msg: std::fmt::Arguments) {
+//     #[cfg(feature = "prtln-lib")]
+//     println!("[prtln]: {message}")
+// }
+
+#[allow(unused)]
+pub(crate) use stdext::function_name;
+pub(crate) fn fn_parse(name:&str) -> &str {
+    name.rsplit("::").next().unwrap()
+}
+
+#[allow(unused)]
+pub(crate) fn prtln_lib(fn_name: &str, message: std::fmt::Arguments) {
+    // let val: std::fmt::Arguments = format_args!("hello {}", 3);
+
+    // #[cfg(all(feature = "prtln-lib", feature = "prtln-lib-fn"))]
+    if cfg!(feature = "prtln-lib-fn") {
+        println!("[prtln:{}]: {message}", fn_name);
+    } else if cfg!(feature = "prtln-lib") {
+        println!("[prtln]: {message}");
+    }
+}
+
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum LogLevel {
