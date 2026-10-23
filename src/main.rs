@@ -43,6 +43,7 @@ use process_args::*;
 fn main() {
     args_parser();
     my_func!('m', 1, a);
+    
     // These two below are not really useful. But just having fun a bit
     // with how the macros are running.
     // Cause we can just call the function directly when we are testing
@@ -99,7 +100,7 @@ fn mod1_a() {
     // NOTE: True will not compile here
     println!("move issue is three {}", thread1a_move_issue());
 
-    println!("builder: {:?}", thread1a_builder("max", vec![1, 2, 3, 4, 5], true));
+    println!("builder: {:?}", thread1a_builder("max", vec![1, 2, 3, 4, 5]));
 
     println!(
         "thread stat owned for \"hello world\" is :{}",
