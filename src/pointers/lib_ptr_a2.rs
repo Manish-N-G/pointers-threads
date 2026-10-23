@@ -329,13 +329,21 @@ impl<T: MyNums> MySelfRefStatePin<T> {
     /// panic!("Manual Panic here for print_addr -------------");
     /// ```
     pub fn print_addr(&self, condition: &str) {
+        // if !condition.is_empty() {
+        //     println!("{condition}");
+        // }
+        // let ( var, val, ptr) = unsafe { self.get_addresses() };
+        // println!("add of variable is {:p}", var);
+        // println!("add of val is {:p}", val);
+        // println!("add of ptr is {:p}\n", ptr);
+
         if !condition.is_empty() {
-            println!("{condition}");
+            crate::prtln_lib(format_args!("{condition}"));
         }
         let ( var, val, ptr) = unsafe { self.get_addresses() };
-        println!("add of variable is {:p}", var);
-        println!("add of val is {:p}", val);
-        println!("add of ptr is {:p}\n", ptr);
+        crate::prtln_lib(format_args!("add of variable is {:p}", var));
+        crate::prtln_lib(format_args!("add of val is {:p}", val));
+        crate::prtln_lib(format_args!("add of ptr is {:p}\n", ptr));
     }
 }
 
