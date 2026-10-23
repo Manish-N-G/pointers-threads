@@ -149,7 +149,7 @@ pub fn thread1a_move_issue() -> i32 {
 /// use std::thread;
 /// use pointers_threads::lib_th_a::*;
 ///
-/// let val_from_builder = thread1a_builder("Puchi" vec![1,2,3,4,5], false);
+/// let val_from_builder = thread1a_builder("Puchi", vec![1,2,3,4,5], false);
 /// assert_eq!(&val_from_builder, &[1,2,3,4,5]);
 ///
 /// ```

@@ -123,8 +123,12 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
     // be used. It will panic if vec is less than len 3. 
     // We do this just to show how we can get/manipulate
     // pointers
+    #[allow(unused)]
     let mut element: u32 = unsafe { vec.get_unchecked(2) }.to_owned() as u32;
-    println!("a is {}", element);
+    // println!("a is {}", element);
+    crate::prtln_lib(format_args!("a is {element}"));
+    // crate::logging::prtln_lib("a is {element}"); // doesnt work
+    // NOTE: I would use eg: cargo run --features prtln-lib
 
     element = 2_151_686_160;
     //10000000 01000000 00100000 00010000
@@ -196,10 +200,15 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
         *b += 1;
         let after = *a;
         if before != after {
-            println!(
+            // println!(
+            //     "they are not equal as before {} is not as after {}",
+            //     before, after
+            // );
+            crate::prtln_lib(format_args!(
                 "they are not equal as before {} is not as after {}",
                 before, after
-            );
+            ));
+
         }
         (before, after)
     }
@@ -455,13 +464,19 @@ impl MySelfReference {
     /// setup the ptr interior raw pointer value.
     pub fn print_addr(&self, condition: &str) {
         if !condition.is_empty() {
-            println!("{condition}");
+            // println!("{condition}");
+            crate::prtln_lib(format_args!("{condition}"));
         }
-        println!("add of variable is {:p}", &self);
-        println!("add of val is {:p}", &raw const self.val);
-        // careful to not put & here in self, or it will be a 
-        // different address value
-        println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
+        // println!("add of variable is {:p}", &self);
+        // println!("add of val is {:p}", &raw const self.val);
+        // println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
+        
+        crate::prtln_lib(format_args!("add of variable is {:p}", &self));
+        crate::prtln_lib(format_args!("add of val is {:p}", &raw const self.val));
+        // // careful to not put & here in self, or it will be a 
+        // // different address value
+        crate::prtln_lib(format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()));
+
     }
 }
 
@@ -888,14 +903,29 @@ impl MySelfReferencePinned {
     /// panic!("Manual Panic here for print_addr -------------");
     /// ```
     pub fn print_addr(&self, condition: &str) {
+        // if !condition.is_empty() {
+        //     println!("{condition}");
+        // }
+        // println!("add of variable is {:p}", &self);
+        // println!("add of val is {:p}", &raw const self.val);
+        // // careful to not put & here in self, or it will be a 
+        // // different address value
+        // println!("add of ptr is {:p}\n", self.ptr.unwrap());
+
         if !condition.is_empty() {
-            println!("{condition}");
+            // println!("{condition}");
+            crate::prtln_lib(format_args!("{condition}"));
         }
-        println!("add of variable is {:p}", &self);
-        println!("add of val is {:p}", &raw const self.val);
-        // careful to not put & here in self, or it will be a 
-        // different address value
-        println!("add of ptr is {:p}\n", self.ptr.unwrap());
+        // println!("add of variable is {:p}", &self);
+        // println!("add of val is {:p}", &raw const self.val);
+        // println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
+        
+        crate::prtln_lib(format_args!("add of variable is {:p}", &self));
+        crate::prtln_lib(format_args!("add of val is {:p}", &raw const self.val));
+        // // careful to not put & here in self, or it will be a 
+        // // different address value
+        crate::prtln_lib(format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()));
+
     }
 }
 
