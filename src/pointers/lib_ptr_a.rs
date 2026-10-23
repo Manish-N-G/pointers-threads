@@ -1,8 +1,8 @@
-//! This module covers raw pointer manipulation and assignment along with 
+//! This module covers raw pointer manipulation and assignment along with
 //! structs of self references types.
 //!
 //! In the case of raw pointers, we only manipulate the value and pass it
-//! via const and mut pointers. This is unsafe and uses unsafe rust. And 
+//! via const and mut pointers. This is unsafe and uses unsafe rust. And
 //! understanding this helps to give us better understarding as we go
 //! forward.
 //!
@@ -10,22 +10,22 @@
 //! themselves. This is included in this module, because is shows how data
 //! can be misleading when we move ownership for certain self reference
 //! types. We have SelfReference and SelfReferencePinned /* not to mention
-//! SelfReferenceState */ which shows how they are impacted when we move 
+//! SelfReferenceState */ which shows how they are impacted when we move
 //! these types.
 //!
-//! What is important to keep in mind is how these struct are eventually going 
-//! to be used [`std::future`] and [`std::thread`]. For these concurrent 
-//! implementations, how we move data between threads/tasks, its important to keep in 
+//! What is important to keep in mind is how these struct are eventually going
+//! to be used [`std::future`] and [`std::thread`]. For these concurrent
+//! implementations, how we move data between threads/tasks, its important to keep in
 //! mind how self references could pose some risks. However, rust tries to
 //! help by using the [`std::marker::Unpin`] and `!Unpin` trait bounds.
 //! And by using [`std::pin::Pin`], we will be able to define the conditions
 //! for the `Unpin` and `!Unpin` traits with `Pin`.
-//! 
+//!
 //! # Pinning
 //!
-//! To simple explain, Pinning an Unpin type allows us to change its field 
+//! To simple explain, Pinning an Unpin type allows us to change its field
 //! values while providing certain guarantees that its memory address remains
-//! stable for the duration of the pin. 
+//! stable for the duration of the pin.
 //! Basically The Pin wrapper restricts moving the value out of its memory location,
 //! but it allows mutation. There are methods on the pinned type that can modify
 //! its fields as long as they are not meant to be moved.
@@ -44,45 +44,47 @@
 //! guarantee that the pointee will not be moved through that specific pointer.
 //! Basically this just hints to use that this type P, is not supposed to me moved.
 //!
-//! With type `P: Unpin`, is just wrap P in Pin, while having no concrete effects; 
+//! With type `P: Unpin`, is just wrap P in Pin, while having no concrete effects;
 //! as the value can actually me moved freely. We could do this through [`std::mem::swap`]
 //! for example. You can safely obtain a mutable reference (&mut T) via get_mut to modify
-//! fields because the compiler guarantees the type does not rely on a stable memory address. 
+//! fields because the compiler guarantees the type does not rely on a stable memory address.
 //!
-//! Therefore, Implementing Pin on Unpin will not do much except proving mutability 
-//! via pointers. The Pin pointer itself is movable (if it implements Unpin), but it 
+//! Therefore, Implementing Pin on Unpin will not do much except proving mutability
+//! via pointers. The Pin pointer itself is movable (if it implements Unpin), but it
 //! restricts access to the underlying data to prevent moves that could invalidate
-//! self-reference types. 
+//! self-reference types.
 //!
-//! However, for types that are !Unpin (such as compiler-generated Futures or 
+//! However, for types that are !Unpin (such as compiler-generated Futures or
 //! self-referential structs), obtaining a standard &mut T is prohibited in safe code.
-//! This restriction ensures that the pointee’s address remains stable, preventing 
+//! This restriction ensures that the pointee’s address remains stable, preventing
 //! dangling pointers if the value were to be moved.
-//! 
+//!
 //! `NOTE`: We might need to manually implement `!Unpin`, if we are using raw pointers
-//! for example in our struct type. Look at **SelfReferencedPinned** via 
+//! for example in our struct type. Look at **SelfReferencedPinned** via
 //! [`std::marker::PhantomPinned`].
 //!
 //! In short, pinning an Unpin type prevents moves through the pinned pointer,
-//! allowing safe mutation of fields, but it does not physically lock the value in 
+//! allowing safe mutation of fields, but it does not physically lock the value in
 //! memory if other mutable references exist. For !Unpin types, the pinning guarantee
-//! is stricter, preventing any move through the pinned pointer to maintain safety 
+//! is stricter, preventing any move through the pinned pointer to maintain safety
 //! for self-referential structures.
 //!
 //! For !Unpin types, Pin enforces that the address will not change for the lifetime
-//! of the pin. We also cannot obtain a standard mutable reference (&mut T) to modify 
-//! fields safely; you must use unsafe methods or specialized constructors 
+//! of the pin. We also cannot obtain a standard mutable reference (&mut T) to modify
+//! fields safely; you must use unsafe methods or specialized constructors
 //! (like Box::pin or pin!) that guarantee the pointee remains at a stable memory location.
 //!
 //! To Summarize:
-//! Unpin: Address is not stable; fields can be modified via **&mut T**; pinning is a no-op. 
-//! !Unpin: Address is stable while pinned; fields cannot be modified via **&mut T** ( unless 
+//! Unpin: Address is not stable; fields can be modified via **&mut T**; pinning is a no-op.
+//! !Unpin: Address is stable while pinned; fields cannot be modified via **&mut T** ( unless
 //! via unsafe rust); pinning prevents moves.
+
+use crate::{fn_parse, function_name, prtln_lib};
 
 /// An unsafe function that requires a vector of more then
 /// 2 elements, or else it would fail. It produces a tuple
 /// where the 1st element it the always 8208 and the next is
-/// 8209 as long as no wrapping is does if out of bound or 
+/// 8209 as long as no wrapping is does if out of bound or
 /// panic is vector it not larger than 2 elements.
 /// ```rust,editable
 /// //use pointers_threads::lib_ptr_a::*;
@@ -97,12 +99,12 @@
 /// // However this function doesnt focus too much
 /// // on the value as it just simple manuplates the value
 /// // by creating a new fixed one. We do this simple to show
-/// // how const mut raw pointers can be used to perform 
+/// // how const mut raw pointers can be used to perform
 /// // additions and casting.
 ///
 /// // Its good to get a good idea how this works be looking
 /// // directly at the code for this function
-/// // Safety: This function is not save, as we cannot have more than 
+/// // Safety: This function is not save, as we cannot have more than
 /// // 2 values. We need to ensure safety, but I leave it as it is.
 /// assert_eq!( unsafe {unsafe_raw_vector_element_mutability(a) }, ( 8208, 8209 ));
 /// ```
@@ -120,13 +122,13 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
     // On purpose I used an unsafe get_unchecked element for
     // vector to illustrate how it could be used
     // Safety: There is not safe and this should not
-    // be used. It will panic if vec is less than len 3. 
+    // be used. It will panic if vec is less than len 3.
     // We do this just to show how we can get/manipulate
     // pointers
     #[allow(unused)]
     let mut element: u32 = unsafe { vec.get_unchecked(2) }.to_owned() as u32;
     // println!("a is {}", element);
-    crate::prtln_lib(format_args!("a is {element}"));
+    prtln_lib(fn_parse(function_name!()), format_args!("a is {element}"));
     // crate::logging::prtln_lib("a is {element}"); // doesnt work
     // NOTE: I would use eg: cargo run --features prtln-lib
 
@@ -157,7 +159,7 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
 /// signature, as well of passing values to it.
 ///
 /// ```
-/// use pointers_threads::lib_ptr_a::*; 
+/// use pointers_threads::lib_ptr_a::*;
 ///
 /// // This works also for our method
 /// let mut b:u16 = 33;
@@ -187,13 +189,13 @@ pub unsafe fn unsafe_raw_vector_element_mutability(vec: Vec<usize>) -> (u16, u16
 /// ```
 /// # Safety
 ///
-/// This function is marked as unsafe because we are trying to receive 
+/// This function is marked as unsafe because we are trying to receive
 /// raw pointers, as arguments. This is important to know and be will
 /// not be able to pass if without the unsafe tag. However, knowing this,
-/// this doesn't mean that this function is unsafe. what it does it takes 
+/// this doesn't mean that this function is unsafe. what it does it takes
 /// a const ref and mut ref of the same value and gives us the deref along
 /// with increment of the deref.
-pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 ){
+pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> (u16, u16) {
     // as we are working with raw pointers, we can use unsafe
     unsafe {
         let before = *a; // val copied. Not a reference pointer
@@ -204,33 +206,34 @@ pub unsafe fn danger_pointer_val_inc(a: *const u16, b: *mut u16) -> ( u16, u16 )
             //     "they are not equal as before {} is not as after {}",
             //     before, after
             // );
-            crate::prtln_lib(format_args!(
-                "they are not equal as before {} is not as after {}",
-                before, after
-            ));
-
+            prtln_lib(
+                fn_parse(function_name!()),
+                format_args!(
+                    "they are not equal as before {} is not as after {}",
+                    before, after
+                ),
+            );
         }
         (before, after)
     }
 }
 
-
 #[derive(Debug)]
 /// This struct shows a SelfReference type that has a value and a pointers.
-/// The methods on this struct call on creating a Self Reference where the 
+/// The methods on this struct call on creating a Self Reference where the
 /// Option of the raw pointers points the value in this struct.
 ///
-/// We use this to illustrate how SelfReference types can be created and 
+/// We use this to illustrate how SelfReference types can be created and
 /// how we need to be careful of this type by the methods we call.
 ///
-/// The reason this is important, is because if we were going to use a 
-/// async function using Self reference for tokio/threads, we need to 
+/// The reason this is important, is because if we were going to use a
+/// async function using Self reference for tokio/threads, we need to
 /// make sure memory is carefully handles. Imagine, if were to pass ownership
 /// and some files were copies, but the reference in ptr, points to the old
 /// address. For that very reason we try to simulate the methods we will be
 /// calling and how they are handled.
 ///
-/// These types are also affected by how the `Box::pin`, `Pin::new` and `pin!` 
+/// These types are also affected by how the `Box::pin`, `Pin::new` and `pin!`
 /// operations work. We will have to dive deeper into how those operate,
 /// and they to will be discussed in the next part.
 /// Look at the `lib_ptr_a` for more details
@@ -254,7 +257,7 @@ pub struct MySelfReference {
 /// type, if we are not careful. Hence, we have to find the correct practice
 /// in order to make sure that works well
 /// ```
-/// use pointers_threads::lib_ptr_a::*; 
+/// use pointers_threads::lib_ptr_a::*;
 ///
 /// let mut my_self_ref = MySelfReference::new(3u8);
 ///
@@ -269,7 +272,7 @@ impl MySelfReference {
     pub fn new(val: u8) -> Self {
         Self { val, ptr: None }
     }
-    
+
     /// This ensures that we have saved the pointer value in ptr
     /// so that I points to the correct value in memory. If we don't
     /// do this, and we more or reassign out variable with a new
@@ -304,11 +307,11 @@ impl MySelfReference {
     /// ```
     pub fn put_ptr(&mut self) {
         // we use raw pointers to case value to raw address ptr
-        self.ptr = Some( &raw const self.val );
+        self.ptr = Some(&raw const self.val);
     }
-    
-    /// This get the value VIA POINTERS for our type. We do this 
-    /// to show how important it is to handle self references. 
+
+    /// This get the value VIA POINTERS for our type. We do this
+    /// to show how important it is to handle self references.
     /// If we are not careful, this will lead to incorrect results
     /// ```should_panic
     /// use pointers_threads::lib_ptr_a::*;
@@ -321,7 +324,7 @@ impl MySelfReference {
     /// my_self_ref.get_val();
     ///
     /// ```
-    /// Instead, the correct method should be the one mentioned 
+    /// Instead, the correct method should be the one mentioned
     /// below. We need to always make sure that the value is updated
     /// 1st before getting the value. Or else it could point to an
     /// older value in the address.
@@ -342,9 +345,9 @@ impl MySelfReference {
     pub fn get_val(&self) -> u8 {
         unsafe { *self.ptr.unwrap() }
     }
-    
+
     /// update_val is used to take an already created value for
-    /// MySelfReference, and put a new value in its place for the 
+    /// MySelfReference, and put a new value in its place for the
     /// val field. This uses the copy trait and is useful to assign
     /// value quickly without working about the ptr. Here, even it
     /// the ptr is not assigned, we could still assign it
@@ -356,7 +359,7 @@ impl MySelfReference {
     ///
     /// let mut my_self_ref = MySelfReference::new(3u8);
     ///
-    /// // we can update value before saving the ptr. This is 
+    /// // we can update value before saving the ptr. This is
     /// // possible but not recommended.
     /// my_self_ref.update_val(8u8);
     /// ```
@@ -383,7 +386,7 @@ impl MySelfReference {
     pub fn update_val(&mut self, val: u8) {
         self.val = val;
     }
-    
+
     /// We use the update_val_ptr call to update the value in
     /// the field via pointer dereferencing. This essentially is the
     /// came as update_val, but tells us how to use pointers instead.
@@ -396,7 +399,7 @@ impl MySelfReference {
     ///
     /// let mut my_self_ref = MySelfReference::new(3u8);
     ///
-    /// // we can update value before saving the ptr. This is 
+    /// // we can update value before saving the ptr. This is
     /// // possible but not recommended.
     /// my_self_ref.update_val_ptr(8u8);
     /// ```
@@ -406,7 +409,7 @@ impl MySelfReference {
     ///
     /// let mut my_self_ref = MySelfReference::new(3u8);
     ///
-    /// // we can update value before saving the ptr. This is 
+    /// // we can update value before saving the ptr. This is
     /// // possible but not recommended.
     /// my_self_ref.update_val_ptr(8u8);
     /// my_self_ref.get_val();
@@ -456,27 +459,35 @@ impl MySelfReference {
     /// assert_eq!( val, ptr );
     /// ```
     pub fn get_addresses(&self) -> (&u8, &u8) {
-        ( &self.val, unsafe { &*self.ptr.unwrap() } )
+        (&self.val, unsafe { &*self.ptr.unwrap() })
     }
-    
+
     /// Just a helper function to print values to the
     /// user can see. This can again panic if we don't
     /// setup the ptr interior raw pointer value.
     pub fn print_addr(&self, condition: &str) {
         if !condition.is_empty() {
             // println!("{condition}");
-            crate::prtln_lib(format_args!("{condition}"));
+            prtln_lib(fn_parse(function_name!()), format_args!("{condition}"));
         }
         // println!("add of variable is {:p}", &self);
         // println!("add of val is {:p}", &raw const self.val);
         // println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
-        
-        crate::prtln_lib(format_args!("add of variable is {:p}", &self));
-        crate::prtln_lib(format_args!("add of val is {:p}", &raw const self.val));
-        // // careful to not put & here in self, or it will be a 
-        // // different address value
-        crate::prtln_lib(format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()));
 
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of variable is {:p}", &self),
+        );
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of val is {:p}", &raw const self.val),
+        );
+        // // careful to not put & here in self, or it will be a
+        // // different address value
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()),
+        );
     }
 }
 
@@ -487,7 +498,6 @@ unsafe impl Send for MySelfReference {}
 /// with caution.
 unsafe impl Sync for MySelfReference {}
 
-
 // Copy clone done seem to matter here really
 #[derive(Debug, Copy, Clone)]
 /// This SelfReferencePinned type that has a value and a pointers and
@@ -497,11 +507,11 @@ unsafe impl Sync for MySelfReference {}
 ///
 /// The purpose of using the SelfReferencePinned type is similar to the
 /// SelfReference type. We can access these values through the methods,
-/// However, we will soon discover why using PhantomPinned to make this 
+/// However, we will soon discover why using PhantomPinned to make this
 /// type a !Unpin, proves to be tricky.
 ///
 /// Here, how this works with async is that, it defines the type to be
-/// !Unpin. And if its unpinned, it indicates that it should be used 
+/// !Unpin. And if its unpinned, it indicates that it should be used
 /// with mainly Box::pin and not the pin::new and pin! operations. Despite
 /// finding ways to implement this for pin::new and pin! safely but working
 /// with some workaround, it best to avoid this. Self reference are dangerous
@@ -519,33 +529,31 @@ pub struct MySelfReferencePinned {
     // we will be calling on them.
     pub(crate) val: u8,
 
-    // Also, this field is not Send and not Sync because rust 
+    // Also, this field is not Send and not Sync because rust
     // doesn't automatically make them so as we have used raw pointers.
     pub(crate) ptr: Option<*const u8>,
 
     // when we use PhantomPinner: the MySelfReference struct goes from
     // Unpin type ( via auto implementations ) to !Unpin type
     _mkr: std::marker::PhantomPinned,
-    
     // in the case a type is Unpin, we can use Pin::new(), Box::pin()
     // and pin!(). and those methods works in general.
-    // However, if use make the type !Unpin, then this will not work 
+    // However, if use make the type !Unpin, then this will not work
     // properly for pin::new() cause pin::new() as this doesn't work with
     // !Unpin. And despite working with pin!(), we also that that this can
     // be really tricky, and we need to be careful about this.
 }
 
-
 /// I will have to do some unsafe impl here.
-/// NOTE: This has to be to type &self not &mut self. 
+/// NOTE: This has to be to type &self not &mut self.
 /// Or else PhantomPinned marker will complain and not
 /// allow you to do this. This is done specifically for
-/// safety. Our implementation is unsafe and this should 
-/// not be the way this is done. But its good know that 
+/// safety. Our implementation is unsafe and this should
+/// not be the way this is done. But its good know that
 /// we could find a work around it.. However, don't
 /// implement is this way.
 /// ```
-/// use pointers_threads::lib_ptr_a::*; 
+/// use pointers_threads::lib_ptr_a::*;
 ///
 /// let mut my_self_ref = MySelfReferencePinned::new(3u8);
 ///
@@ -553,21 +561,20 @@ pub struct MySelfReferencePinned {
 ///
 /// assert_eq!(3u8, my_self_ref.get_val());
 /// ```
-/// Also, for this type, since we have PhantomPinned type, we should 
+/// Also, for this type, since we have PhantomPinned type, we should
 /// avoid using ptr manipulation in order to access values.
 /// **NOTE: These types are only meant to be used with Box::pin
 /// but for the sake of understanding why it could cause problems,
 /// we will also look at pin::new ( even if its not possible at the start)
 /// at pin! macro.**
 impl MySelfReferencePinned {
-
     /// This simple block to create a new MySelfReferencePinned type
     /// This type has PhantomPinned, so turning this struct from a
     /// Unpin to !Unpin type. !Unpin tells us that this value
     /// has its fields addresses constant, and locked in place
     /// unless we use unsafe rust code.
     /// ```
-    /// use pointers_threads::lib_ptr_a::*; 
+    /// use pointers_threads::lib_ptr_a::*;
     ///
     /// let mut my_self_ref_to_pin = MySelfReferencePinned::new(3u8);
     ///
@@ -578,15 +585,18 @@ impl MySelfReferencePinned {
     /// assert_eq!(3u8, my_self_ref_to_pin.get_val());
     /// ```
     pub fn new(val: u8) -> Self {
-        Self { val,ptr: None, _mkr:std::marker::PhantomPinned }
+        Self {
+            val,
+            ptr: None,
+            _mkr: std::marker::PhantomPinned,
+        }
     }
 
-
     // Notice I used &raw const and not as *const u8
-    // cause this will just convert the value into a 
+    // cause this will just convert the value into a
     // addr pointer.
     /// put_ptr should be called immediately after creating
-    /// the pinned type to ensure that the address is not 
+    /// the pinned type to ensure that the address is not
     /// None if the ptr field.
     /// ```should_panic
     /// use pointers_threads::lib_ptr_a::*;
@@ -615,7 +625,7 @@ impl MySelfReferencePinned {
     ///
     /// ```
     pub fn put_ptr(&mut self) {
-        self.ptr = Some( &raw const self.val );
+        self.ptr = Some(&raw const self.val);
     }
 
     // this is wrong. will convert 4 as a pointer value
@@ -626,7 +636,7 @@ impl MySelfReferencePinned {
 
     // remember, the add for self is not the same as the address
     // values calling the function. This is because, the address
-    // is copied into this, and we use this copied address. However, 
+    // is copied into this, and we use this copied address. However,
     // the address will point the correct value
     // All this is is a variable holding the address, and this
     // variable is copied.
@@ -637,8 +647,8 @@ impl MySelfReferencePinned {
     /// but nothing stops us from using it for Unpin types also.
     /// # Safety
     ///
-    /// This is not safe, and we have to be careful, as this could 
-    /// potentially fail. We can fix this in the next module were we 
+    /// This is not safe, and we have to be careful, as this could
+    /// potentially fail. We can fix this in the next module were we
     /// use states instead.
     ///
     /// This would be the correct implementation to make sure
@@ -704,10 +714,12 @@ impl MySelfReferencePinned {
     /// assert_eq!( val, ptr );
     /// ```
     pub unsafe fn put_ptr_cast(&self) {
-        let _z = Some( &raw const self.val );
+        let _z = Some(&raw const self.val);
         // let mut _y = &self.ptr as *const Option<*const u8> as *mut Option<*const u8>;
         let mut _y = &raw const self.ptr as *mut Option<*const u8>;
-        unsafe { *_y = _z; }
+        unsafe {
+            *_y = _z;
+        }
 
         // didn't work
         // let x = &self.val as *const u8;
@@ -724,7 +736,7 @@ impl MySelfReferencePinned {
     ///
     /// assert_eq!( 3, my_self_ref.get_val() );
     /// ```
-    /// Should be 
+    /// Should be
     /// ```
     /// # use pointers_threads::lib_ptr_a::*;
     ///
@@ -739,7 +751,6 @@ impl MySelfReferencePinned {
         // let x = self.ptr.unwrap() as u32 as *const u32;
         unsafe { *self.ptr.unwrap() }
     }
-
 
     /// update_val for the SelfReferencePinned type that is meant
     /// to be used before Pinning is done
@@ -777,12 +788,12 @@ impl MySelfReferencePinned {
     pub fn update_val(&mut self, val: u8) {
         self.val = val;
     }
-    
+
     /// # Safety
     /// We this will be able to get the value
     /// between val, and pass the address that way, and deref
     /// that value. This in not recommended to process the values
-    /// this way, however, for implementation, it gives us a 
+    /// this way, however, for implementation, it gives us a
     /// brief of how it works.
     /// Consider this as unsafe
     ///
@@ -804,9 +815,11 @@ impl MySelfReferencePinned {
     pub unsafe fn update_val_cast(&self, val: u8) {
         let mut _x = &self.val as *const u8 as *mut u8; // works
         // let mut _x = &raw mut self.val; // if self is mut
-        unsafe { *_x = val; }
+        unsafe {
+            *_x = val;
+        }
     }
-    
+
     /// This does the same as update_val. This is just
     /// implemented via updating the value via the ptr
     /// address in ptr field.
@@ -848,7 +861,7 @@ impl MySelfReferencePinned {
     /// unsafe { my_self_ref_pin.put_ptr_cast(); }
     ///
     /// // This function is unsafe, but allows us to do this in the
-    /// // unsafe implementation but this function is in itself 
+    /// // unsafe implementation but this function is in itself
     /// // an unsafe call.
     /// unsafe {my_self_ref_pin.update_val_ptr_cast(10); }
     /// let (val, ptr) = my_self_ref_pin.get_addresses();
@@ -858,7 +871,9 @@ impl MySelfReferencePinned {
     pub fn update_val_ptr_cast(&self, val: u8) {
         // let mut _x = self.ptr.unwrap() as *mut u8; //works
         let mut _x = self.ptr.unwrap().cast_mut();
-        unsafe { *_x = val; }
+        unsafe {
+            *_x = val;
+        }
     }
 
     /// To get the addresses for the value and the ptr raw
@@ -881,7 +896,7 @@ impl MySelfReferencePinned {
     /// assert_eq!( val, ptr );
     /// ```
     pub fn get_addresses(&self) -> (&u8, &u8) {
-        ( &self.val, unsafe { &*self.ptr.unwrap() } )
+        (&self.val, unsafe { &*self.ptr.unwrap() })
     }
 
     /// Prints the address for the type and its fields and inner fields.
@@ -908,27 +923,34 @@ impl MySelfReferencePinned {
         // }
         // println!("add of variable is {:p}", &self);
         // println!("add of val is {:p}", &raw const self.val);
-        // // careful to not put & here in self, or it will be a 
+        // // careful to not put & here in self, or it will be a
         // // different address value
         // println!("add of ptr is {:p}\n", self.ptr.unwrap());
 
         if !condition.is_empty() {
             // println!("{condition}");
-            crate::prtln_lib(format_args!("{condition}"));
+            prtln_lib(fn_parse(function_name!()), format_args!("{condition}"));
         }
         // println!("add of variable is {:p}", &self);
         // println!("add of val is {:p}", &raw const self.val);
         // println!("add of ptr val is {:p}\n", self.ptr.unwrap() );
-        
-        crate::prtln_lib(format_args!("add of variable is {:p}", &self));
-        crate::prtln_lib(format_args!("add of val is {:p}", &raw const self.val));
-        // // careful to not put & here in self, or it will be a 
-        // // different address value
-        crate::prtln_lib(format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()));
 
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of variable is {:p}", &self),
+        );
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of val is {:p}", &raw const self.val),
+        );
+        // // careful to not put & here in self, or it will be a
+        // // different address value
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("add of ptr val is {:p}\n", self.ptr.unwrap()),
+        );
     }
 }
-
 
 /// NOTE: Despite being available for Send, we have to proceed
 /// with caution.

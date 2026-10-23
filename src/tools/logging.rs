@@ -14,10 +14,21 @@ use clap::Parser;
 // }
 
 #[allow(unused)]
-pub fn prtln_lib(message: std::fmt::Arguments) {
+pub(crate) use stdext::function_name;
+pub(crate) fn fn_parse(name:&str) -> &str {
+    name.rsplit("::").next().unwrap()
+}
+
+#[allow(unused)]
+pub(crate) fn prtln_lib(fn_name: &str, message: std::fmt::Arguments) {
     // let val: std::fmt::Arguments = format_args!("hello {}", 3);
-    #[cfg(feature = "prtln-lib")]
-    println!("[prtln]: {message}")
+
+    // #[cfg(all(feature = "prtln-lib", feature = "prtln-lib-fn"))]
+    if cfg!(feature = "prtln-lib-fn") {
+        println!("[prtln:{}]: {message}", fn_name);
+    } else if cfg!(feature = "prtln-lib") {
+        println!("[prtln]: {message}");
+    }
 }
 
 #[derive(Debug, Clone)]

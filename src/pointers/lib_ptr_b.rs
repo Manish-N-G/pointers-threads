@@ -2,29 +2,46 @@
 // use std::any::type_name;
 // use std::any::TypeId;
 
+use crate::{fn_parse, function_name, prtln_lib};
+
 pub fn thread1f_cow() {
     let c1 = std::borrow::Cow::Borrowed("Hello there"); // works
     // println!("make owned str {:?}", make_owned(c1));
-    crate::prtln_lib(format_args!("make owned str {:?}", make_owned(c1)));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("make owned str {:?}", make_owned(c1)),
+    );
 
     let x = [1, 2, 3, 4, 5];
     let c1 = std::borrow::Cow::Borrowed(&x[..]).into_owned(); // this works
     // println!("into owned directly {:?}", c1);
-    crate::prtln_lib(format_args!("into owned directly {:?}", c1));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("into owned directly {:?}", c1),
+    );
 
     let x = [1, 2, 3, 4, 5];
     let c1 = std::borrow::Cow::Borrowed(&x[..]); // this needs to be handled for make_owned
     let y: Vec<u8> = make_owned(c1); // rust makes this to u8 by setting x as u8
     // println!("make owned for u8{:?}", y);
-    crate::prtln_lib(format_args!("make owned for u8{:?}", y));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("make owned for u8{:?}", y),
+    );
 
     let x = 5;
     let c1 = std::borrow::Cow::Borrowed(&x); // this needs to be handled for make_owned
     // println!("make owned direct{:?}", make_owned(c1));
-    crate::prtln_lib(format_args!("make owned direct{:?}", make_owned(c1)));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("make owned direct{:?}", make_owned(c1)),
+    );
 
     // println!("---------------Create Cow ----------------");
-    crate::prtln_lib(format_args!("---------------Create Cow ----------------"));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("---------------Create Cow ----------------"),
+    );
 
     let c1 = std::borrow::Cow::Borrowed("Hello there"); // works
     let z = create_cow_owned(c1);
@@ -34,12 +51,15 @@ pub fn thread1f_cow() {
     //     z,
     //     get_type(&z)
     // );
-    crate::prtln_lib(format_args!(
-        "create cow {} str {:?} for type {}",
-        cow_type(&z),
-        z,
-        get_type(&z)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "create cow {} str {:?} for type {}",
+            cow_type(&z),
+            z,
+            get_type(&z)
+        ),
+    );
 
     let x = [1, 2, 3, 4, 5];
     let c1 = std::borrow::Cow::Borrowed(&x[..]); // this needs to be handled for create_cow Owned
@@ -50,12 +70,15 @@ pub fn thread1f_cow() {
     //     z,
     //     get_type(&z)
     // );
-    crate::prtln_lib(format_args!(
-        "create cow {} for u8{:?} for type {}",
-        cow_type(&z),
-        z,
-        get_type(&z)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "create cow {} for u8{:?} for type {}",
+            cow_type(&z),
+            z,
+            get_type(&z)
+        ),
+    );
 
     let x = 5;
     let c1 = std::borrow::Cow::Borrowed(&x); // this needs to be handled for create_cow Owned
@@ -66,12 +89,15 @@ pub fn thread1f_cow() {
     //     z,
     //     get_type(&z)
     // );
-    crate::prtln_lib(format_args!(
-        "create cow {} direct{:?} for type {}",
-        cow_type(&z),
-        z,
-        get_type(&z)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "create cow {} direct{:?} for type {}",
+            cow_type(&z),
+            z,
+            get_type(&z)
+        ),
+    );
 
     let x = [1, 2, 3, 4, 5];
     let mut c1 = std::borrow::Cow::Borrowed(&x[..]); // this needs to be handled for create_cow Owned
@@ -81,12 +107,15 @@ pub fn thread1f_cow() {
     //     get_type(&c1),
     //     cow_type(&c1)
     // );
-    crate::prtln_lib(format_args!(
-        "cow borrowed before update u8 {:?} for type {} is type {}",
-        c1,
-        get_type(&c1),
-        cow_type(&c1)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "cow borrowed before update u8 {:?} for type {} is type {}",
+            c1,
+            get_type(&c1),
+            cow_type(&c1)
+        ),
+    );
     // [6,7,8].iter().for_each(|&val| {
     //     c1.to_mut().push(val)
     // }); does the same
@@ -99,19 +128,25 @@ pub fn thread1f_cow() {
     //     get_type(&c1),
     //     cow_type(&c1)
     // );
-    crate::prtln_lib(format_args!(
-        "cow owned after update u8 {:?} for type {} is type {}",
-        c1,
-        get_type(&c1),
-        cow_type(&c1)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "cow owned after update u8 {:?} for type {} is type {}",
+            c1,
+            get_type(&c1),
+            cow_type(&c1)
+        ),
+    );
     if let std::borrow::Cow::Owned(x) = c1 {
         // println!("c1 is {:?}", x);
-        crate::prtln_lib(format_args!("c1 is {:?}", x));
+        prtln_lib(fn_parse(function_name!()), format_args!("c1 is {:?}", x));
     }
 
     // println!("---------------Make Cow ----------------");
-    crate::prtln_lib(format_args!("---------------Make Cow ----------------"));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("---------------Make Cow ----------------"),
+    );
 
     let x = 8;
     let y = make_cow_for_u8(x);
@@ -122,13 +157,16 @@ pub fn thread1f_cow() {
     //     get_type(&y),
     //     cow_is_owned(x)
     // );
-    crate::prtln_lib(format_args!(
-        "cow make u8 for {} is {:?} and type {}, os is owned - {}",
-        x,
-        y,
-        get_type(&y),
-        cow_is_owned(x)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "cow make u8 for {} is {:?} and type {}, os is owned - {}",
+            x,
+            y,
+            get_type(&y),
+            cow_is_owned(x)
+        ),
+    );
     let x = 3;
     let y = make_cow_for_u8(x);
     // println!(
@@ -138,16 +176,22 @@ pub fn thread1f_cow() {
     //     get_type(&y),
     //     cow_is_owned(x)
     // );
-    crate::prtln_lib(format_args!(
-        "cow make u8 for {} is {:?} and type {}, os is owned - {}",
-        x,
-        y,
-        get_type(&y),
-        cow_is_owned(x)
-    ));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!(
+            "cow make u8 for {} is {:?} and type {}, os is owned - {}",
+            x,
+            y,
+            get_type(&y),
+            cow_is_owned(x)
+        ),
+    );
 
     // println!("---------------Cow replace cow type ----------------");
-    crate::prtln_lib(format_args!("---------------Cow replace cow type ----------------"));
+    prtln_lib(
+        fn_parse(function_name!()),
+        format_args!("---------------Cow replace cow type ----------------"),
+    );
     let x = "hello world";
     let y = "hello <world>";
     for val in [x, y] {
@@ -156,11 +200,14 @@ pub fn thread1f_cow() {
         //     sanitize(val),
         //     cow_type(&sanitize(val))
         // );
-        crate::prtln_lib(format_args!(
-            "val is now {} and type {}",
-            sanitize(val),
-            cow_type(&sanitize(val))
-        ));
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!(
+                "val is now {} and type {}",
+                sanitize(val),
+                cow_type(&sanitize(val))
+            ),
+        );
     }
 }
 

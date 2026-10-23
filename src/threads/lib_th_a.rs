@@ -1,4 +1,4 @@
-// This is another addition of doc comments on top of what is 
+// This is another addition of doc comments on top of what is
 // already mentioned before. //! is for lib_th_a again. And its
 // the root of this crate. /// Will need to be appended only to
 // another module under this or we will have to use it on functions
@@ -16,6 +16,7 @@
 //! These selected few functions is mainly used for thread creation
 //! and errors that could be encountered when creating threads.
 //!
+use crate::{fn_parse, function_name, prtln_lib};
 use std::thread;
 
 // Remember, rust docs are not compiled inside lib_th_a
@@ -26,13 +27,13 @@ use std::thread;
 /// This is a simple test thread that takes a vector, and adds the value
 /// 42 to it at the end of the vec
 /// ```rust,editable
-/// # // Note, the # will hide this from rust docs, but not from the 
+/// # // Note, the # will hide this from rust docs, but not from the
 /// # // compiler. So essentially we are making 2 for the same functions
 /// # // and testing to see what works.
 /// # // So, we can include this or we could also ignore it
 /// # // as its not required in docs. However, it we are using a link
 /// # // to rust playground, we dont have a choice but to add this fn
-/// # // again. 
+/// # // again.
 /// # // The other options would be maybe push it to crates.io and then
 /// # // add this crate as a dependency. This way, we can make sure that
 /// # // we dont have issues with the crate
@@ -53,22 +54,24 @@ use std::thread;
 /// ```
 // /// [Rust Playground](https://play.rust-lang.org/?...)
 // #[doc(html_playground_url = "https://play.rust-lang.org/")]
-pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::Any + Send> > {
-    // NOTE: I seems that the placeholder '_' is not allowed here for this 
+pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::Any + Send>> {
+    // NOTE: I seems that the placeholder '_' is not allowed here for this
     // function signature. Hence we use the Any trait by wrapping our err in a BOX.
     // This is because the error is of an opaque type by the looks of it.
 
     // v is something like v = vec![1,2,3,4,5];
 
-    // Here rust uses "move closure inference". This means 
-    // that rust automatically decided to move without explicitly 
+    // Here rust uses "move closure inference". This means
+    // that rust automatically decided to move without explicitly
     // writing it.
     // If we need to pass references, it needs to have static
     // lifetime in general
-    thread::spawn(|| { // move is made automatically
+    thread::spawn(|| {
+        // move is made automatically
         v.push(42);
         v
-    }).join()
+    })
+    .join()
     // we instead of unwrapping, we pass the result type for join.
 
     // if we were to use v again, we will have borrow issues
@@ -93,19 +96,21 @@ pub fn thread1a_add_42(mut v: Vec<i32>) -> Result<Vec<i32>, Box<dyn std::any::An
 /// ```
 pub fn thread1a_add_val(mut v: Vec<i32>, val: i32) -> Vec<i32> {
     // The Closure might outlive the borrowed val. So we will move it in the closure,
-    // where earlier with `thread1a_add_42`, the closure implicitely moved v in 
+    // where earlier with `thread1a_add_42`, the closure implicitely moved v in
     // the closure, but with val in the mix, we have to move it all in the closure.
     // This happens because we need static borrows only for spawned threads in isolation.
-    thread::spawn( move|| { 
+    thread::spawn(move || {
         v.push(val);
         v
-    }).join().unwrap()
+    })
+    .join()
+    .unwrap()
 }
 
 /// Spawned thread needs to have move when taking references
 ///
 /// When creating a arr, we have to use move in the closure cause the thread
-/// takes a reference, which cannot satisfy the 'static lifetime, and hence 
+/// takes a reference, which cannot satisfy the 'static lifetime, and hence
 /// required the closure to move the reference. Not implicit move can be called
 /// here cause we closure would only captured a reference.
 /// ```
@@ -119,18 +124,21 @@ pub fn thread1a_add_val(mut v: Vec<i32>, val: i32) -> Vec<i32> {
 /// ```
 #[allow(clippy::let_and_return)]
 pub fn thread1a_move_issue() -> i32 {
-    let v = vec![1,2,3];
+    let v = vec![1, 2, 3];
     // this below will throw error as it needs to move the value, for static lifetime
 
     // thread::spawn(|| {
     //     println!("{:?}", v);   // only &v needed
     // }); // ← ERROR! Needs move because v would be borrowed, but thread may outlive it
 
-    let val = thread::spawn( move || { // not implicitly move anymore, but explicit
+    let val = thread::spawn(move || {
+        // not implicitly move anymore, but explicit
         _ = &v;
         // drop(v); // However, adding this will compile without move, and makes move implicit
         3
-    }).join().unwrap();
+    })
+    .join()
+    .unwrap();
 
     // println!("v is {:?}", v); // implicit moved here. This will not work
     val
@@ -149,27 +157,38 @@ pub fn thread1a_move_issue() -> i32 {
 /// use std::thread;
 /// use pointers_threads::lib_th_a::*;
 ///
-/// let val_from_builder = thread1a_builder("Puchi", vec![1,2,3,4,5], false);
+/// let val_from_builder = thread1a_builder("Puchi", vec![1,2,3,4,5]);
 /// assert_eq!(&val_from_builder, &[1,2,3,4,5]);
 ///
 /// ```
-pub fn thread1a_builder<T>(name: &'static str, val: Vec<T>, print_val: bool) -> Vec<T> 
-where T: Sized + Send + std::fmt::Debug + 'static{
+pub fn thread1a_builder<T>(name: &'static str, val: Vec<T>) -> Vec<T>
+where
+    T: Sized + Send + std::fmt::Debug + 'static,
+{
     // this thread is created using a basic thread builder type
     // with an attribute name with it. Here this is basic but gives
     // us the idea that certain attributes can be added like name
     // stack size and others.
     let builder = thread::Builder::new().name(name.into());
 
-    let handler = builder.spawn( move || {
-        if print_val {
-            println!("checking with name");
-            println!("Thread builder printed of type T for {:?}", val);
-        }
+    let handler = builder.spawn(move || {
+        // println!("checking with name");
+        // println!("Thread builder printed of type T for {:?}", val);
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("checking with name"),
+        );
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("Thread builder printed of type T for {:?}", val),
+        );
         val
     });
 
-    handler.expect("Handler failed").join().expect("Join failed")
+    handler
+        .expect("Handler failed")
+        .join()
+        .expect("Join failed")
 }
 
 /// This is static function where we create a string literal with
@@ -178,8 +197,8 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 ///
 /// This will just say that we have a stat thread here. Notice that
 /// we don't need to use move here, as we can use static reference
-/// for the closure, even if its defined in the function. This is 
-/// possible because the 'static lifetime exists for the life of 
+/// for the closure, even if its defined in the function. This is
+/// possible because the 'static lifetime exists for the life of
 /// this executable/lib
 /// ```
 /// use pointers_threads::lib_th_a::*;
@@ -187,26 +206,35 @@ where T: Sized + Send + std::fmt::Debug + 'static{
 ///
 /// assert_eq!(thread1a_stat(), "this is stat thread!");
 /// ```
-pub fn thread1a_stat() -> &'static str{
+pub fn thread1a_stat() -> &'static str {
+    use std::fmt::Write;
     let stat = "this is stat thread!"; // static lifetime
     thread::spawn(|| {
-        // Instead of taking a variable, where I would have to move 
-        // Into the closure, I will just check length and use that to 
+        // Instead of taking a variable, where I would have to move
+        // Into the closure, I will just check length and use that to
         // decide if we print the value of not
         if stat.len().is_multiple_of(2) {
             // Here stat is not moved but referenced in this closure
+            let mut val = String::with_capacity(stat.len());
             for x in stat.chars() {
                 // possible as its static lifetime and chars borrows self
-                print!("{} ", x);
+                // print!("{} ", x);
+                let _ = write!(val, "{} ", x);
             }
-            println!();
+            // println!();
+            prtln_lib(fn_parse(function_name!()), format_args!("{val}"));
         }
-
-    }) .join() .unwrap();
+    })
+    .join()
+    .unwrap();
 
     // this will allow me to use stat after calling it here
     if stat.len().is_multiple_of(2) {
-        println!("stat val inside the function is: {stat}");
+        // println!("stat val inside the function is: {stat}");
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("stat val inside the function is: {stat}"),
+        );
     }
     stat
 }
@@ -216,7 +244,8 @@ pub fn thread1a_stat() -> &'static str{
 ///
 /// This function doesn't do anything interesting, we pass a 'static
 /// str and we get the same static string as a result. This will only
-/// print the value when calling the function
+/// print the value when calling the function with the prtln-lib feature
+/// into command line
 /// ```
 /// use pointers_threads::lib_th_a::*;
 /// use std::thread;
@@ -236,13 +265,16 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
     // type &, this function copied the reference of the value. For this
     // reason, by using move, we only pass a reference variable into the
     // closure. As this would not be able to modify the type.
-    let th = thread::spawn( move || {
-        println!("thread1a stat val is {val}");
+    let th = thread::spawn(move || {
+        // println!("thread1a stat val is {val}");
+        prtln_lib(
+            fn_parse(function_name!()),
+            format_args!("thread1a stat val is {val}"),
+        );
         val
     });
     th.join().unwrap()
 }
-
 
 /// We take 2 Iterator of a Generic type, and creates a shared reference thread
 /// with one, and a mutable reference with another. It returns a vec of the
@@ -278,7 +310,7 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 ///     ('a'..='z').collect::<Vec<char>>()
 /// );
 /// ```
-// With range, I was asked to sort out Recursion limits if we didn't use 
+// With range, I was asked to sort out Recursion limits if we didn't use
 // Range: Iterator<item = type> but I didn't want to break my head, but instead,
 // when I tried it, it didn't give me recursion problems.
 // #![recursion_limit = "256"]
@@ -291,13 +323,18 @@ pub fn thread1a_stat_owned(val: &'static str) -> &'static str {
 //       Vec<U2>: std::fmt::Debug,
 //       U1: std::fmt::Debug + std::fmt::Display + Send + Sync,
 //       U2: std::fmt::Debug + std::fmt::Display + Send + Sync,
-pub fn thread1a_scope_vec<I1, I2>(iter1: I1, iter2: I2, val2: I2::Item,  printable: bool)
-    -> Vec<I2::Item>
-where I1::Item: std::fmt::Display + Send + Sync, // sized is default
-      I2::Item: std::fmt::Display + Send + Sync,
-      Vec<I2::Item>: std::fmt::Debug,
-      I1: std::iter::Iterator,
-      I2: std::iter::Iterator,
+pub fn thread1a_scope_vec<I1, I2>(
+    iter1: I1,
+    iter2: I2,
+    val2: I2::Item,
+    printable: bool,
+) -> Vec<I2::Item>
+where
+    I1::Item: std::fmt::Display + Send + Sync, // sized is default
+    I2::Item: std::fmt::Display + Send + Sync,
+    Vec<I2::Item>: std::fmt::Debug,
+    I1: std::iter::Iterator,
+    I2: std::iter::Iterator,
 {
     let v = iter1.collect::<Vec<I1::Item>>();
     // let v = iter1.collect::<Vec<U1>>();
@@ -311,7 +348,7 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
     // lifetimes can be smaller than static as scope finished the tread
     // by join at the end
     let x: Vec<_> = (1..1000).collect();
-    let y = std::sync::Arc::new( std::sync::Mutex::new(x.iter()));
+    let y = std::sync::Arc::new(std::sync::Mutex::new(x.iter()));
     let z = y.clone();
     thread::scope(|s| {
         let s1 = s.spawn(|| {
@@ -375,7 +412,7 @@ where I1::Item: std::fmt::Display + Send + Sync, // sized is default
         // }); // this is not possible
 
         // This this situation, rust borrows a mutable reference for v2, but its only used in the
-        // scope just 1se, which doesn't cause conflicts as no other new threads have been asking 
+        // scope just 1se, which doesn't cause conflicts as no other new threads have been asking
         // for shared/mutable reference of v2.
         s.spawn(|| {
             v2.push(val2); // automatic borrow ( as mut ) occurs here.
