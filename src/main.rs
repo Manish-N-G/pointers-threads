@@ -32,15 +32,16 @@ mod th1;
 mod th2;
 mod th3;
 
-mod process_args;
+mod welcome_file;
 
 //todomanish:
 use pointers_threads::*;
-use process_args::*;
+use welcome_file::*;
 
 // I block on mod3_a directly to avoid changin main via tokio::main
 // #[tokio::main]
 fn main() {
+    welcome_message();
     args_parser();
     my_func!('m', 1, a);
     
