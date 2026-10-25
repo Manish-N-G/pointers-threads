@@ -32,30 +32,16 @@ mod th1;
 mod th2;
 mod th3;
 
-mod process_args;
+mod welcome_file;
 
 //todomanish:
 use pointers_threads::*;
-use process_args::*;
-
-// Embeds the content of 'config.txt' (located at crate root) as a static string
-const WELCOME_DATA: &str = include_str!("../assets/welcome.txt");
+use welcome_file::*;
 
 // I block on mod3_a directly to avoid changin main via tokio::main
 // #[tokio::main]
 fn main() {
-    let mut welcome = WELCOME_DATA.split("\"\"\"");
-    if let Some(s) = welcome.find(|val| val.contains("welcome")) {
-        for line in s.lines().skip(1) {
-            println!("{line}")
-        }
-    }
-    if let Some(s) = welcome.find(|val| val.contains("label3")) {
-        for line in s.lines().skip(1) {
-            println!("{line}")
-        }
-    }
-
+    welcome_message();
     args_parser();
     my_func!('m', 1, a);
     
